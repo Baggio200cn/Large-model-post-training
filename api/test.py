@@ -7,22 +7,22 @@ class handler(BaseHTTPRequestHandler):
         try:
             response = {
                 'status': 'success',
-                'message': 'API is working correctly!',
+                'message': 'Test API is working!',
                 'timestamp': datetime.now().isoformat(),
-                'test_data': {
-                    'server': 'Vercel',
-                    'runtime': 'Python',
-                    'version': '1.0.0',
-                    'api_files_detected': [
-                        'data-analysis.py',
-                        'generate-tweet.py', 
-                        'health.py',
-                        'latest-results.py',
-                        'predict.py',
-                        'spiritual.py',
-                        'test.py'
-                    ]
-                }
+                'server_info': {
+                    'platform': 'Vercel',
+                    'runtime': 'Python 3.9',
+                    'version': '1.0.0'
+                },
+                'api_endpoints': [
+                    '/api/test',
+                    '/api/health', 
+                    '/api/predict',
+                    '/api/data-analysis',
+                    '/api/spiritual',
+                    '/api/latest-results',
+                    '/api/generate-tweet'
+                ]
             }
             
             self.send_response(200)
@@ -41,7 +41,7 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
             
             error_response = {
-                'status': 'error', 
+                'status': 'error',
                 'message': str(e),
                 'timestamp': datetime.now().isoformat()
             }

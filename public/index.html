@@ -182,7 +182,7 @@
 
         async function checkSystemStatus() {
             try {
-                const response = await fetch('/api/health');
+                const response = await fetch('/api/health.py');
                 if (response.ok) {
                     const data = await response.json();
                     updateStatus('✅ 系统运行正常', true);
@@ -200,7 +200,7 @@
             updateResult('testResult', '🔄 正在测试API连接...', 'loading');
             
             try {
-                const response = await fetch('/api/health');
+                const response = await fetch('/api/health.py');
                 if (response.ok) {
                     const data = await response.json();
                     updateResult('testResult', 
@@ -222,7 +222,7 @@
             updateResult('analysisResult', '🔄 正在执行数据分析...', 'loading');
             
             try {
-                const response = await fetch('/api/data-analysis');
+                const response = await fetch('/api/data-analysis.py');
                 if (response.ok) {
                     const data = await response.json();
                     if (data.status === 'success') {
@@ -247,7 +247,7 @@
             updateResult('predictionResult', '🔄 AI正在生成预测...', 'loading');
             
             try {
-                const response = await fetch('/api/predict', {
+                const response = await fetch('/api/predict.py', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({})
@@ -279,7 +279,7 @@
             updateResult('healthResult', '🔄 正在检查系统健康状态...', 'loading');
             
             try {
-                const response = await fetch('/api/health');
+                const response = await fetch('/api/health.py');
                 if (response.ok) {
                     const data = await response.json();
                     updateResult('healthResult', 

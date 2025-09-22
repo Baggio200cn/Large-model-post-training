@@ -1,47 +1,301 @@
-# 文件更新指南
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大乐透AI预测系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .api-status {
+            background: #2d3748;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .card h3 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+        
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 5px;
+            transition: opacity 0.3s;
+        }
+        
+        .button:hover {
+            opacity: 0.9;
+        }
+        
+        .result {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            min-height: 50px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .error {
+            color: #e53e3e;
+            border-left-color: #e53e3e;
+        }
+        
+        .success {
+            color: #38a169;
+            border-left-color: #38a169;
+        }
+        
+        .loading {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>大乐透AI预测系统</h1>
+            <p>基于深度学习的多模态集成预测平台</p>
+        </div>
 
-## 方案 1：更新 public/js/app.js
+        <div class="api-status" id="apiStatus">
+            <span id="statusText">系统初始化中...</span>
+        </div>
 
-如果你的 JavaScript 代码在单独的文件中：
+        <div class="dashboard">
+            <div class="card">
+                <h3>🔍 API连接测试</h3>
+                <p>测试后端API服务连接状态</p>
+                <button class="button" onclick="testAPI()">测试连接</button>
+                <div class="result" id="testResult">
+                    <p>点击按钮测试API连接</p>
+                </div>
+            </div>
 
-1. 打开 `public/js/app.js`
-2. 替换以下函数：
-   - `performDataAnalysis()`
-   - `loadLatestResults()`
-   - `generateAIPrediction()`
-   - `performHealthCheck()`
-   - `testAPI()` (新增)
-   - DOMContentLoaded 事件监听器
+            <div class="card">
+                <h3>📊 数据分析</h3>
+                <p>分析历史开奖数据，发现规律性</p>
+                <button class="button" onclick="testDataAnalysis()">执行分析</button>
+                <div class="result" id="analysisResult">
+                    <p>点击按钮开始数据分析</p>
+                </div>
+            </div>
 
-## 方案 2：更新 public/index.html
+            <div class="card">
+                <h3>🤖 AI智能预测</h3>
+                <p>使用机器学习模型预测下期号码</p>
+                <button class="button" onclick="testPrediction()">生成预测</button>
+                <div class="result" id="predictionResult">
+                    <p>点击按钮生成AI预测</p>
+                </div>
+            </div>
 
-如果 JavaScript 代码直接在 HTML 文件中：
+            <div class="card">
+                <h3>🏥 系统健康检查</h3>
+                <p>检查系统各组件运行状态</p>
+                <button class="button" onclick="testHealth()">健康检查</button>
+                <div class="result" id="healthResult">
+                    <p>点击按钮检查系统状态</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-1. 打开 `public/index.html`
-2. 找到 `<script>` 标签部分
-3. 替换其中的相关函数
+    <script>
+        console.log('页面加载完成，开始初始化');
 
-## 需要添加的新文件
+        // 页面加载完成后自动检查系统状态
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.getElementById('statusText').textContent = '正在检查系统状态...';
+                checkSystemStatus();
+            }, 1000);
+        });
 
-### api/test.py
-在 `api` 目录下创建新文件 `test.py`，用于测试 API 连接。
+        function updateStatus(message, isSuccess = true) {
+            const statusEl = document.getElementById('statusText');
+            if (statusEl) {
+                statusEl.textContent = message;
+                statusEl.style.color = isSuccess ? '#48bb78' : '#f56565';
+            }
+        }
 
-## 文件路径对应关系
+        function updateResult(elementId, message, className = '') {
+            const el = document.getElementById(elementId);
+            if (el) {
+                el.innerHTML = '<p class="' + className + '">' + message + '</p>';
+            }
+        }
 
-根据你的项目结构：
-```
-project/
-├── api/
-│   ├── test.py              ← 新增文件
-│   ├── data-analysis.py     ← 对应 /api/data-analysis
-│   ├── health.py            ← 对应 /api/health
-│   ├── predict.py           ← 对应 /api/predict
-│   ├── spiritual.py         ← 对应 /api/spiritual
-│   ├── latest-results.py    ← 对应 /api/latest-results
-│   └── generate-tweet.py    ← 对应 /api/generate-tweet
-├── public/
-│   ├── index.html           ← 可能需要更新
-│   └── js/
-│       └── app.js           ← 主要更新文件
-└── vercel.json
-```
+        async function checkSystemStatus() {
+            try {
+                const response = await fetch('/api/health');
+                if (response.ok) {
+                    const data = await response.json();
+                    updateStatus('✅ 系统运行正常', true);
+                    console.log('系统状态检查成功:', data);
+                } else {
+                    throw new Error('HTTP ' + response.status);
+                }
+            } catch (error) {
+                updateStatus('❌ 系统连接失败', false);
+                console.error('系统状态检查失败:', error);
+            }
+        }
+
+        async function testAPI() {
+            updateResult('testResult', '🔄 正在测试API连接...', 'loading');
+            
+            try {
+                const response = await fetch('/api/health');
+                if (response.ok) {
+                    const data = await response.json();
+                    updateResult('testResult', 
+                        '✅ API连接成功<br>' +
+                        '状态: ' + data.status + '<br>' +
+                        '服务: ' + data.service + '<br>' +
+                        '时间: ' + data.timestamp, 
+                        'success'
+                    );
+                } else {
+                    throw new Error('HTTP ' + response.status);
+                }
+            } catch (error) {
+                updateResult('testResult', '❌ API连接失败: ' + error.message, 'error');
+            }
+        }
+
+        async function testDataAnalysis() {
+            updateResult('analysisResult', '🔄 正在执行数据分析...', 'loading');
+            
+            try {
+                const response = await fetch('/api/data-analysis');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        updateResult('analysisResult', 
+                            '✅ 数据分析完成<br>' +
+                            '分析期数: ' + data.analysis.data_overview.total_draws + '<br>' +
+                            '更新时间: ' + data.analysis.data_overview.last_update,
+                            'success'
+                        );
+                    } else {
+                        throw new Error(data.message || '分析失败');
+                    }
+                } else {
+                    throw new Error('HTTP ' + response.status);
+                }
+            } catch (error) {
+                updateResult('analysisResult', '❌ 数据分析失败: ' + error.message, 'error');
+            }
+        }
+
+        async function testPrediction() {
+            updateResult('predictionResult', '🔄 AI正在生成预测...', 'loading');
+            
+            try {
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({})
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        const pred = data.prediction.ensemble_prediction;
+                        updateResult('predictionResult', 
+                            '✅ AI预测完成<br>' +
+                            '前区: ' + pred.front_zone.join(', ') + '<br>' +
+                            '后区: ' + pred.back_zone.join(', ') + '<br>' +
+                            '置信度: ' + (pred.confidence * 100).toFixed(1) + '%',
+                            'success'
+                        );
+                    } else {
+                        throw new Error(data.message || '预测失败');
+                    }
+                } else {
+                    throw new Error('HTTP ' + response.status);
+                }
+            } catch (error) {
+                updateResult('predictionResult', '❌ AI预测失败: ' + error.message, 'error');
+            }
+        }
+
+        async function testHealth() {
+            updateResult('healthResult', '🔄 正在检查系统健康状态...', 'loading');
+            
+            try {
+                const response = await fetch('/api/health');
+                if (response.ok) {
+                    const data = await response.json();
+                    updateResult('healthResult', 
+                        '✅ 系统健康检查完成<br>' +
+                        '服务状态: ' + data.status + '<br>' +
+                        '系统版本: ' + data.version + '<br>' +
+                        '检查时间: ' + new Date(data.timestamp).toLocaleString(),
+                        'success'
+                    );
+                } else {
+                    throw new Error('HTTP ' + response.status);
+                }
+            } catch (error) {
+                updateResult('healthResult', '❌ 健康检查失败: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

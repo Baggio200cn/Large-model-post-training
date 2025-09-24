@@ -1,294 +1,333 @@
 from http.server import BaseHTTPRequestHandler
 import json
-import logging
 from datetime import datetime
 import random
-import hashlib
-import traceback
-
-# 设置日志
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+import math
 
 class handler(BaseHTTPRequestHandler):
-    def __init__(self, *args, **kwargs):
-        self.spiritual_images = [
-            {
-                'filename': 'lotus_meditation.jpg',
-                'description': '莲花冥想图，象征纯净与觉醒，适合提升内心平静',
-                'energy_type': 'purification',
-                'chakra_alignment': 'crown'
-            },
-            {
-                'filename': 'mountain_zen.jpg', 
-                'description': '高山禅境图，代表稳定与高远，增强意志力',
-                'energy_type': 'stability',
-                'chakra_alignment': 'root'
-            },
-            {
-                'filename': 'ocean_waves.jpg',
-                'description': '海浪律动图，体现流动与变化，激发直觉力',
-                'energy_type': 'flow',
-                'chakra_alignment': 'sacral'
-            },
-            {
-                'filename': 'forest_tranquility.jpg',
-                'description': '森林宁静图，传递自然与和谐，平衡心境',
-                'energy_type': 'harmony',
-                'chakra_alignment': 'heart'
-            },
-            {
-                'filename': 'sunset_chakra.jpg',
-                'description': '夕阳脉轮图，展现能量与平衡，开启智慧',
-                'energy_type': 'wisdom',
-                'chakra_alignment': 'third_eye'
-            },
-            {
-                'filename': 'crystal_formation.jpg',
-                'description': '水晶阵列图，聚集宇宙能量，增强感知力',
-                'energy_type': 'amplification',
-                'chakra_alignment': 'throat'
-            }
-        ]
-        super().__init__(*args, **kwargs)
-
     def do_GET(self):
         try:
-            logger.info("收到灵修扰动请求")
+            # 基于时间和宇宙因子的复合随机种子
+            time_seed = int(datetime.now().timestamp()) % 10000
+            cosmic_seed = self._calculate_cosmic_influence()
+            combined_seed = (time_seed + cosmic_seed) % 99991
+            random.seed(combined_seed)
             
-            # 基于时间和随机因子的种子
-            current_time = datetime.now()
-            time_seed = int(current_time.timestamp()) % 100000
-            
-            # 使用时间哈希确保一定的随机性但又有规律
-            time_hash = hashlib.md5(str(time_seed).encode()).hexdigest()
-            random.seed(int(time_hash[:8], 16))
-            
-            # 选择灵修图像
-            selected_image = random.choice(self.spiritual_images)
-            
-            # 生成扰动因子
-            perturbation_factors = self._generate_perturbation_factors(current_time)
-            
-            # 生成灵修指导
-            spiritual_guidance = self._generate_spiritual_guidance(selected_image, perturbation_factors)
-            
-            # 计算整体强度
-            overall_intensity = self._calculate_overall_intensity(perturbation_factors)
-            
-            # 生成能量读数
-            energy_reading = self._generate_energy_reading(current_time)
+            # 生成灵修扰动数据
+            spiritual_data = self._generate_spiritual_perturbation()
             
             response = {
                 'status': 'success',
-                'spiritual_perturbation': {
-                    'spiritual_image': selected_image,
-                    'perturbation_factors': perturbation_factors,
-                    'overall_intensity': overall_intensity,
-                    'spiritual_guidance': spiritual_guidance,
-                    'cosmic_timing': {
-                        'current_phase': self._get_cosmic_phase(current_time),
-                        'optimal_meditation_time': self._get_optimal_meditation_time(current_time),
-                        'lunar_influence': self._get_lunar_influence(current_time)
-                    }
+                'spiritual_perturbation': spiritual_data,
+                'cosmic_metadata': {
+                    'calculation_time': datetime.now().isoformat(),
+                    'cosmic_seed': cosmic_seed,
+                    'lunar_phase': self._get_lunar_phase(),
+                    'energy_signature': self._generate_energy_signature()
                 },
-                'energy_reading': energy_reading,
-                'quantum_resonance': {
-                    'frequency_hz': round(random.uniform(7.83, 40.0), 2),  # 舒曼共振范围
-                    'coherence_level': round(random.uniform(0.6, 0.95), 3),
-                    'dimensional_alignment': random.choice(['第三密度', '第四密度过渡', '第五密度共振'])
-                },
-                'timestamp': current_time.isoformat(),
-                'session_id': time_hash[:16]
+                'timestamp': datetime.now().isoformat()
             }
             
-            self._send_json_response(200, response)
-            logger.info("灵修扰动数据生成成功")
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            
+            self.wfile.write(json.dumps(response, ensure_ascii=False).encode('utf-8'))
             
         except Exception as e:
-            logger.error(f"灵修扰动处理错误: {str(e)}")
-            logger.error(traceback.format_exc())
-            self._send_error_response(500, f"灵修能量获取失败: {str(e)}")
+            self._send_error_response(str(e))
     
     def do_OPTIONS(self):
-        self._send_cors_headers()
-    
-    def _generate_perturbation_factors(self, current_time):
-        """生成基于时间的扰动因子"""
-        hour = current_time.hour
-        minute = current_time.minute
-        day = current_time.day
-        
-        # 基于时间的能量波动
-        time_factor = (hour * 60 + minute) / 1440  # 0-1之间的时间因子
-        day_factor = day / 31  # 月相因子
-        
-        # 混沌因子 - 基于分钟数的波动
-        chaos_base = (minute % 7) / 7
-        chaos_factor = round(chaos_base * random.uniform(0.8, 1.2), 3)
-        
-        # 和谐因子 - 基于小时数的稳定性
-        harmony_base = 1 - abs(hour - 12) / 12  # 中午12点最和谐
-        harmony_factor = round(harmony_base * random.uniform(0.7, 1.0), 3)
-        
-        # 宇宙调谐 - 综合时间因子
-        cosmic_alignment = round((time_factor + day_factor) / 2 * random.uniform(0.6, 1.0), 3)
-        
-        # 能量等级 - 基于时间段
-        energy_levels = ['极低', '低', '中等', '高', '极高']
-        if 6 <= hour <= 9 or 18 <= hour <= 21:  # 黄金时间
-            energy_level = random.choice(['高', '极高'])
-        elif 22 <= hour <= 5:  # 深夜时间
-            energy_level = random.choice(['极低', '低'])
-        else:
-            energy_level = random.choice(['中等', '高'])
-        
-        return {
-            'chaos_factor': chaos_factor,
-            'harmony_factor': harmony_factor,
-            'energy_level': energy_level,
-            'cosmic_alignment': cosmic_alignment,
-            'time_resonance': round(time_factor, 3),
-            'lunar_phase_influence': round(day_factor, 3)
-        }
-    
-    def _generate_spiritual_guidance(self, selected_image, perturbation_factors):
-        """生成灵修指导"""
-        mantras = {
-            'purification': ['愿智慧照亮前路', '心如莲花，纯净无染', '清净本心，回归本源'],
-            'stability': ['稳如磐石，心如止水', '根植大地，直指苍穹', '不动如山，应变如风'],
-            'flow': ['随缘不变，不变随缘', '如水般柔顺，如风般自由', '顺应自然，与道合一'],
-            'harmony': ['天人合一，万物归心', '内外和谐，身心平衡', '众生平等，慈悲为怀'],
-            'wisdom': ['智慧如日，照破无明', '直觉如灯，指引前路', '洞察本质，超越表象'],
-            'amplification': ['能量聚集，意念专注', '共振宇宙，感应万物', '扩展意识，提升振频']
-        }
-        
-        energy_type = selected_image.get('energy_type', 'harmony')
-        mantra_list = mantras.get(energy_type, mantras['harmony'])
-        
-        # 基于能量等级调整冥想时间
-        energy_level = perturbation_factors['energy_level']
-        if energy_level in ['极高', '高']:
-            meditation_time = f'{random.randint(20, 45)}分钟'
-        elif energy_level == '中等':
-            meditation_time = f'{random.randint(10, 25)}分钟'
-        else:
-            meditation_time = f'{random.randint(5, 15)}分钟'
-        
-        return {
-            'recommended_mantra': random.choice(mantra_list),
-            'meditation_time': meditation_time,
-            'breathing_pattern': random.choice(['4-7-8呼吸法', '箱式呼吸法', '自然呼吸法', '数息观呼吸法']),
-            'posture_suggestion': random.choice(['莲花坐', '金刚坐', '简易坐', '椅子冥想坐']),
-            'focus_point': selected_image.get('chakra_alignment', 'heart'),
-            'preparation_ritual': random.choice([
-                '点燃一支香，净化空间',
-                '播放轻柔的冥想音乐',
-                '在面前放置一杯清水',
-                '面向东方，迎接晨光',
-                '在心中感恩宇宙万物'
-            ])
-        }
-    
-    def _calculate_overall_intensity(self, perturbation_factors):
-        """计算整体扰动强度"""
-        chaos = perturbation_factors['chaos_factor']
-        harmony = perturbation_factors['harmony_factor']
-        cosmic = perturbation_factors['cosmic_alignment']
-        
-        # 综合计算强度，考虑平衡性
-        intensity = (chaos * 0.3 + harmony * 0.4 + cosmic * 0.3)
-        return round(intensity, 3)
-    
-    def _generate_energy_reading(self, current_time):
-        """生成能量读数"""
-        hour = current_time.hour
-        
-        # 基于时间的能量波动
-        base_cosmic = 60 + (hour % 12) * 3  # 60-95范围
-        base_earth = 50 + (24 - abs(hour - 12)) * 2  # 50-90范围
-        base_personal = 70 + random.randint(-20, 30)  # 50-100范围
-        
-        return {
-            'cosmic_energy': f'{min(95, max(60, base_cosmic + random.randint(-5, 10)))}%',
-            'earth_energy': f'{min(90, max(50, base_earth + random.randint(-5, 10)))}%',
-            'personal_energy': f'{min(100, max(50, base_personal))}%',
-            'chakra_balance': {
-                'root': round(random.uniform(0.6, 1.0), 2),
-                'sacral': round(random.uniform(0.6, 1.0), 2),
-                'solar_plexus': round(random.uniform(0.6, 1.0), 2),
-                'heart': round(random.uniform(0.7, 1.0), 2),
-                'throat': round(random.uniform(0.6, 1.0), 2),
-                'third_eye': round(random.uniform(0.5, 0.9), 2),
-                'crown': round(random.uniform(0.5, 0.9), 2)
-            }
-        }
-    
-    def _get_cosmic_phase(self, current_time):
-        """获取宇宙相位"""
-        phases = [
-            '新月相位 - 新的开始',
-            '上弦月相位 - 积累能量',
-            '满月相位 - 能量高峰',
-            '下弦月相位 - 释放净化',
-            '日食相位 - 重大转变',
-            '水逆相位 - 内省反思',
-            '火星冲相位 - 行动力强',
-            '金星合相位 - 和谐美好'
-        ]
-        return random.choice(phases)
-    
-    def _get_optimal_meditation_time(self, current_time):
-        """获取最佳冥想时间"""
-        hour = current_time.hour
-        
-        if 5 <= hour <= 7:
-            return "日出时分 - 迎接新能量"
-        elif 11 <= hour <= 13:
-            return "正午时分 - 阳气最盛"
-        elif 17 <= hour <= 19:
-            return "日落时分 - 阴阳转换"
-        elif 23 <= hour or hour <= 1:
-            return "子时时分 - 静心内观"
-        else:
-            return "当下即是最佳时机"
-    
-    def _get_lunar_influence(self, current_time):
-        """获取月相影响"""
-        day = current_time.day
-        if day <= 7:
-            return "新月影响 - 适合种下意愿"
-        elif day <= 14:
-            return "上弦月影响 - 适合行动实践"
-        elif day <= 21:
-            return "满月影响 - 适合感恩庆祝"
-        else:
-            return "下弦月影响 - 适合释放清理"
-    
-    def _send_json_response(self, status_code, data):
-        """发送JSON响应"""
-        self.send_response(status_code)
-        self.send_header('Content-type', 'application/json; charset=utf-8')
-        self._send_cors_headers()
-        self.end_headers()
-        
-        json_str = json.dumps(data, ensure_ascii=False, indent=2)
-        self.wfile.write(json_str.encode('utf-8'))
-    
-    def _send_error_response(self, status_code, message):
-        """发送错误响应"""
-        error_response = {
-            'status': 'error', 
-            'message': message,
-            'timestamp': datetime.now().isoformat()
-        }
-        self._send_json_response(status_code, error_response)
-    
-    def _send_cors_headers(self):
-        """发送CORS头部"""
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
-        self.send_header('Access-Control-Max-Age', '86400')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.end_headers()
+    
+    def _calculate_cosmic_influence(self):
+        """计算宇宙影响因子"""
+        now = datetime.now()
+        
+        # 基于时间的多重因子
+        hour_factor = now.hour * 127
+        minute_factor = now.minute * 61
+        day_factor = now.day * 31
+        month_factor = now.month * 12
+        
+        # 星座影响（简化版黄道12宫）
+        zodiac_factor = (now.month * 30 + now.day) % 360
+        
+        # 五行影响（基于年份）
+        wuxing_factor = now.year % 5 * 73
+        
+        cosmic_influence = (
+            hour_factor + minute_factor + day_factor + 
+            month_factor + zodiac_factor + wuxing_factor
+        ) % 10000
+        
+        return cosmic_influence
+    
+    def _get_lunar_phase(self):
+        """获取月相信息（简化计算）"""
+        now = datetime.now()
+        # 简化的月相计算，基于日期的周期性
+        lunar_cycle = (now.day % 28) / 28.0
+        
+        if lunar_cycle < 0.125:
+            return {"phase": "新月", "energy": "新生", "influence": 0.2}
+        elif lunar_cycle < 0.375:
+            return {"phase": "上弦月", "energy": "成长", "influence": 0.6}
+        elif lunar_cycle < 0.625:
+            return {"phase": "满月", "energy": "圆满", "influence": 1.0}
+        elif lunar_cycle < 0.875:
+            return {"phase": "下弦月", "energy": "释放", "influence": 0.4}
+        else:
+            return {"phase": "残月", "energy": "净化", "influence": 0.1}
+    
+    def _generate_energy_signature(self):
+        """生成能量签名"""
+        now = datetime.now()
+        signature_base = f"{now.year}{now.month:02d}{now.day:02d}{now.hour:02d}"
+        
+        # 转换为能量数值
+        energy_sum = sum(int(digit) for digit in signature_base)
+        energy_signature = f"EN{energy_sum:04d}_{now.hour:02d}{now.minute:02d}"
+        
+        return energy_signature
+    
+    def _generate_spiritual_perturbation(self):
+        """生成灵修扰动数据"""
+        # 选择灵修图像
+        spiritual_images = [
+            {
+                'filename': 'lotus_meditation.jpg',
+                'description': '莲花冥想图，象征纯净与觉醒',
+                'element': '水',
+                'chakra': '顶轮',
+                'energy_type': '净化'
+            },
+            {
+                'filename': 'mountain_zen.jpg',
+                'description': '高山禅境图，代表稳定与高远',
+                'element': '土',
+                'chakra': '根轮',
+                'energy_type': '稳定'
+            },
+            {
+                'filename': 'ocean_waves.jpg',
+                'description': '海浪律动图，体现流动与变化',
+                'element': '水',
+                'chakra': '性轮',
+                'energy_type': '流动'
+            },
+            {
+                'filename': 'forest_tranquility.jpg',
+                'description': '森林宁静图，传递自然与和谐',
+                'element': '木',
+                'chakra': '心轮',
+                'energy_type': '和谐'
+            },
+            {
+                'filename': 'sunset_chakra.jpg',
+                'description': '夕阳脉轮图，展现能量与平衡',
+                'element': '火',
+                'chakra': '太阳轮',
+                'energy_type': '激活'
+            },
+            {
+                'filename': 'crystal_meditation.jpg',
+                'description': '水晶冥想图，聚焦意识与直觉',
+                'element': '金',
+                'chakra': '眉心轮',
+                'energy_type': '聚焦'
+            }
+        ]
+        
+        selected_image = random.choice(spiritual_images)
+        
+        # 生成扰动因子
+        chaos_factor = self._generate_chaos_factor()
+        harmony_factor = self._generate_harmony_factor()
+        cosmic_alignment = self._generate_cosmic_alignment()
+        
+        # 计算总体强度
+        overall_intensity = (chaos_factor + harmony_factor + cosmic_alignment) / 3
+        
+        # 生成能量读数
+        energy_reading = self._generate_energy_reading()
+        
+        # 生成灵修指引
+        spiritual_guidance = self._generate_spiritual_guidance(selected_image)
+        
+        return {
+            'spiritual_image': selected_image,
+            'perturbation_factors': {
+                'chaos_factor': round(chaos_factor, 3),
+                'harmony_factor': round(harmony_factor, 3),
+                'energy_level': self._categorize_energy_level(overall_intensity),
+                'cosmic_alignment': round(cosmic_alignment, 3),
+                'elemental_influence': selected_image['element'],
+                'chakra_resonance': selected_image['chakra']
+            },
+            'overall_intensity': round(overall_intensity, 3),
+            'energy_reading': energy_reading,
+            'spiritual_guidance': spiritual_guidance,
+            'manifestation_window': self._calculate_manifestation_window(),
+            'recommended_actions': self._generate_recommended_actions(selected_image)
+        }
+    
+    def _generate_chaos_factor(self):
+        """生成混沌因子"""
+        now = datetime.now()
+        
+        # 基于时间的混沌性
+        time_chaos = (now.microsecond % 1000) / 1000.0
+        
+        # 加入一些数学混沌
+        x = (now.hour * now.minute + now.second) / 100.0
+        mathematical_chaos = abs(math.sin(x) * math.cos(x * 1.7))
+        
+        # 组合混沌因子
+        chaos_factor = (time_chaos * 0.6 + mathematical_chaos * 0.4)
+        return min(0.9, max(0.1, chaos_factor))
+    
+    def _generate_harmony_factor(self):
+        """生成和谐因子"""
+        now = datetime.now()
+        
+        # 基于黄金比例的和谐性
+        golden_ratio = 1.618
+        harmony_base = (now.day + now.hour) / golden_ratio
+        harmony_factor = (harmony_base % 1) * 0.8 + 0.2
+        
+        return min(0.9, max(0.1, harmony_factor))
+    
+    def _generate_cosmic_alignment(self):
+        """生成宇宙调谐因子"""
+        now = datetime.now()
+        
+        # 模拟行星对齐影响
+        day_of_year = now.timetuple().tm_yday
+        cosmic_cycle = math.sin(2 * math.pi * day_of_year / 365.25)
+        
+        # 加入时间因子
+        time_factor = math.cos(2 * math.pi * now.hour / 24)
+        
+        # 组合宇宙因子
+        alignment = (cosmic_cycle + time_factor + 2) / 4  # 归一化到0-1
+        return min(1.0, max(0.0, alignment))
+    
+    def _categorize_energy_level(self, intensity):
+        """分类能量等级"""
+        if intensity >= 0.8:
+            return "极高"
+        elif intensity >= 0.6:
+            return "高"
+        elif intensity >= 0.4:
+            return "中等"
+        elif intensity >= 0.2:
+            return "低"
+        else:
+            return "极低"
+    
+    def _generate_energy_reading(self):
+        """生成能量读数"""
+        lunar_phase = self._get_lunar_phase()
+        lunar_influence = lunar_phase['influence']
+        
+        return {
+            'cosmic_energy': f"{random.randint(60, 95)}%",
+            'earth_energy': f"{random.randint(50, 90)}%",
+            'personal_energy': f"{random.randint(70, 100)}%",
+            'lunar_energy': f"{int(lunar_influence * 100)}%",
+            'elemental_energy': f"{random.randint(55, 85)}%"
+        }
+    
+    def _generate_spiritual_guidance(self, selected_image):
+        """生成灵修指引"""
+        mantras = {
+            '水': ['愿智慧如水般流淌', '净化心灵，洗涤尘埃', '流水不腐，心境常新'],
+            '土': ['稳如磐石，心安如山', '脚踏实地，仰望星空', '大地之母，滋养万物'],
+            '木': ['生机勃勃，向阳而生', '根深叶茂，心怀慈悲', '春风化雨，润物无声'],
+            '火': ['光明照耀，温暖人心', '热情如火，照亮前路', '凤凰涅槃，浴火重生'],
+            '金': ['明心见性，直指本心', '金刚不坏，智慧如镜', '洞察秋毫，明辨是非']
+        }
+        
+        element = selected_image['element']
+        selected_mantras = mantras.get(element, ['愿智慧照亮前路'])
+        
+        meditation_times = ['5分钟', '10分钟', '15分钟', '20分钟', '30分钟']
+        
+        return {
+            'meditation_time': random.choice(meditation_times),
+            'recommended_mantra': random.choice(selected_mantras),
+            'chakra_focus': selected_image['chakra'],
+            'breathing_pattern': self._generate_breathing_pattern(),
+            'visualization': f"专注于{selected_image['description']}的意象"
+        }
+    
+    def _generate_breathing_pattern(self):
+        """生成呼吸模式"""
+        patterns = [
+            "4-7-8呼吸法（吸气4秒，屏息7秒，呼气8秒）",
+            "方形呼吸法（吸气4秒，屏息4秒，呼气4秒，屏息4秒）",
+            "自然呼吸法（随呼吸的自然节奏，保持觉知）",
+            "深度腹式呼吸（缓慢深呼吸，专注腹部起伏）",
+            "交替鼻孔呼吸（左右鼻孔交替呼吸，平衡能量）"
+        ]
+        return random.choice(patterns)
+    
+    def _calculate_manifestation_window(self):
+        """计算显化时间窗口"""
+        lunar_phase = self._get_lunar_phase()
+        
+        if lunar_phase['phase'] == '新月':
+            return {'period': '新月后3-7天', 'quality': '新开始的最佳时机'}
+        elif lunar_phase['phase'] == '上弦月':
+            return {'period': '上弦月期间', 'quality': '积累能量，稳步前进'}
+        elif lunar_phase['phase'] == '满月':
+            return {'period': '满月前后3天', 'quality': '能量最强，显化最佳'}
+        elif lunar_phase['phase'] == '下弦月':
+            return {'period': '下弦月期间', 'quality': '释放阻碍，清理旧有'}
+        else:
+            return {'period': '残月期间', 'quality': '内省净化，准备新周期'}
+    
+    def _generate_recommended_actions(self, selected_image):
+        """生成推荐行动"""
+        element = selected_image['element']
+        energy_type = selected_image['energy_type']
+        
+        actions_by_element = {
+            '水': ['喝足够的水', '在水边冥想', '洗个舒缓的热水澡', '听流水声'],
+            '土': ['赤脚接触大地', '园艺活动', '山地徒步', '稳定作息'],
+            '木': ['拥抱树木', '森林浴', '种植绿植', '早起迎朝阳'],
+            '火': ['观看日出日落', '点燃蜡烛冥想', '适度运动', '激发创造力'],
+            '金': ['整理环境', '练习正念', '佩戴水晶', '专注呼吸']
+        }
+        
+        base_actions = actions_by_element.get(element, ['保持正念', '深呼吸'])
+        selected_actions = random.sample(base_actions, min(3, len(base_actions)))
+        
+        return {
+            'immediate_actions': selected_actions,
+            'daily_practice': f'每日进行{selected_image["chakra"]}能量冥想',
+            'weekly_ritual': f'每周进行一次{element}元素净化仪式',
+            'avoid_activities': ['负面思考', '过度焦虑', '熬夜晚睡']
+        }
+    
+    def _send_error_response(self, error_message):
+        """发送错误响应"""
+        self.send_response(500)
+        self.send_header('Content-type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        
+        error_response = {
+            'status': 'error',
+            'message': error_message,
+            'timestamp': datetime.now().isoformat(),
+            'error_code': 'SPIRITUAL_CALCULATION_FAILED'
+        }
+        
+        self.wfile.write(json.dumps(error_response, ensure_ascii=False).encode('utf-8'))

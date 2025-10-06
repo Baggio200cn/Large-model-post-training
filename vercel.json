@@ -1,83 +1,9 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "public/**/*",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "api/**/*.py",
-      "use": "@vercel/python"
-    }
-  ],
   "routes": [
-    {
-      "src": "/api/predict",
-      "dest": "/api/predict.py",
-      "methods": ["POST", "OPTIONS"]
-    },
-    {
-      "src": "/api/data-analysis",
-      "dest": "/api/data-analysis.py",
-      "methods": ["GET", "OPTIONS"]
-    },
-    {
-      "src": "/api/spiritual",
-      "dest": "/api/spiritual.py",
-      "methods": ["GET", "OPTIONS"]
-    },
-    {
-      "src": "/api/health",
-      "dest": "/api/health.py",
-      "methods": ["GET", "OPTIONS"]
-    },
-    {
-      "src": "/api/generate-tweet",
-      "dest": "/api/generate-tweet.py",
-      "methods": ["POST", "OPTIONS"]
-    },
-    {
-      "src": "/api/latest-results",
-      "dest": "/api/latest-results.py",
-      "methods": ["GET", "POST", "OPTIONS"]
-    },
-    {
-      "src": "/favicon.ico",
-      "dest": "/public/favicon.ico"
-    },
     {
       "src": "/(.*)",
       "dest": "/public/$1"
     }
-  ],
-  "functions": {
-    "api/**/*.py": {
-      "runtime": "python3.9",
-      "maxDuration": 30,
-      "memory": 1024
-    }
-  },
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type"
-        }
-      ]
-    }
-  ],
-  "env": {
-    "PYTHONPATH": "/var/task",
-    "PYTHON_VERSION": "3.9"
-  }
+  ]
 }

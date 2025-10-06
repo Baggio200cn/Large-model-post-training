@@ -10,8 +10,8 @@ class handler(BaseHTTPRequestHandler):
             'draw_date': '2025-10-06',  # 👈 更新日期
             'draw_time': '20:30:00',
             'winning_numbers': {
-                'front_zone': [5, 12, 18, 24, 33],  # 👈 更新前区号码
-                'back_zone': [6, 11]  # 👈 更新后区号码
+                'front_zone': [23，03，21，04，24],  # 👈 更新前区号码
+                'back_zone': [9，12]  # 👈 更新后区号码
             },
             'prize_info': {
                 'total_sales': '32,156万元',  # 👈 更新销售额
@@ -19,7 +19,7 @@ class handler(BaseHTTPRequestHandler):
                 'total_winners': '2,345,678注'  # 👈 更新中奖注数
             },
             'next_draw': {
-                'date': '2025-10-09',  # 👈 更新下期日期
+                'date': '2025-10-06',  # 👈 更新下期日期
                 'period': '25113',  # 👈 更新下期期数
                 'estimated_jackpot': '2,800万元'
             },

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI彩票分析实验室 - 探索随机性与AI的边界</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <h1>🎯 AI彩票分析实验室</h1>
+            <p class="subtitle">用有趣的方式学习AI技术 · 探索随机性与模式识别的边界</p>
+        </header>
+
+        <!-- 主内容卡片 -->
+        <div class="card main-card">
+            <!-- 加载状态 -->
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <h3>AI模型分析中...</h3>
+                <p>正在分析历史数据，生成预测结果</p>
+            </div>
+
+            <!-- 预测结果 -->
+            <div id="predictions" class="predictions-container" style="display: none;">
+                <!-- 红球推荐 -->
+                <div class="prediction-section">
+                    <h2 class="section-title">
+                        <span class="icon">🔴</span>
+                        红球推荐
+                        <span class="subtitle-small">基于历史频率分析</span>
+                    </h2>
+                    <div id="red-balls" class="balls-container"></div>
+                </div>
+
+                <!-- 蓝球推荐 -->
+                <div class="prediction-section">
+                    <h2 class="section-title">
+                        <span class="icon">🔵</span>
+                        蓝球推荐
+                        <span class="subtitle-small">统计学习结果</span>
+                    </h2>
+                    <div id="blue-balls" class="balls-container"></div>
+                </div>
+
+                <!-- 模型信息 -->
+                <div id="model-info" class="model-info"></div>
+
+                <!-- 免责声明 -->
+                <div class="disclaimer">
+                    <div class="disclaimer-header">
+                        <span class="icon">⚠️</span>
+                        <strong>重要提示</strong>
+                    </div>
+                    <p>本预测基于历史数据的统计分析，<strong>仅用于展示AI技术</strong>。</p>
+                    <p>彩票是<strong>完全随机</strong>的，中奖概率为 <code>1/21,425,712</code>，历史数据不能预测未来结果。</p>
+                    <p>请理性对待，<strong>不要依据此预测进行投注</strong>。本项目的价值在于学习AI技术，而非预测彩票。</p>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="actions">
+                    <button onclick="loadPrediction()" class="btn btn-primary">
+                        🔄 重新分析
+                    </button>
+                    <button onclick="showAbout()" class="btn btn-secondary">
+                        📖 了解更多
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 关于项目 -->
+        <div id="about" class="card about-card" style="display: none;">
+            <h2>📚 关于本项目</h2>
+            <div class="about-content">
+                <section>
+                    <h3>🎓 教育目的</h3>
+                    <p>本项目是一个AI科普教育项目，通过大乐透数据分析展示完整的数据科学流程，包括数据采集、特征工程、模型训练和API部署。</p>
+                </section>
+
+                <section>
+                    <h3>💡 核心技术</h3>
+                    <ul>
+                        <li><strong>数据采集</strong>：免费API + 自动化脚本</li>
+                        <li><strong>特征工程</strong>：统计分析 + 频率计算</li>
+                        <li><strong>模型训练</strong>：轻量级机器学习</li>
+                        <li><strong>API服务</strong>：Vercel Serverless</li>
+                        <li><strong>前端展示</strong>：响应式Web设计</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3>🤔 AI能预测彩票吗？</h3>
+                    <p><strong>不能。</strong>彩票是真随机事件，每次开奖都是独立的，历史数据不影响未来结果。</p>
+                    <p>本项目的价值在于：</p>
+                    <ul>
+                        <li>✅ 学习完整的数据科学项目流程</li>
+                        <li>✅ 理解AI的能力与边界</li>
+                        <li>✅ 掌握统计学和概率论知识</li>
+                        <li>✅ 培养批判性思维</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3>🔗 更多资源</h3>
+                    <p>
+                        <a href="https://github.com/your-repo" target="_blank" class="link">GitHub仓库</a> · 
+                        <a href="#" class="link">技术文档</a> · 
+                        <a href="#" class="link">科普文章</a>
+                    </p>
+                </section>
+            </div>
+            
+            <button onclick="hideAbout()" class="btn btn-secondary">返回</button>
+        </div>
+
+        <!-- 页脚 -->
+        <footer class="footer">
+            <p>© 2025 AI彩票分析实验室 · 仅供学习参考 · <a href="#" onclick="showAbout(); return false;">关于项目</a></p>
+            <p class="footer-note">记住：AI是工具，不是魔法 🎓</p>
+        </footer>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

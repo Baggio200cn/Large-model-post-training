@@ -32,6 +32,9 @@ jobs:
           pip list
           pip show python-dotenv || true
 
+      - name: Remove non-printable characters
+        run: sed -i 's/\xC2\xA0//g' scripts/collect_data_scraper.py
+
       - name: run-scraper
         run: |
           python scripts/collect_data_scraper.py

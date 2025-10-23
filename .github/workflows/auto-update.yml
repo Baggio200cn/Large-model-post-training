@@ -4,65 +4,67 @@ on:
   schedule:
     # 每天北京时间晚上9点运行（UTC+8 = 13:00 UTC）
     - cron: '0 13 * * *'
-  workflow_dispatch:  # 允许手动触发
+  workflow_dispatch:
 
 jobs:
   update-data:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: 检出代码
         uses: actions/checkout@v3
-      
-      - name: 设置Python环境
+
+      - name: 设置 Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
           cache: 'pip'
-      
+
       - name: 安装依赖
         run: |
-           python -m pip install --upgrade pip
-           pip install -r requirements.txt
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-      - name: 调试: 显示已安装包（可保留或删除）
+      - name: 调试: 显示已安装的 pip 包（可保留用于排错）
         run: |
-           python -V
-           pip --version
-           pip list
-           pip show python-dotenv || true
-      
+          python -V
+          pip --version
+          pip list
+          pip show python-dotenv || true
+
       - name: 采集最新数据（使用网页爬虫）
         run: |
           python scripts/collect_data_scraper.py
           echo "数据采集完成"
-      
+
       - name: 训练模型
         run: |
           python scripts/train_model.py
           echo "模型训练完成"
-      
-      - name: 复制模型到API目录
+
+      - name: 复制模型到 API 目录
         run: |
-          cp data/models/frequency_model.pkl api/frequency_model.pkl
-          echo "模型已更新到API目录"
-      
+          mkdir -p api || true
+          cp -f data/models/frequency_model.pkl api/frequency_model.pkl || true
+          echo "模型已更新到 API 目录（如存在）"
+
       - name: 检查是否有更新
         id: check_changes
         run: |
           git diff --quiet data/raw/history.json api/frequency_model.pkl || echo "has_changes=true" >> $GITHUB_OUTPUT
-      
+
       - name: 提交更新
         if: steps.check_changes.outputs.has_changes == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add data/raw/history.json api/frequency_model.pkl
-          git commit -m "🤖 自动更新: $(date +'%Y-%m-%d %H:%M:%S')"
-          git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
+          git add data/raw/history.json api/frequency_model.pkl || true
+          # 如果没有任何变化 git commit 会失败；使用 || true 防止中断
+          git commit -m "🤖 自动更新: $(date +'%Y-%m-%d %H:%M:%S')" || echo "no changes to commit"
+          git push || echo "git push failed (check permissions)"
+
       - name: 通知更新完成
         if: steps.check_changes.outputs.has_changes == 'true'
         run: |

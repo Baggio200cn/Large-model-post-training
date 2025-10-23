@@ -4,7 +4,7 @@ on:
   schedule:
     # 每天北京时间晚上9点运行（UTC+8 = 13:00 UTC）
     - cron: '0 13 * * *'
-  workflow_dispatch:
+  workflow_dispatch:  # 手动触发
 
 jobs:
   update-data:
@@ -61,8 +61,8 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add data/raw/history.json api/frequency_model.pkl || true
-          # 如果没有任何变化 git commit 会失败；使用 || true 防止中断
           git commit -m "🤖 自动更新: $(date +'%Y-%m-%d %H:%M:%S')" || echo "no changes to commit"
+          # 使用 https token push：actions/checkout 默认已经为 push 提供 GITHUB_TOKEN
           git push || echo "git push failed (check permissions)"
 
       - name: 通知更新完成

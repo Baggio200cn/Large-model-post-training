@@ -1,12 +1,22 @@
 /**
- * AI彩票分析实验室 - 主JavaScript文件
+ * AI彩票分析实验室 - 主JavaScript文件（智能API切换版）
  */
 
 // 全局状态
 let currentPrediction = null;
+let historyData = null;
 
 /**
- * 加载预测数据
+ * 页面加载时初始化
+ */
+window.addEventListener('DOMContentLoaded', () => {
+    console.log('页面加载完成，开始初始化...');
+    loadPrediction();
+    loadHistory();
+});
+
+/**
+ * 加载预测数据（智能切换）
  */
 async function loadPrediction() {
     console.log('开始加载预测数据...');
@@ -15,8 +25,14 @@ async function loadPrediction() {
     showLoading();
 
     try {
-        // 调用API
-        const response = await fetch('/api/predict');
+        // 优先尝试使用缓存的模型（快速）
+        let response = await fetch('/api/predict');
+        
+        // 如果缓存API失败，自动切换到实时API
+        if (!response.ok) {
+            console.log('缓存API失败，切换到实时API...');
+            response = await fetch('/api/predict-realtime');
+        }
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -26,13 +42,140 @@ async function loadPrediction() {
         
         if (data.success) {
             currentPrediction = data.data;
-            displayPrediction(data.data);
+            displayPrediction(data.data, data.realtime);
         } else {
             showError(data.error || '预测失败，请稍后重试');
         }
     } catch (error) {
         console.error('Error:', error);
         showError('网络错误或服务暂时不可用，请稍后重试');
+    }
+}
+
+/**
+ * 加载历史数据（智能切换）
+ */
+async function loadHistory() {
+    console.log('开始加载历史数据...');
+    
+    const loadingEl = document.getElementById('history-loading');
+    const contentEl = document.getElementById('history-content');
+    const errorEl = document.getElementById('history-error');
+    
+    // 显示加载状态
+    if (loadingEl) loadingEl.style.display = 'flex';
+    if (contentEl) contentEl.style.display = 'none';
+    if (errorEl) errorEl.style.display = 'none';
+
+    try {
+        // 优先尝试使用缓存的历史数据（快速）
+        let response = await fetch('/api/history?limit=10');
+        
+        // 如果缓存API失败，自动切换到实时API
+        if (!response.ok) {
+            console.log('缓存历史API失败，切换到实时API...');
+            response = await fetch('/api/history-realtime?limit=10');
+        }
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            historyData = data.data;
+            displayHistory(data.data, data.realtime);
+            
+            // 隐藏加载，显示内容
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (contentEl) contentEl.style.display = 'block';
+        } else {
+            throw new Error(data.error || '加载失败');
+        }
+    } catch (error) {
+        console.error('History Error:', error);
+        
+        // 显示错误
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (errorEl) errorEl.style.display = 'block';
+    }
+}
+
+/**
+ * 显示历史数据
+ */
+function displayHistory(data, isRealtime) {
+    const tbody = document.getElementById('history-tbody');
+    if (!tbody) return;
+    
+    // 清空现有内容
+    tbody.innerHTML = '';
+    
+    // 生成表格行
+    data.forEach((item, index) => {
+        const row = document.createElement('tr');
+        
+        // 期号
+        const periodCell = document.createElement('td');
+        periodCell.className = 'period-cell';
+        periodCell.textContent = item.period;
+        
+        // 日期
+        const dateCell = document.createElement('td');
+        dateCell.className = 'date-cell';
+        dateCell.textContent = item.date;
+        
+        // 开奖号码
+        const numbersCell = document.createElement('td');
+        numbersCell.className = 'numbers-cell';
+        
+        // 创建号码显示区域
+        const numbersContainer = document.createElement('div');
+        numbersContainer.className = 'history-balls-container';
+        
+        // 红球
+        item.red_balls.forEach(num => {
+            const ball = document.createElement('span');
+            ball.className = 'history-ball red';
+            ball.textContent = String(num).padStart(2, '0');
+            numbersContainer.appendChild(ball);
+        });
+        
+        // 分隔符
+        const separator = document.createElement('span');
+        separator.className = 'ball-separator';
+        separator.textContent = '+';
+        numbersContainer.appendChild(separator);
+        
+        // 蓝球
+        item.blue_balls.forEach(num => {
+            const ball = document.createElement('span');
+            ball.className = 'history-ball blue';
+            ball.textContent = String(num).padStart(2, '0');
+            numbersContainer.appendChild(ball);
+        });
+        
+        numbersCell.appendChild(numbersContainer);
+        
+        // 添加到行
+        row.appendChild(periodCell);
+        row.appendChild(dateCell);
+        row.appendChild(numbersCell);
+        
+        // 添加到表格
+        tbody.appendChild(row);
+        
+        // 添加动画延迟
+        row.style.animationDelay = `${index * 0.05}s`;
+    });
+    
+    // 如果是实时数据，显示标记
+    if (isRealtime) {
+        const title = document.querySelector('.history-card .section-title .subtitle-small');
+        if (title) {
+            title.innerHTML = '最近10期数据 <span style="color: #10b981;">● 实时</span>';
+        }
     }
 }
 
@@ -48,211 +191,120 @@ function showLoading() {
 }
 
 /**
- * 显示预测结果
- */
-function displayPrediction(data) {
-    console.log('显示预测结果:', data);
-    
-    // 显示红球
-    const redContainer = document.getElementById('red-balls');
-    if (redContainer) {
-        redContainer.innerHTML = '';
-        data.red.slice(0, 5).forEach(ball => {
-            const div = createBallElement(ball, 'red');
-            redContainer.appendChild(div);
-        });
-    }
-
-    // 显示蓝球
-    const blueContainer = document.getElementById('blue-balls');
-    if (blueContainer) {
-        blueContainer.innerHTML = '';
-        data.blue.slice(0, 2).forEach(ball => {
-            const div = createBallElement(ball, 'blue');
-            blueContainer.appendChild(div);
-        });
-    }
-
-    // 显示模型信息
-    const modelInfo = document.getElementById('model-info');
-    if (modelInfo && data.model_info) {
-        const trainedDate = new Date(data.model_info.trained_at).toLocaleString('zh-CN');
-        modelInfo.innerHTML = `
-            <strong>模型信息：</strong>
-            训练时间：${trainedDate} | 
-            分析窗口：最近${data.model_info.window_size}期 | 
-            方法：频率统计分析
-        `;
-    }
-
-    // 隐藏加载，显示结果
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('predictions').style.display = 'block';
-    document.getElementById('predictions').classList.add('fade-in');
-}
-
-/**
- * 创建彩球元素
- */
-function createBallElement(ball, type) {
-    const div = document.createElement('div');
-    div.className = `ball ${type}`;
-    div.innerHTML = `
-        <span class="number">${ball.number.toString().padStart(2, '0')}</span>
-        <span class="reason">${ball.reason}</span>
-        <span class="probability">${(ball.probability * 100).toFixed(2)}%</span>
-    `;
-    
-    // 添加点击效果
-    div.addEventListener('click', () => {
-        showBallDetail(ball, type);
-    });
-    
-    return div;
-}
-
-/**
- * 显示彩球详情（可选功能）
- */
-function showBallDetail(ball, type) {
-    const typeName = type === 'red' ? '红球' : '蓝球';
-    const message = `
-${typeName} ${ball.number.toString().padStart(2, '0')}
-
-分类：${ball.reason}
-出现概率：${(ball.probability * 100).toFixed(2)}%
-
-这个概率基于最近100期的历史数据统计。
-注意：历史频率不能预测未来结果。
-    `.trim();
-    
-    alert(message);
-}
-
-/**
- * 显示错误信息
+ * 显示错误
  */
 function showError(message) {
     const loading = document.getElementById('loading');
+    
     if (loading) {
         loading.innerHTML = `
-            <div style="color: #dc3545;">
-                <h3>❌ 出错了</h3>
+            <div class="error">
+                <span class="icon">❌</span>
+                <h3>出错了</h3>
                 <p>${message}</p>
-                <button onclick="loadPrediction()" class="btn btn-primary" style="margin-top: 20px;">
-                    重试
-                </button>
+                <button onclick="loadPrediction()" class="btn btn-primary">重试</button>
             </div>
         `;
     }
 }
 
 /**
+ * 显示预测结果
+ */
+function displayPrediction(data, isRealtime) {
+    const loading = document.getElementById('loading');
+    const predictions = document.getElementById('predictions');
+    
+    if (loading) loading.style.display = 'none';
+    if (predictions) predictions.style.display = 'block';
+    
+    // 显示红球
+    displayBalls('red-balls', data.red, 'red');
+    
+    // 显示蓝球
+    displayBalls('blue-balls', data.blue, 'blue');
+    
+    // 显示模型信息
+    displayModelInfo(data.model_info, isRealtime);
+}
+
+/**
+ * 显示号码球
+ */
+function displayBalls(containerId, balls, type) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    balls.forEach((ball, index) => {
+        const ballEl = document.createElement('div');
+        ballEl.className = `ball ${type}`;
+        ballEl.style.animationDelay = `${index * 0.1}s`;
+        
+        ballEl.innerHTML = `
+            <div class="ball-number">${String(ball.number).padStart(2, '0')}</div>
+            <div class="ball-info">
+                <div class="ball-probability">${(ball.probability * 100).toFixed(2)}%</div>
+                <div class="ball-reason">${ball.reason}</div>
+            </div>
+        `;
+        
+        container.appendChild(ballEl);
+    });
+}
+
+/**
+ * 显示模型信息
+ */
+function displayModelInfo(info, isRealtime) {
+    const container = document.getElementById('model-info');
+    if (!container) return;
+    
+    const trainingDate = info.trained_at === 'unknown' 
+        ? '未知' 
+        : new Date(info.trained_at).toLocaleString('zh-CN');
+    
+    const dataSource = isRealtime 
+        ? '<span style="color: #10b981; font-weight: 600;">● 实时API</span>' 
+        : '缓存模型';
+    
+    container.innerHTML = `
+        <div class="info-item">
+            <span class="label">模型信息：</span>
+            <span class="value">训练时间: ${trainingDate} | 分析窗口: 最近${info.window_size}期 | 方法: 频率统计分析 | 数据源: ${dataSource}</span>
+        </div>
+    `;
+}
+
+/**
  * 显示关于页面
  */
 function showAbout() {
-    document.getElementById('predictions').style.display = 'none';
-    document.getElementById('about').style.display = 'block';
-    document.getElementById('about').classList.add('fade-in');
+    const mainCard = document.querySelector('.main-card');
+    const historyCard = document.querySelector('.history-card');
+    const aboutCard = document.getElementById('about');
+    
+    if (mainCard) mainCard.style.display = 'none';
+    if (historyCard) historyCard.style.display = 'none';
+    if (aboutCard) aboutCard.style.display = 'block';
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 /**
  * 隐藏关于页面
  */
 function hideAbout() {
-    document.getElementById('about').style.display = 'none';
-    document.getElementById('predictions').style.display = 'block';
+    const mainCard = document.querySelector('.main-card');
+    const historyCard = document.querySelector('.history-card');
+    const aboutCard = document.getElementById('about');
+    
+    if (mainCard) mainCard.style.display = 'block';
+    if (historyCard) historyCard.style.display = 'block';
+    if (aboutCard) aboutCard.style.display = 'none';
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/**
- * 页面加载完成后自动执行
- */
-window.addEventListener('DOMContentLoaded', () => {
-    console.log('AI彩票分析实验室已启动');
-    
-    // 自动加载预测
-    loadPrediction();
-    
-    // 添加键盘快捷键
-    document.addEventListener('keydown', (e) => {
-        // 按R键重新加载
-        if (e.key === 'r' || e.key === 'R') {
-            loadPrediction();
-        }
-        // 按ESC键关闭关于页面
-        if (e.key === 'Escape') {
-            const about = document.getElementById('about');
-            if (about && about.style.display !== 'none') {
-                hideAbout();
-            }
-        }
-    });
-});
-
-/**
- * 工具函数：格式化日期
- */
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-}
-
-/**
- * 工具函数：下载预测结果（可选功能）
- */
-function downloadPrediction() {
-    if (!currentPrediction) {
-        alert('暂无预测数据');
-        return;
-    }
-    
-    const text = generatePredictionText(currentPrediction);
-    const blob = new Blob([text], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `prediction_${new Date().getTime()}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-}
-
-/**
- * 生成预测文本（用于下载）
- */
-function generatePredictionText(data) {
-    const lines = [];
-    lines.push('='.repeat(50));
-    lines.push('AI彩票分析实验室 - 预测结果');
-    lines.push('='.repeat(50));
-    lines.push('');
-    lines.push('红球推荐：');
-    data.red.slice(0, 5).forEach((ball, i) => {
-        lines.push(`  ${i + 1}. ${ball.number.toString().padStart(2, '0')} - ${ball.reason} (${(ball.probability * 100).toFixed(2)}%)`);
-    });
-    lines.push('');
-    lines.push('蓝球推荐：');
-    data.blue.slice(0, 2).forEach((ball, i) => {
-        lines.push(`  ${i + 1}. ${ball.number.toString().padStart(2, '0')} - ${ball.reason} (${(ball.probability * 100).toFixed(2)}%)`);
-    });
-    lines.push('');
-    lines.push('='.repeat(50));
-    lines.push('⚠️  免责声明');
-    lines.push('='.repeat(50));
-    lines.push('本预测仅基于历史数据统计，不能提高中奖概率。');
-    lines.push('彩票是随机事件，请理性购买。');
-    lines.push('');
-    
-    return lines.join('\n');
-}
-
-// 导出函数供HTML使用
-window.loadPrediction = loadPrediction;
-window.showAbout = showAbout;
-window.hideAbout = hideAbout;
-window.downloadPrediction = downloadPrediction;
+console.log('main.js 加载完成（智能API切换版）');

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI彩票分析实验室 - 探索随机性与AI的边界</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/history-styles.css">
 </head>
 <body>
     <div class="container">
@@ -71,45 +72,67 @@
             </div>
         </div>
 
+        <!-- 历史开奖记录 -->
+        <div class="card history-card">
+            <h2 class="section-title">
+                <span class="icon">📊</span>
+                历史开奖记录
+                <span class="subtitle-small">最近10期数据</span>
+            </h2>
+            
+            <!-- 加载状态 -->
+            <div id="history-loading" class="loading-small">
+                <div class="spinner-small"></div>
+                <span>加载中...</span>
+            </div>
+
+            <!-- 历史数据表格 -->
+            <div id="history-content" style="display: none;">
+                <div class="history-table-container">
+                    <table class="history-table" id="history-table">
+                        <thead>
+                            <tr>
+                                <th>期号</th>
+                                <th>开奖日期</th>
+                                <th>开奖号码</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-tbody">
+                            <!-- 动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 错误状态 -->
+            <div id="history-error" class="error-message" style="display: none;">
+                <span class="icon">❌</span>
+                <p>历史数据加载失败</p>
+                <button onclick="loadHistory()" class="btn btn-sm">重试</button>
+            </div>
+        </div>
+
         <!-- 关于项目 -->
         <div id="about" class="card about-card" style="display: none;">
             <h2>📚 关于本项目</h2>
             <div class="about-content">
                 <section>
                     <h3>🎓 教育目的</h3>
-                    <p>本项目是一个AI科普教育项目，通过大乐透数据分析展示完整的数据科学流程，包括数据采集、特征工程、模型训练和API部署。</p>
+                    <p>本项目是一个AI科普教育项目，通过大乐透数据分析展示完整的数据科学流程。</p>
                 </section>
 
                 <section>
                     <h3>💡 核心技术</h3>
                     <ul>
                         <li><strong>数据采集</strong>：免费API + 自动化脚本</li>
-                        <li><strong>特征工程</strong>：统计分析 + 频率计算</li>
-                        <li><strong>模型训练</strong>：轻量级机器学习</li>
+                        <li><strong>模型训练</strong>：统计分析 + 频率计算</li>
                         <li><strong>API服务</strong>：Vercel Serverless</li>
-                        <li><strong>前端展示</strong>：响应式Web设计</li>
                     </ul>
                 </section>
 
                 <section>
                     <h3>🤔 AI能预测彩票吗？</h3>
-                    <p><strong>不能。</strong>彩票是真随机事件，每次开奖都是独立的，历史数据不影响未来结果。</p>
-                    <p>本项目的价值在于：</p>
-                    <ul>
-                        <li>✅ 学习完整的数据科学项目流程</li>
-                        <li>✅ 理解AI的能力与边界</li>
-                        <li>✅ 掌握统计学和概率论知识</li>
-                        <li>✅ 培养批判性思维</li>
-                    </ul>
-                </section>
-
-                <section>
-                    <h3>🔗 更多资源</h3>
-                    <p>
-                        <a href="https://github.com/your-repo" target="_blank" class="link">GitHub仓库</a> · 
-                        <a href="#" class="link">技术文档</a> · 
-                        <a href="#" class="link">科普文章</a>
-                    </p>
+                    <p><strong>不能。</strong>彩票是真随机事件，历史数据不影响未来结果。</p>
                 </section>
             </div>
             
@@ -118,7 +141,7 @@
 
         <!-- 页脚 -->
         <footer class="footer">
-            <p>© 2025 AI彩票分析实验室 · 仅供学习参考 · <a href="#" onclick="showAbout(); return false;">关于项目</a></p>
+            <p>© 2025 AI彩票分析实验室 · 仅供学习参考</p>
             <p class="footer-note">记住：AI是工具，不是魔法 🎓</p>
         </footer>
     </div>

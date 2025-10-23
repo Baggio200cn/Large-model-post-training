@@ -1,0 +1,106 @@
+{
+  "red": [
+    {
+      "number": 9,
+      "probability": 0.050980392156862744,
+      "reason": "高频热号",
+      "rank": 1
+    },
+    {
+      "number": 2,
+      "probability": 0.043137254901960784,
+      "reason": "高频热号",
+      "rank": 2
+    },
+    {
+      "number": 22,
+      "probability": 0.0392156862745098,
+      "reason": "高频热号",
+      "rank": 3
+    },
+    {
+      "number": 8,
+      "probability": 0.0392156862745098,
+      "reason": "高频热号",
+      "rank": 4
+    },
+    {
+      "number": 14,
+      "probability": 0.0392156862745098,
+      "reason": "高频热号",
+      "rank": 5
+    },
+    {
+      "number": 26,
+      "probability": 0.03529411764705882,
+      "reason": "高频热号",
+      "rank": 6
+    },
+    {
+      "number": 15,
+      "probability": 0.03529411764705882,
+      "reason": "高频热号",
+      "rank": 7
+    },
+    {
+      "number": 12,
+      "probability": 0.03529411764705882,
+      "reason": "高频热号",
+      "rank": 8
+    },
+    {
+      "number": 18,
+      "probability": 0.03529411764705882,
+      "reason": "高频热号",
+      "rank": 9
+    },
+    {
+      "number": 34,
+      "probability": 0.03529411764705882,
+      "reason": "高频热号",
+      "rank": 10
+    }
+  ],
+  "blue": [
+    {
+      "number": 5,
+      "probability": 0.14705882352941177,
+      "reason": "高频热号",
+      "rank": 1
+    },
+    {
+      "number": 2,
+      "probability": 0.10784313725490197,
+      "reason": "高频热号",
+      "rank": 2
+    },
+    {
+      "number": 4,
+      "probability": 0.10784313725490197,
+      "reason": "高频热号",
+      "rank": 3
+    },
+    {
+      "number": 10,
+      "probability": 0.09803921568627451,
+      "reason": "中频温号",
+      "rank": 4
+    },
+    {
+      "number": 1,
+      "probability": 0.08823529411764706,
+      "reason": "中频温号",
+      "rank": 5
+    },
+    {
+      "number": 9,
+      "probability": 0.08823529411764706,
+      "reason": "中频温号",
+      "rank": 6
+    }
+  ],
+  "model_info": {
+    "window_size": 100,
+    "trained_at": "2025-10-23T14:13:28.398273"
+  }
+}

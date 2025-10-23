@@ -46,12 +46,12 @@ class LotteryDataFetcher:
             print(f"❌ 获取最新数据失败: {e}")
             return None
     
-    def get_history(self, size: int = 100) -> List[Dict]:
+    def get_history(self, size: int = 50) -> List[Dict]:
         """
         获取历史数据
         
         Args:
-            size: 获取的期数，默认100期
+            size: 获取的期数，默认50期（免费API限制）
         """
         url = f"{self.base_url}/history"
         params = {
@@ -82,21 +82,25 @@ class LotteryDataFetcher:
         
         原始格式示例：
         {
-            "openCode": "03,12,18,25,31+04,09",
-            "expect": "25001",
+            "openCode": "08,15,27,29,31+01+07",
+            "expect": "2025119",
             "name": "超级大乐透",
-            "time": "2025-01-01 20:30:00"
+            "time": "2025-10-20 21:25:00"
         }
         """
         open_code = raw_data['openCode']
-        red, blue = open_code.split('+')
+        
+        # 处理红球和蓝球（蓝球之间也用+分隔）
+        parts = open_code.split('+')
+        red_str = parts[0]
+        blue_str = ','.join(parts[1:])  # 把所有蓝球用逗号连接
         
         return {
             'period': raw_data['expect'],
             'date': raw_data['time'].split(' ')[0],
             'time': raw_data['time'],
-            'red_balls': sorted([int(n) for n in red.split(',')]),
-            'blue_balls': sorted([int(n) for n in blue.split(',')]),
+            'red_balls': sorted([int(n) for n in red_str.split(',')]),
+            'blue_balls': sorted([int(n) for n in blue_str.split(',')]),
             'original_code': open_code
         }
     
@@ -132,7 +136,7 @@ class LotteryDataFetcher:
         
         if not existing_data:
             print("📝 没有现有数据，将获取全部历史数据")
-            new_data = self.get_history(size=500)
+            new_data = self.get_history(size=50)  # 免费API限制50期
             self.save_to_file(new_data, filepath)
             return
         

@@ -51,7 +51,11 @@ jobs:
       - name: check-for-changes
         id: check_changes
         run: |
-          git diff --quiet data/raw/history.json api/frequency_model.pkl || echo "has_changes=true" >> $GITHUB_OUTPUT
+          if git diff --quiet data/raw/history.json api/frequency_model.pkl; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
 
       - name: commit-and-push
         if: steps.check_changes.outputs.has_changes == 'true'

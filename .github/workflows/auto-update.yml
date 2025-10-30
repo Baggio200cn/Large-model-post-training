@@ -2,9 +2,8 @@ name: Update Lottery Data
 
 on:
   schedule:
-    # 每周一、三、六 21:00 北京时间 = 13:00 UTC
     - cron: '0 13 * * 1,3,6'
-  workflow_dispatch:  # 允许手动触发
+  workflow_dispatch:
   push:
     branches: [ main ]
     paths:
@@ -45,7 +44,6 @@ jobs:
           echo ""
           echo "=== Running scraper ==="
           
-          # 优先使用混合策略脚本
           if [ -f "scripts/collect_data_hybrid.py" ]; then
             echo "✅ Using collect_data_hybrid.py"
             python scripts/collect_data_hybrid.py
@@ -71,7 +69,6 @@ jobs:
             fi
           done
           
-          # 查找并显示数据文件
           if find data -name "*.json" -o -name "*.csv" 2>/dev/null | grep -q .; then
             echo ""
             echo "✅ Data files found:"
@@ -104,7 +101,6 @@ jobs:
           echo "**Time**: $(date)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          # 统计数据文件
           CSV_COUNT=$(find data -name "*.csv" 2>/dev/null | wc -l)
           JSON_COUNT=$(find data -name "*.json" 2>/dev/null | wc -l)
           
@@ -112,7 +108,6 @@ jobs:
           echo "- CSV: $CSV_COUNT" >> $GITHUB_STEP_SUMMARY
           echo "- JSON: $JSON_COUNT" >> $GITHUB_STEP_SUMMARY
           
-          # 显示最新数据
           LATEST_JSON=$(find data -name "history.json" 2>/dev/null | head -1)
           if [ -f "$LATEST_JSON" ]; then
             RECORDS=$(jq '. | length' "$LATEST_JSON" 2>/dev/null || echo "N/A")
@@ -122,63 +117,3 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "---" >> $GITHUB_STEP_SUMMARY
           echo "✅ Workflow completed successfully" >> $GITHUB_STEP_SUMMARY
-```
-
-### 步骤 5: 提交更改
-
-滚动到页面底部：
-
-1. **Commit message** 输入：
-```
-   🔧 Fix: Update workflow to use hybrid scraper
-```
-
-2. **Extended description**（可选）：
-```
-   - 使用新的混合策略爬虫
-   - 添加多种fallback机制
-   - 改进错误处理和日志输出
-```
-
-3. 选择 **`Commit directly to the main branch`**
-
-4. 点击 **`Commit changes`**
-
----
-
-## ✅ 提交后验证
-
-### 步骤 6: 手动触发测试
-
-1. 点击顶部的 **`Actions`** 标签
-
-2. 在左侧找到 **`Update Lottery Data`** 工作流
-
-3. 点击右上角的 **`Run workflow`** 按钮
-
-4. 再次点击绿色的 **`Run workflow`** 按钮
-
-5. 等待几秒，页面会刷新，你会看到新的运行记录
-
-6. 点击运行记录查看详情
-
----
-
-## 📊 期望的结果
-
-如果一切正常，你应该看到：
-```
-✅ Set up job
-✅ Checkout repository
-✅ Setup Python
-✅ Install dependencies
-✅ Ensure data directory exists
-✅ Run data scraper
-   ✅ Using collect_data_hybrid.py
-   🎯 开始获取最近 100 期数据...
-   🕷️ 策略1: 爬取福彩官网
-   ...
-✅ Verify collected data
-✅ Commit and push if changed
-✅ Generate summary
-✅ Complete job

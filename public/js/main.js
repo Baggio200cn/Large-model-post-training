@@ -2,6 +2,7 @@
 // AI彩票分析实验室 - 主JavaScript文件
 // 更新日期: 2025-10-30
 // 功能: 动态时间显示 + API数据加载
+// 已修复: API端点 + 语法错误
 // ==============================================
 
 // 全局变量
@@ -32,8 +33,8 @@ async function loadPrediction() {
     predictionsEl.style.display = 'none';
     
     try {
-        // 调用预测API
-        const response = await fetch('/api/predict-realtime.py');
+        // 调用预测API (修改为已存在的文件)
+        const response = await fetch('/api/predict.py');
         
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
@@ -62,6 +63,7 @@ async function loadPrediction() {
 // ==============================================
 async function fetchAndUpdateTimestamp() {
     try {
+        // 尝试获取最新结果API中的时间戳
         const response = await fetch('/api/latest-results.py');
         const data = await response.json();
         
@@ -69,9 +71,13 @@ async function fetchAndUpdateTimestamp() {
             currentUpdateTime = data.updated_at;
             updateTimestampDisplay(currentUpdateTime);
             console.log('⏰ 时间戳更新:', currentUpdateTime);
+        } else {
+            // 如果没有时间戳，使用当前时间
+            throw new Error('No timestamp in API response');
         }
     } catch (error) {
-        console.error('⚠️ 时间戳获取失败:', error);
+        console.error('⚠️ 时间戳获取失败，使用当前时间:', error);
+        
         // 使用当前时间作为备用
         const now = new Date();
         currentUpdateTime = now.toLocaleString('zh-CN', {
@@ -82,6 +88,7 @@ async function fetchAndUpdateTimestamp() {
             minute: '2-digit',
             second: '2-digit'
         }).replace(/\//g, '-');
+        
         updateTimestampDisplay(currentUpdateTime);
     }
 }
@@ -101,7 +108,7 @@ function updateTimestampDisplay(timestamp) {
         if (modelInfoEl.innerHTML.trim()) {
             // 替换现有时间
             modelInfoEl.innerHTML = modelInfoEl.innerHTML.replace(
-                /训练时间:.*?(\<|\n|$)/,
+                /训练时间:.*?(<|\n|$)/,
                 `训练时间: ${timestamp}$1`
             );
             
@@ -184,7 +191,8 @@ async function loadHistory() {
     errorEl.style.display = 'none';
     
     try {
-        const response = await fetch('/api/history-realtime.py');
+        // 调用历史数据API (修改为已存在的文件)
+        const response = await fetch('/api/history.py');
         
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);

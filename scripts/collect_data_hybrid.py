@@ -64,16 +64,29 @@ class HybridLotteryScraper:
         return None
     
     def _generate_sample_data(self, count: int) -> List[Dict]:
-        """Generate sample data"""
+        """Generate sample data with correct current dates"""
         import random
         
         data = []
-        base_date = datetime(2024, 1, 1)
+        
+        # Use current date and work backwards
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=count*3)  # 3 days between draws
+        
+        # Calculate period numbers for current year
+        current_year = datetime.now().year
+        year_code = current_year - 2000  # 2025 -> 25
+        
+        # Estimate current period (approximately 3 draws per week, ~150 per year)
+        day_of_year = end_date.timetuple().tm_yday
+        estimated_period = int(day_of_year / 2.4)  # roughly 365/150
+        base_period = year_code * 1000 + max(1, estimated_period - count + 1)
         
         for i in range(count):
-            period = f"24{i+1:03d}"
-            draw_date = base_date + timedelta(days=i*2)
+            period = f"{base_period + i:05d}"
+            draw_date = start_date + timedelta(days=i*3)
             
+            # Generate random numbers
             red = sorted(random.sample(range(1, 36), 5))
             blue = sorted(random.sample(range(1, 13), 2))
             
@@ -87,7 +100,8 @@ class HybridLotteryScraper:
                 'source': 'simulated'
             })
         
-        return data
+        # Return with newest first
+        return list(reversed(data))
     
     def _parse_official_data(self, raw: Dict) -> Dict:
         """Parse official data"""
@@ -105,23 +119,34 @@ class HybridLotteryScraper:
         }
     
     def save_data(self, data: List[Dict]):
-        """Save data to files"""
+        """Save data to files with metadata"""
         if not data:
             print("No data to save")
             return
         
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         
-        # Save JSON
+        # Create output with metadata
+        output = {
+            'updated_at': datetime.now().isoformat(),
+            'updated_at_formatted': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'total_count': len(data),
+            'data_source': data[0].get('source', 'unknown'),
+            'latest_period': data[0]['period'],
+            'latest_date': data[0]['date'],
+            'data': data
+        }
+        
+        # Save JSON with metadata
         json_path = os.path.join(self.data_dir, 'history.json')
         with open(json_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+            json.dump(output, f, ensure_ascii=False, indent=2)
         print(f"JSON saved: {json_path}")
         
         # Save backup
         backup_path = os.path.join(self.data_dir, f'history_{timestamp}.json')
         with open(backup_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+            json.dump(output, f, ensure_ascii=False, indent=2)
         print(f"Backup saved: {backup_path}")
         
         # Save CSV
@@ -164,8 +189,18 @@ class HybridLotteryScraper:
         if not os.path.exists(json_path):
             return []
         
-        with open(json_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        try:
+            with open(json_path, 'r', encoding='utf-8') as f:
+                content = json.load(f)
+                # Handle both old format (array) and new format (object with metadata)
+                if isinstance(content, list):
+                    return content
+                elif isinstance(content, dict) and 'data' in content:
+                    return content['data']
+                else:
+                    return []
+        except:
+            return []
     
     def update_data(self, max_new: int = 50):
         """Update data incrementally"""

@@ -2,9 +2,8 @@ name: Update Lottery Data
 
 on:
   schedule:
-    # 每周一、三、六 UTC 13:00 (北京时间 21:00)
     - cron: '0 13 * * 1,3,6'
-  workflow_dispatch:  # 允许手动触发
+  workflow_dispatch:
 
 jobs:
   update-data:
@@ -31,7 +30,7 @@ jobs:
         run: |
           mkdir -p data/raw
       
-      - name: Run data collector (strict mode)
+      - name: Run data collector
         run: |
           python scripts/collect_real_data.py
       
@@ -40,15 +39,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add data/raw/
-          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: Auto-update lottery data" && git push)
-```
-
----
-
-## 🔧 修复步骤
-
-### 方法1: 在GitHub上直接编辑（推荐）
-
-1. **访问文件**
-```
-   https://github.com/Baggio200cn/Large-model-post-training/blob/main/.github/workflows/auto-update.yml
+          if ! git diff --quiet || ! git diff --staged --quiet; then
+            git commit -m "chore: Auto-update lottery data"
+            git push
+          fi

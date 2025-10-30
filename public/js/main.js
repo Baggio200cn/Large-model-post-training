@@ -1,13 +1,16 @@
 // ==============================================
 // AI彩票分析实验室 - 主JavaScript文件
-// 版本: 2.0 - 完整生产版
-// 更新日期: 2025-10-30
-// 功能: 完整的API集成 + 错误处理 + 动态时间
+// 版本: 3.0 - 包含重新分析功能
+// 更新日期: 2025-10-31
 // ==============================================
 
+// ==============================================
 // 全局变量
+// ==============================================
 let currentUpdateTime = '';
-let debugMode = true; // 开启调试模式
+let debugMode = true;
+let currentStrategy = 'balanced';
+let predictionHistory = [];
 
 // ==============================================
 // 工具函数：日志输出
@@ -39,15 +42,15 @@ document.addEventListener('DOMContentLoaded', function() {
     log('info', '页面加载完成，开始初始化...');
     
     // 自动加载预测和历史数据
-    loadPrediction();
+    loadPrediction(false);
     loadHistory();
 });
 
 // ==============================================
-// 1. 加载AI预测结果
+// 1. 加载AI预测结果（支持重新分析）
 // ==============================================
-async function loadPrediction() {
-    log('info', '开始加载预测数据...');
+async function loadPrediction(forceNew = false) {
+    log('info', `加载预测数据... (重新生成: ${forceNew})`);
     
     const loadingEl = document.getElementById('loading');
     const predictionsEl = document.getElementById('predictions');
@@ -62,9 +65,16 @@ async function loadPrediction() {
     predictionsEl.style.display = 'none';
     
     try {
+        // 生成随机种子（确保每次都不同）
+        const seed = Date.now() + Math.floor(Math.random() * 10000);
+        
+        // 构建API URL（带种子和策略参数）
+        const apiUrl = `/api/predict.py?seed=${seed}&strategy=${currentStrategy}`;
+        
+        log('debug', `请求API: ${apiUrl}`);
+        
         // 调用预测API
-        log('debug', '正在请求 /api/predict.py...');
-        const response = await fetch('/api/predict.py');
+        const response = await fetch(apiUrl);
         
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -82,11 +92,27 @@ async function loadPrediction() {
             throw new Error('号码数据必须是数组格式');
         }
         
+        // 如果是重新分析，添加到历史记录
+        if (forceNew && predictionHistory.length < 10) {
+            predictionHistory.push({
+                timestamp: new Date().toLocaleString('zh-CN'),
+                data: data
+            });
+        }
+        
         // 显示预测结果
         displayPrediction(data);
         
+        // 更新策略显示
+        updateStrategyDisplay();
+        
         // 获取并更新时间戳
         await fetchAndUpdateTimestamp();
+        
+        // 如果是重新分析，显示提示
+        if (forceNew) {
+            showReanalysisNotification();
+        }
         
     } catch (error) {
         log('error', '加载预测失败', error);
@@ -98,7 +124,139 @@ async function loadPrediction() {
 }
 
 // ==============================================
-// 2. 获取并更新时间戳
+// 2. 重新分析按钮处理
+// ==============================================
+function reanalyze() {
+    log('info', '用户点击重新分析按钮');
+    
+    // 显示策略选择器
+    showStrategySelector();
+    
+    // 执行新的预测
+    loadPrediction(true);
+}
+
+// ==============================================
+// 3. 策略选择器
+// ==============================================
+function showStrategySelector() {
+    // 如果已经存在选择器，直接返回
+    if (document.getElementById('strategy-selector')) {
+        return;
+    }
+    
+    const modelInfoEl = document.getElementById('model-info');
+    if (!modelInfoEl) return;
+    
+    // 创建策略选择HTML
+    const selectorHTML = `
+        <div id="strategy-selector" class="strategy-selector">
+            <h4>🎯 选择预测策略</h4>
+            <div class="strategy-options">
+                <button class="strategy-btn ${currentStrategy === 'conservative' ? 'active' : ''}" 
+                        onclick="changeStrategy('conservative')">
+                    🛡️ 保守型
+                    <small>侧重高频号码</small>
+                </button>
+                <button class="strategy-btn ${currentStrategy === 'balanced' ? 'active' : ''}" 
+                        onclick="changeStrategy('balanced')">
+                    ⚖️ 平衡型
+                    <small>高频+随机混合</small>
+                </button>
+                <button class="strategy-btn ${currentStrategy === 'aggressive' ? 'active' : ''}" 
+                        onclick="changeStrategy('aggressive')">
+                    🚀 激进型
+                    <small>探索冷门号码</small>
+                </button>
+                <button class="strategy-btn ${currentStrategy === 'random' ? 'active' : ''}" 
+                        onclick="changeStrategy('random')">
+                    🎲 随机型
+                    <small>完全随机探索</small>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    // 插入到模型信息前面
+    modelInfoEl.insertAdjacentHTML('beforebegin', selectorHTML);
+}
+
+// ==============================================
+// 4. 切换预测策略
+// ==============================================
+function changeStrategy(strategy) {
+    log('info', `切换策略: ${strategy}`);
+    
+    currentStrategy = strategy;
+    
+    // 更新按钮状态
+    const buttons = document.querySelectorAll('.strategy-btn');
+    buttons.forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    const activeBtn = Array.from(buttons).find(btn => 
+        btn.getAttribute('onclick').includes(strategy)
+    );
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
+    
+    // 立即生成新预测
+    loadPrediction(true);
+}
+
+// ==============================================
+// 5. 更新策略显示
+// ==============================================
+function updateStrategyDisplay() {
+    const modelInfoEl = document.getElementById('model-info');
+    if (!modelInfoEl) return;
+    
+    // 查找或创建策略显示元素
+    let strategyEl = modelInfoEl.querySelector('.current-strategy');
+    if (!strategyEl) {
+        strategyEl = document.createElement('p');
+        strategyEl.className = 'current-strategy';
+        modelInfoEl.insertBefore(strategyEl, modelInfoEl.firstChild);
+    }
+    
+    const strategyNames = {
+        'conservative': '🛡️ 保守型策略',
+        'balanced': '⚖️ 平衡型策略',
+        'aggressive': '🚀 激进型策略',
+        'random': '🎲 随机型策略'
+    };
+    
+    strategyEl.innerHTML = `<strong>当前策略:</strong> ${strategyNames[currentStrategy]}`;
+}
+
+// ==============================================
+// 6. 显示重新分析提示
+// ==============================================
+function showReanalysisNotification() {
+    // 创建提示元素
+    const notification = document.createElement('div');
+    notification.className = 'reanalysis-notification';
+    notification.innerHTML = `
+        <span class="icon">🔄</span>
+        <span class="text">已生成新的预测结果</span>
+    `;
+    
+    // 添加到页面
+    document.body.appendChild(notification);
+    
+    // 3秒后自动消失
+    setTimeout(() => {
+        notification.classList.add('fade-out');
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 3000);
+}
+
+// ==============================================
+// 7. 获取并更新时间戳
 // ==============================================
 async function fetchAndUpdateTimestamp() {
     log('info', '开始获取时间戳...');
@@ -141,7 +299,7 @@ async function fetchAndUpdateTimestamp() {
 }
 
 // ==============================================
-// 3. 更新页面上的时间显示
+// 8. 更新页面上的时间显示
 // ==============================================
 function updateTimestampDisplay(timestamp) {
     log('info', '更新时间显示', timestamp);
@@ -171,7 +329,7 @@ function updateTimestampDisplay(timestamp) {
 }
 
 // ==============================================
-// 4. 显示预测结果
+// 9. 显示预测结果
 // ==============================================
 function displayPrediction(data) {
     log('info', '开始渲染预测结果', data);
@@ -189,7 +347,7 @@ function displayPrediction(data) {
 }
 
 // ==============================================
-// 5. 显示号码球（通用函数）
+// 10. 显示号码球（通用函数）
 // ==============================================
 function displayBalls(containerId, balls, ballClass) {
     const container = document.getElementById(containerId);
@@ -218,7 +376,7 @@ function displayBalls(containerId, balls, ballClass) {
 }
 
 // ==============================================
-// 6. 显示模型信息
+// 11. 显示模型信息
 // ==============================================
 function displayModelInfo(data) {
     const modelInfoEl = document.getElementById('model-info');
@@ -258,7 +416,7 @@ function displayModelInfo(data) {
 }
 
 // ==============================================
-// 7. 加载历史开奖记录
+// 12. 加载历史开奖记录
 // ==============================================
 async function loadHistory() {
     log('info', '开始加载历史数据...');
@@ -312,7 +470,7 @@ async function loadHistory() {
 }
 
 // ==============================================
-// 8. 显示历史数据
+// 13. 显示历史数据
 // ==============================================
 function displayHistory(data) {
     log('info', '开始渲染历史数据', data);
@@ -360,7 +518,7 @@ function displayHistory(data) {
 }
 
 // ==============================================
-// 9. 格式化号码显示
+// 14. 格式化号码显示
 // ==============================================
 function formatNumbers(numbers, type) {
     if (!numbers || !Array.isArray(numbers) || numbers.length === 0) {
@@ -376,7 +534,80 @@ function formatNumbers(numbers, type) {
 }
 
 // ==============================================
-// 10. 显示关于页面
+// 15. 预测历史功能
+// ==============================================
+function showPredictionHistory() {
+    if (predictionHistory.length === 0) {
+        alert('暂无预测历史记录');
+        return;
+    }
+    
+    const historyHTML = `
+        <div class="modal-overlay" id="history-modal" onclick="closeHistoryModal()">
+            <div class="modal-content" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h2>📊 预测历史记录</h2>
+                    <button class="close-btn" onclick="closeHistoryModal()">×</button>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="history-list">
+                        ${predictionHistory.map((record, index) => `
+                            <div class="history-item">
+                                <div class="history-header">
+                                    <span class="history-index">#${index + 1}</span>
+                                    <span class="history-time">${record.timestamp}</span>
+                                </div>
+                                <div class="history-numbers">
+                                    <div class="red-numbers">
+                                        ${record.data.red_balls.map(n => 
+                                            `<span class="ball-small red-ball-small">${String(n).padStart(2, '0')}</span>`
+                                        ).join('')}
+                                    </div>
+                                    <span class="separator">+</span>
+                                    <div class="blue-numbers">
+                                        ${record.data.blue_balls.map(n => 
+                                            `<span class="ball-small blue-ball-small">${String(n).padStart(2, '0')}</span>`
+                                        ).join('')}
+                                    </div>
+                                </div>
+                                <div class="history-meta">
+                                    <span>策略: ${record.data.model}</span>
+                                    <span>置信度: ${(record.data.confidence * 100).toFixed(1)}%</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="clearPredictionHistory()">清空历史</button>
+                    <button class="btn btn-primary" onclick="closeHistoryModal()">关闭</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', historyHTML);
+}
+
+function closeHistoryModal() {
+    const modal = document.getElementById('history-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function clearPredictionHistory() {
+    if (confirm('确定要清空所有预测历史记录吗？')) {
+        predictionHistory = [];
+        closeHistoryModal();
+        log('info', '预测历史已清空');
+    }
+}
+
+// ==============================================
+// 16. 显示关于页面
 // ==============================================
 function showAbout() {
     const predictionsEl = document.getElementById('predictions');
@@ -390,7 +621,7 @@ function showAbout() {
 }
 
 // ==============================================
-// 11. 隐藏关于页面
+// 17. 隐藏关于页面
 // ==============================================
 function hideAbout() {
     const predictionsEl = document.getElementById('predictions');
@@ -404,7 +635,7 @@ function hideAbout() {
 }
 
 // ==============================================
-// 12. 错误显示
+// 18. 错误显示
 // ==============================================
 function showError(message) {
     log('error', '显示错误信息', message);
@@ -424,7 +655,7 @@ function showError(message) {
             <span style="font-size: 48px;">❌</span>
             <h3 style="color: #856404; margin: 20px 0;">加载失败</h3>
             <p style="color: #856404; margin-bottom: 20px;">${message}</p>
-            <button onclick="loadPrediction()" class="btn btn-primary" style="
+            <button onclick="loadPrediction(false)" class="btn btn-primary" style="
                 padding: 12px 30px;
                 background: #667eea;
                 color: white;
@@ -443,9 +674,62 @@ function showError(message) {
 // 导出函数（供HTML调用）
 // ==============================================
 window.loadPrediction = loadPrediction;
+window.reanalyze = reanalyze;
+window.changeStrategy = changeStrategy;
 window.loadHistory = loadHistory;
 window.showAbout = showAbout;
 window.hideAbout = hideAbout;
+window.showPredictionHistory = showPredictionHistory;
+window.closeHistoryModal = closeHistoryModal;
+window.clearPredictionHistory = clearPredictionHistory;
 
 // 初始化完成
-log('success', 'main.js 加载完成！版本: 2.0');
+log('success', 'main.js 加载完成！版本: 3.0 - 包含重新分析功能');
+```
+
+---
+
+## 🚀 最简单的方法：完整替换
+
+### Step 1: 打开 GitHub 编辑器
+
+访问：
+```
+https://github.com/Baggio200cn/Large-model-post-training/blob/main/public/js/main.js
+```
+
+### Step 2: 点击编辑按钮
+
+点击右上角的铅笔图标 ✏️
+
+### Step 3: 全选删除
+
+- 按 `Ctrl + A` (全选)
+- 按 `Delete` (删除)
+
+### Step 4: 粘贴新代码
+
+- 复制上面完整的 main.js 代码
+- 粘贴到编辑器中（`Ctrl + V`）
+
+### Step 5: 提交更改
+
+滚动到页面底部：
+- **Commit message**: `feat: Add complete reanalysis functionality with strategy selection`
+- 点击 **"Commit changes"** 按钮
+
+---
+
+## ✅ 验证步骤
+
+### 提交后：
+
+1. **Vercel 会自动部署**（等待 1-2 分钟）
+
+2. **访问您的网站**
+
+3. **按 F12** 打开控制台
+
+4. **应该看到**：
+```
+   ✅ [时间] main.js 加载完成！版本: 3.0 - 包含重新分析功能

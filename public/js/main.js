@@ -1,310 +1,294 @@
-/**
- * AI彩票分析实验室 - 主JavaScript文件（智能API切换版）
- */
+// ==============================================
+// AI彩票分析实验室 - 主JavaScript文件
+// 更新日期: 2025-10-30
+// 功能: 动态时间显示 + API数据加载
+// ==============================================
 
-// 全局状态
-let currentPrediction = null;
-let historyData = null;
+// 全局变量
+let currentUpdateTime = '';
 
-/**
- * 页面加载时初始化
- */
-window.addEventListener('DOMContentLoaded', () => {
-    console.log('页面加载完成，开始初始化...');
+// ==============================================
+// 页面加载时自动执行
+// ==============================================
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 页面加载完成，开始初始化...');
+    
+    // 自动加载预测和历史数据
     loadPrediction();
     loadHistory();
 });
 
-/**
- * 加载预测数据（智能切换）
- */
+// ==============================================
+// 1. 加载AI预测结果
+// ==============================================
 async function loadPrediction() {
-    console.log('开始加载预测数据...');
+    console.log('📊 开始加载预测数据...');
+    
+    const loadingEl = document.getElementById('loading');
+    const predictionsEl = document.getElementById('predictions');
     
     // 显示加载状态
-    showLoading();
-
+    loadingEl.style.display = 'block';
+    predictionsEl.style.display = 'none';
+    
     try {
-        // 优先尝试使用缓存的模型（快速）
-        let response = await fetch('/api/predict');
-        
-        // 如果缓存API失败，自动切换到实时API
-        if (!response.ok) {
-            console.log('缓存API失败，切换到实时API...');
-            response = await fetch('/api/predict-realtime');
-        }
+        // 调用预测API
+        const response = await fetch('/api/predict-realtime.py');
         
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP ${response.status}`);
         }
         
         const data = await response.json();
+        console.log('✅ 预测数据加载成功:', data);
         
-        if (data.success) {
-            currentPrediction = data.data;
-            displayPrediction(data.data, data.realtime);
-        } else {
-            showError(data.error || '预测失败，请稍后重试');
-        }
+        // 显示预测结果
+        displayPrediction(data);
+        
+        // 获取并更新时间戳
+        await fetchAndUpdateTimestamp();
+        
     } catch (error) {
-        console.error('Error:', error);
-        showError('网络错误或服务暂时不可用，请稍后重试');
+        console.error('❌ 加载预测失败:', error);
+        showError('预测加载失败: ' + error.message);
+    } finally {
+        loadingEl.style.display = 'none';
+        predictionsEl.style.display = 'block';
     }
 }
 
-/**
- * 加载历史数据（智能切换）
- */
+// ==============================================
+// 2. 获取并更新时间戳
+// ==============================================
+async function fetchAndUpdateTimestamp() {
+    try {
+        const response = await fetch('/api/latest-results.py');
+        const data = await response.json();
+        
+        if (data.status === 'success' && data.updated_at) {
+            currentUpdateTime = data.updated_at;
+            updateTimestampDisplay(currentUpdateTime);
+            console.log('⏰ 时间戳更新:', currentUpdateTime);
+        }
+    } catch (error) {
+        console.error('⚠️ 时间戳获取失败:', error);
+        // 使用当前时间作为备用
+        const now = new Date();
+        currentUpdateTime = now.toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        }).replace(/\//g, '-');
+        updateTimestampDisplay(currentUpdateTime);
+    }
+}
+
+// ==============================================
+// 3. 更新页面上的时间显示
+// ==============================================
+function updateTimestampDisplay(timestamp) {
+    // 查找模型信息区域
+    const modelInfoEl = document.getElementById('model-info');
+    
+    if (modelInfoEl) {
+        // 更新或添加时间信息
+        let timeText = `训练时间: ${timestamp}`;
+        
+        // 如果已经有内容，追加时间；否则直接设置
+        if (modelInfoEl.innerHTML.trim()) {
+            // 替换现有时间
+            modelInfoEl.innerHTML = modelInfoEl.innerHTML.replace(
+                /训练时间:.*?(\<|\n|$)/,
+                `训练时间: ${timestamp}$1`
+            );
+            
+            // 如果没有找到训练时间，添加到末尾
+            if (!modelInfoEl.innerHTML.includes('训练时间')) {
+                modelInfoEl.innerHTML += `<p class="update-time">⏰ ${timeText}</p>`;
+            }
+        } else {
+            modelInfoEl.innerHTML = `<p class="update-time">⏰ ${timeText}</p>`;
+        }
+    }
+    
+    console.log('✅ 时间显示已更新:', timestamp);
+}
+
+// ==============================================
+// 4. 显示预测结果
+// ==============================================
+function displayPrediction(data) {
+    console.log('🎨 开始渲染预测结果...');
+    
+    // 红球显示
+    const redBallsEl = document.getElementById('red-balls');
+    if (redBallsEl && data.red_balls) {
+        redBallsEl.innerHTML = data.red_balls
+            .map(num => `<div class="ball red-ball">${num.toString().padStart(2, '0')}</div>`)
+            .join('');
+    }
+    
+    // 蓝球显示
+    const blueBallsEl = document.getElementById('blue-balls');
+    if (blueBallsEl && data.blue_balls) {
+        blueBallsEl.innerHTML = data.blue_balls
+            .map(num => `<div class="ball blue-ball">${num.toString().padStart(2, '0')}</div>`)
+            .join('');
+    }
+    
+    // 模型信息显示
+    const modelInfoEl = document.getElementById('model-info');
+    if (modelInfoEl) {
+        let infoHTML = '<div class="model-details">';
+        
+        if (data.confidence) {
+            infoHTML += `<p>📊 <strong>置信度:</strong> ${(data.confidence * 100).toFixed(1)}%</p>`;
+        }
+        
+        if (data.model) {
+            infoHTML += `<p>🤖 <strong>模型:</strong> ${data.model}</p>`;
+        }
+        
+        if (data.based_on_count) {
+            infoHTML += `<p>📈 <strong>基于:</strong> ${data.based_on_count} 期历史数据</p>`;
+        }
+        
+        // 添加时间戳（如果已经获取到）
+        if (currentUpdateTime) {
+            infoHTML += `<p class="update-time">⏰ <strong>训练时间:</strong> ${currentUpdateTime}</p>`;
+        }
+        
+        infoHTML += '</div>';
+        modelInfoEl.innerHTML = infoHTML;
+    }
+    
+    console.log('✅ 预测结果渲染完成');
+}
+
+// ==============================================
+// 5. 加载历史开奖记录
+// ==============================================
 async function loadHistory() {
-    console.log('开始加载历史数据...');
+    console.log('📜 开始加载历史数据...');
     
     const loadingEl = document.getElementById('history-loading');
     const contentEl = document.getElementById('history-content');
     const errorEl = document.getElementById('history-error');
     
     // 显示加载状态
-    if (loadingEl) loadingEl.style.display = 'flex';
-    if (contentEl) contentEl.style.display = 'none';
-    if (errorEl) errorEl.style.display = 'none';
-
+    loadingEl.style.display = 'flex';
+    contentEl.style.display = 'none';
+    errorEl.style.display = 'none';
+    
     try {
-        // 优先尝试使用缓存的历史数据（快速）
-        let response = await fetch('/api/history?limit=10');
-        
-        // 如果缓存API失败，自动切换到实时API
-        if (!response.ok) {
-            console.log('缓存历史API失败，切换到实时API...');
-            response = await fetch('/api/history-realtime?limit=10');
-        }
+        const response = await fetch('/api/history-realtime.py');
         
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP ${response.status}`);
         }
         
         const data = await response.json();
+        console.log('✅ 历史数据加载成功:', data);
         
-        if (data.success) {
-            historyData = data.data;
-            displayHistory(data.data, data.realtime);
-            
-            // 隐藏加载，显示内容
-            if (loadingEl) loadingEl.style.display = 'none';
-            if (contentEl) contentEl.style.display = 'block';
-        } else {
-            throw new Error(data.error || '加载失败');
-        }
+        displayHistory(data);
+        
+        loadingEl.style.display = 'none';
+        contentEl.style.display = 'block';
+        
     } catch (error) {
-        console.error('History Error:', error);
-        
-        // 显示错误
-        if (loadingEl) loadingEl.style.display = 'none';
-        if (errorEl) errorEl.style.display = 'block';
+        console.error('❌ 历史数据加载失败:', error);
+        loadingEl.style.display = 'none';
+        errorEl.style.display = 'block';
     }
 }
 
-/**
- * 显示历史数据
- */
-function displayHistory(data, isRealtime) {
+// ==============================================
+// 6. 显示历史数据
+// ==============================================
+function displayHistory(data) {
     const tbody = document.getElementById('history-tbody');
-    if (!tbody) return;
     
-    // 清空现有内容
-    tbody.innerHTML = '';
-    
-    // 生成表格行
-    data.forEach((item, index) => {
-        const row = document.createElement('tr');
-        
-        // 期号
-        const periodCell = document.createElement('td');
-        periodCell.className = 'period-cell';
-        periodCell.textContent = item.period;
-        
-        // 日期
-        const dateCell = document.createElement('td');
-        dateCell.className = 'date-cell';
-        dateCell.textContent = item.date;
-        
-        // 开奖号码
-        const numbersCell = document.createElement('td');
-        numbersCell.className = 'numbers-cell';
-        
-        // 创建号码显示区域
-        const numbersContainer = document.createElement('div');
-        numbersContainer.className = 'history-balls-container';
-        
-        // 红球
-        item.red_balls.forEach(num => {
-            const ball = document.createElement('span');
-            ball.className = 'history-ball red';
-            ball.textContent = String(num).padStart(2, '0');
-            numbersContainer.appendChild(ball);
-        });
-        
-        // 分隔符
-        const separator = document.createElement('span');
-        separator.className = 'ball-separator';
-        separator.textContent = '+';
-        numbersContainer.appendChild(separator);
-        
-        // 蓝球
-        item.blue_balls.forEach(num => {
-            const ball = document.createElement('span');
-            ball.className = 'history-ball blue';
-            ball.textContent = String(num).padStart(2, '0');
-            numbersContainer.appendChild(ball);
-        });
-        
-        numbersCell.appendChild(numbersContainer);
-        
-        // 添加到行
-        row.appendChild(periodCell);
-        row.appendChild(dateCell);
-        row.appendChild(numbersCell);
-        
-        // 添加到表格
-        tbody.appendChild(row);
-        
-        // 添加动画延迟
-        row.style.animationDelay = `${index * 0.05}s`;
-    });
-    
-    // 如果是实时数据，显示标记
-    if (isRealtime) {
-        const title = document.querySelector('.history-card .section-title .subtitle-small');
-        if (title) {
-            title.innerHTML = '最近10期数据 <span style="color: #10b981;">● 实时</span>';
-        }
+    if (!tbody || !data.history || data.history.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3">暂无数据</td></tr>';
+        return;
     }
-}
-
-/**
- * 显示加载状态
- */
-function showLoading() {
-    const loading = document.getElementById('loading');
-    const predictions = document.getElementById('predictions');
     
-    if (loading) loading.style.display = 'block';
-    if (predictions) predictions.style.display = 'none';
+    // 只显示最近10期
+    const recentData = data.history.slice(0, 10);
+    
+    tbody.innerHTML = recentData.map(item => `
+        <tr>
+            <td class="period">${item.period || '---'}</td>
+            <td class="date">${item.date || '---'}</td>
+            <td class="numbers">
+                <div class="number-display">
+                    ${formatNumbers(item.red_balls, 'red')}
+                    <span class="separator">+</span>
+                    ${formatNumbers(item.blue_balls, 'blue')}
+                </div>
+            </td>
+        </tr>
+    `).join('');
+    
+    console.log('✅ 历史数据渲染完成');
 }
 
-/**
- * 显示错误
- */
+// ==============================================
+// 7. 格式化号码显示
+// ==============================================
+function formatNumbers(numbers, type) {
+    if (!numbers || !Array.isArray(numbers)) {
+        return '<span>--</span>';
+    }
+    
+    const className = type === 'red' ? 'red-ball-small' : 'blue-ball-small';
+    
+    return numbers
+        .map(num => `<span class="ball-small ${className}">${num.toString().padStart(2, '0')}</span>`)
+        .join(' ');
+}
+
+// ==============================================
+// 8. 显示关于页面
+// ==============================================
+function showAbout() {
+    document.getElementById('predictions').style.display = 'none';
+    document.getElementById('about').style.display = 'block';
+    console.log('📖 显示关于页面');
+}
+
+// ==============================================
+// 9. 隐藏关于页面
+// ==============================================
+function hideAbout() {
+    document.getElementById('about').style.display = 'none';
+    document.getElementById('predictions').style.display = 'block';
+    console.log('🔙 返回主页面');
+}
+
+// ==============================================
+// 10. 错误显示
+// ==============================================
 function showError(message) {
-    const loading = document.getElementById('loading');
-    
-    if (loading) {
-        loading.innerHTML = `
-            <div class="error">
-                <span class="icon">❌</span>
-                <h3>出错了</h3>
-                <p>${message}</p>
-                <button onclick="loadPrediction()" class="btn btn-primary">重试</button>
-            </div>
-        `;
-    }
-}
-
-/**
- * 显示预测结果
- */
-function displayPrediction(data, isRealtime) {
-    const loading = document.getElementById('loading');
-    const predictions = document.getElementById('predictions');
-    
-    if (loading) loading.style.display = 'none';
-    if (predictions) predictions.style.display = 'block';
-    
-    // 显示红球
-    displayBalls('red-balls', data.red, 'red');
-    
-    // 显示蓝球
-    displayBalls('blue-balls', data.blue, 'blue');
-    
-    // 显示模型信息
-    displayModelInfo(data.model_info, isRealtime);
-}
-
-/**
- * 显示号码球
- */
-function displayBalls(containerId, balls, type) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    
-    container.innerHTML = '';
-    
-    balls.forEach((ball, index) => {
-        const ballEl = document.createElement('div');
-        ballEl.className = `ball ${type}`;
-        ballEl.style.animationDelay = `${index * 0.1}s`;
-        
-        ballEl.innerHTML = `
-            <div class="ball-number">${String(ball.number).padStart(2, '0')}</div>
-            <div class="ball-info">
-                <div class="ball-probability">${(ball.probability * 100).toFixed(2)}%</div>
-                <div class="ball-reason">${ball.reason}</div>
-            </div>
-        `;
-        
-        container.appendChild(ballEl);
-    });
-}
-
-/**
- * 显示模型信息
- */
-function displayModelInfo(info, isRealtime) {
-    const container = document.getElementById('model-info');
-    if (!container) return;
-    
-    const trainingDate = info.trained_at === 'unknown' 
-        ? '未知' 
-        : new Date(info.trained_at).toLocaleString('zh-CN');
-    
-    const dataSource = isRealtime 
-        ? '<span style="color: #10b981; font-weight: 600;">● 实时API</span>' 
-        : '缓存模型';
-    
-    container.innerHTML = `
-        <div class="info-item">
-            <span class="label">模型信息：</span>
-            <span class="value">训练时间: ${trainingDate} | 分析窗口: 最近${info.window_size}期 | 方法: 频率统计分析 | 数据源: ${dataSource}</span>
+    const predictionsEl = document.getElementById('predictions');
+    predictionsEl.innerHTML = `
+        <div class="error-message">
+            <span class="icon">❌</span>
+            <p>${message}</p>
+            <button onclick="loadPrediction()" class="btn btn-primary">重试</button>
         </div>
     `;
 }
 
-/**
- * 显示关于页面
- */
-function showAbout() {
-    const mainCard = document.querySelector('.main-card');
-    const historyCard = document.querySelector('.history-card');
-    const aboutCard = document.getElementById('about');
-    
-    if (mainCard) mainCard.style.display = 'none';
-    if (historyCard) historyCard.style.display = 'none';
-    if (aboutCard) aboutCard.style.display = 'block';
-    
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
+// ==============================================
+// 导出函数（供HTML调用）
+// ==============================================
+window.loadPrediction = loadPrediction;
+window.loadHistory = loadHistory;
+window.showAbout = showAbout;
+window.hideAbout = hideAbout;
 
-/**
- * 隐藏关于页面
- */
-function hideAbout() {
-    const mainCard = document.querySelector('.main-card');
-    const historyCard = document.querySelector('.history-card');
-    const aboutCard = document.getElementById('about');
-    
-    if (mainCard) mainCard.style.display = 'block';
-    if (historyCard) historyCard.style.display = 'block';
-    if (aboutCard) aboutCard.style.display = 'none';
-    
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-console.log('main.js 加载完成（智能API切换版）');
+console.log('✅ main.js 加载完成！');

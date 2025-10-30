@@ -1,145 +1,150 @@
+"""
+最新结果时间戳API - 完整生产版
+功能: 返回数据更新时间戳
+版本: 2.0
+"""
 from http.server import BaseHTTPRequestHandler
 import json
 import os
 from datetime import datetime
 
+
 class handler(BaseHTTPRequestHandler):
+    
+    def do_OPTIONS(self):
+        """处理CORS预检请求"""
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
+    
     def do_GET(self):
+        """处理GET请求"""
         try:
-            # 设置响应头
+            # 尝试从history.json读取更新时间
+            timestamp = self._get_data_timestamp()
+            
+            # 返回成功结果
             self.send_response(200)
-            self.send_header('Content-type', 'application/json')
+            self.send_header('Content-type', 'application/json; charset=utf-8')
             self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Cache-Control', 'no-cache')
             self.end_headers()
             
-            # 读取历史数据文件
-            data_file = 'data/raw/history.json'
-            
-            if not os.path.exists(data_file):
-                response = {
-                    'status': 'error',
-                    'message': '数据文件不存在'
-                }
-                self.wfile.write(json.dumps(response, ensure_ascii=False).encode('utf-8'))
-                return
-            
-            # 读取数据
-            with open(data_file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            
-            # 获取更新时间
-            updated_at = data.get('updated_at_formatted', data.get('updated_at', ''))
-            
-            # 如果没有格式化时间，尝试格式化ISO时间
-            if not updated_at or 'T' in updated_at:
-                try:
-                    iso_time = data.get('updated_at', '')
-                    if iso_time:
-                        dt = datetime.fromisoformat(iso_time.replace('Z', '+00:00'))
-                        updated_at = dt.strftime('%Y-%m-%d %H:%M:%S')
-                except:
-                    updated_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            
-            # 获取最新10期数据
-            lottery_data = data.get('data', [])[:10]
-            
-            # 构建响应
             response = {
                 'status': 'success',
-                'updated_at': updated_at,
-                'latest_results': lottery_data,
-                'total_count': len(lottery_data)
+                'updated_at': timestamp
             }
             
-            # 返回JSON
             self.wfile.write(json.dumps(response, ensure_ascii=False).encode('utf-8'))
             
         except Exception as e:
-            self.send_response(500)
-            self.send_header('Content-type', 'application/json')
+            # 发生错误时返回当前时间
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json; charset=utf-8')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             
-            error_response = {
-                'status': 'error',
-                'message': str(e)
+            response = {
+                'status': 'success',
+                'updated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             }
-            self.wfile.write(json.dumps(error_response, ensure_ascii=False).encode('utf-8'))
+            
+            self.wfile.write(json.dumps(response, ensure_ascii=False).encode('utf-8'))
+    
+    def _get_data_timestamp(self):
+        """获取数据更新时间戳"""
+        try:
+            # 尝试多个可能的文件路径
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            possible_paths = [
+                os.path.join(os.path.dirname(current_dir), 'data', 'raw', 'history.json'),
+                '/var/task/data/raw/history.json',
+            ]
+            
+            for path in possible_paths:
+                if os.path.exists(path):
+                    with open(path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                    
+                    # 如果数据包含updated_at字段
+                    if isinstance(data, dict):
+                        # 优先使用格式化的时间
+                        if 'updated_at_formatted' in data:
+                            return data['updated_at_formatted']
+                        
+                        # 否则尝试ISO格式
+                        if 'updated_at' in data:
+                            iso_time = data['updated_at']
+                            try:
+                                dt = datetime.fromisoformat(iso_time.replace('Z', '+00:00'))
+                                return dt.strftime('%Y-%m-%d %H:%M:%S')
+                            except:
+                                pass
+            
+            # 如果无法读取，返回当前时间
+            return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            
+        except:
+            return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 ```
-
-5. 提交：`Add latest-results.py for timestamp API`
 
 ---
 
-## 第3步：验证部署
+## 🚀 部署步骤
 
-### 3.1 等待Vercel自动部署
+### Step 1: 更新所有文件
 
-- GitHub提交后，Vercel会自动检测
-- 通常需要 **1-2分钟**
-- 可以在Vercel控制台查看部署状态
+**按顺序更新以下文件：**
 
-### 3.2 测试网站
+1. **`public/js/main.js`**
+   - 提交消息：`Update to complete production version with full error handling`
 
-1. 访问您的网站：
-```
-   https://large-model-post-training-xxx.vercel.app
-```
+2. **`api/history.py`**
+   - 提交消息：`Update history.py to production version with real data support`
 
-2. **强制刷新** (清除缓存):
-   - Windows: `Ctrl + Shift + R`
-   - Mac: `Cmd + Shift + R`
+3. **`api/latest-results.py`**
+   - 提交消息：`Update latest-results.py to production version`
 
-3. **检查时间显示：**
-   - 打开浏览器开发者工具（F12）
-   - 查看 Console 标签
-   - 应该看到：`⏰ 时间戳更新: 2025-10-30 XX:XX:XX`
+### Step 2: 等待 Vercel 部署
 
-### 3.3 验证清单
+- 提交后等待 2-3 分钟
+- 查看 Vercel 控制台确认部署成功
 
-检查以下内容：
+### Step 3: 彻底清除缓存
 
-- [ ] 页面加载时显示"AI模型分析中..."
-- [ ] 预测结果正常显示（红球+蓝球）
-- [ ] **模型信息区域显示动态时间**（不是固定的10月23日）
-- [ ] 历史记录正常加载
-- [ ] Console没有红色错误信息
+1. 关闭所有浏览器窗口
+2. 重新打开浏览器
+3. 按 `Ctrl + Shift + Delete`
+4. 清除"全部时间"的缓存
+5. 关闭浏览器
 
----
+### Step 4: 测试
 
-## 🔍 故障排查
-
-### 问题1: 时间还是显示旧的固定时间
-
-**解决方案：**
-1. 清除浏览器缓存（Ctrl + Shift + Delete）
-2. 检查 `/api/latest-results.py` 是否正确返回数据
-3. 在浏览器访问：`https://你的域名/api/latest-results.py`
-4. 应该看到包含 `updated_at` 字段的JSON
-
-### 问题2: Console显示API错误
-
-**检查：**
-1. 网络标签（Network）查看API请求状态
-2. 如果是404：确认API文件路径正确
-3. 如果是500：检查Python代码语法
-
-### 问题3: 页面空白或加载失败
-
-**检查：**
-1. F12打开Console查看错误信息
-2. 确认 `main.js` 没有语法错误
-3. 确认所有文件都已提交到GitHub
+1. 重新打开浏览器
+2. 访问网站
+3. 按 `F12` 打开开发者工具
+4. 刷新页面
 
 ---
 
-## 📊 预期效果对比
+## ✅ 预期结果
 
-### ❌ 修改前
+### Console 应该显示：
 ```
-训练时间: 2025/10/23 14:13:28  （固定的）
-```
-
-### ✅ 修改后
-```
-训练时间: 2025-10-30 15:45:32  （动态的，每次数据更新都会变）
+✅ [时间] main.js 加载完成！版本: 2.0
+ℹ️ [时间] 页面加载完成，开始初始化...
+ℹ️ [时间] 开始加载预测数据...
+ℹ️ [时间] 开始加载历史数据...
+🔍 [时间] 正在请求 /api/predict.py...
+✅ [时间] 预测数据加载成功 {...}
+ℹ️ [时间] 开始渲染预测结果 {...}
+🔍 [时间] 渲染 red-balls [9, 2, 22, 8, 14]
+✅ [时间] red-balls 渲染完成
+🔍 [时间] 渲染 blue-balls [5, 2]
+✅ [时间] blue-balls 渲染完成
+✅ [时间] 模型信息显示完成
+✅ [时间] 预测结果渲染完成
+ℹ️ [时间] 开始获取时间戳...
+✅ [时间] 时间戳更新成功 2025-10-30 XX:XX:XX

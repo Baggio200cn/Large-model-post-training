@@ -2,55 +2,35 @@ name: Update Lottery Data
 
 on:
   schedule:
+    # 每周一、三、六 UTC 13:00 (北京时间 21:00)
     - cron: '0 13 * * 1,3,6'
-  workflow_dispatch:
-  push:
-    branches: [ main ]
-    paths:
-      - 'scripts/*.py'
+  workflow_dispatch:  # 允许手动触发
 
 jobs:
   update-data:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - name: Checkout code
+        uses: actions/checkout@v3
       
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       
       - name: Install dependencies
         run: |
-          pip install requests pandas beautifulsoup4 lxml python-dotenv
+          python -m pip install --upgrade pip
+          pip install requests
       
-      - name: Create directories
-        run: mkdir -p data/raw data/processed
-      
-      - name: Run scraper
+      - name: Run data collector
         run: |
-          if [ -f "scripts/collect_data_hybrid.py" ]; then
-            python scripts/collect_data_hybrid.py
-          elif [ -f "scripts/collect_data.py" ]; then
-            python scripts/collect_data.py
-          else
-            python scripts/scraper_minimal.py
-          fi
+          python scripts/collect_real_data.py
       
-      - name: Commit and push changes
+      - name: Commit and push data
         run: |
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git config user.name "github-actions[bot]"
-          git add data/
-          
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "🤖 Auto-update: Lottery data $(date +'%Y-%m-%d %H:%M')"
-            git pull --rebase origin main || true
-            git push origin main || git push --force-with-lease origin main
-          fi
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data/raw/
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: Auto-update lottery data [$(date +'%Y-%m-%d %H:%M:%S')]" && git push)

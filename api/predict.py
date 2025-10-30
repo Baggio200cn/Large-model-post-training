@@ -1,5 +1,5 @@
 """
-预测API - 零外部依赖版本
+预测API - 修复版（匹配前端格式）
 """
 
 from http.server import BaseHTTPRequestHandler
@@ -49,16 +49,24 @@ class handler(BaseHTTPRequestHandler):
             # 生成预测
             predictions = self._make_prediction(model)
             
-            # 返回成功结果
+            # 返回成功结果 - 修改为前端期望的格式
             self.send_response(200)
             self.send_header('Content-type', 'application/json; charset=utf-8')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             
+            # 提取红球和蓝球的号码（只要号码，不要概率和原因）
+            red_balls = [item['number'] for item in predictions['red'][:5]]  # 取前5个
+            blue_balls = [item['number'] for item in predictions['blue'][:2]]  # 取前2个
+            
+            # 返回前端期望的格式
             response = {
-                'success': True,
-                'data': predictions,
-                'disclaimer': '⚠️ 本预测仅供学习参考，不构成购彩建议。彩票是随机事件，请理性对待。'
+                'red_balls': red_balls,
+                'blue_balls': blue_balls,
+                'confidence': 0.75,  # 置信度
+                'model': '频率统计模型',
+                'based_on_count': model.get('window_size', 50),
+                'disclaimer': '⚠️ 本预测仅供学习参考，不构成购彩建议。'
             }
             
             self.wfile.write(json.dumps(response, ensure_ascii=False).encode('utf-8'))

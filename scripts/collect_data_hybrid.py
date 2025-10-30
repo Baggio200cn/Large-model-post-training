@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-AI彩票分析实验室 - 混合策略数据爬虫
-策略1: 使用官方API - 需要密钥
-策略2: 直接爬取官网 - 免费但可能失效
-策略3: 生成模拟数据 - 兜底方案
+AI Lottery Analysis Lab - Hybrid Data Scraper
+Strategy 1: Official website scraping
+Strategy 2: Generate sample data as fallback
 """
 
 import os
@@ -14,7 +13,7 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 
 class HybridLotteryScraper:
-    """混合策略大乐透数据爬虫"""
+    """Hybrid lottery data scraper"""
     
     def __init__(self):
         self.data_dir = 'data/raw'
@@ -27,25 +26,25 @@ class HybridLotteryScraper:
         }
     
     def fetch_data(self, count: int = 100) -> List[Dict]:
-        """获取数据 - 尝试多种策略"""
-        print(f"🎯 开始获取最近 {count} 期数据...\n")
+        """Fetch data using multiple strategies"""
+        print(f"Starting to fetch {count} periods of data...")
         
-        # 策略1: 爬取福彩官网
-        print("🕷️  策略1: 爬取福彩官网")
+        # Strategy 1: Official site
+        print("Strategy 1: Official website")
         data = self._fetch_from_official_site(count)
         if data:
-            print(f"✅ 官网爬取成功: {len(data)} 期")
+            print(f"Success: {len(data)} periods")
             return data
-        print("❌ 官网爬取失败，使用模拟数据\n")
+        print("Failed, using sample data")
         
-        # 策略2: 生成模拟数据
-        print("🎲 策略2: 生成模拟数据（用于测试）")
+        # Strategy 2: Generate sample data
+        print("Strategy 2: Generate sample data")
         data = self._generate_sample_data(count)
-        print(f"✅ 生成模拟数据: {len(data)} 期")
+        print(f"Generated {len(data)} periods")
         return data
     
     def _fetch_from_official_site(self, count: int) -> Optional[List[Dict]]:
-        """从官网爬取"""
+        """Fetch from official site"""
         try:
             url = "http://www.cwl.gov.cn/cwl_admin/front/cwlkj/search/kjxx/findDrawNotice"
             response = requests.post(
@@ -65,7 +64,7 @@ class HybridLotteryScraper:
         return None
     
     def _generate_sample_data(self, count: int) -> List[Dict]:
-        """生成模拟数据"""
+        """Generate sample data"""
         import random
         
         data = []
@@ -91,7 +90,7 @@ class HybridLotteryScraper:
         return data
     
     def _parse_official_data(self, raw: Dict) -> Dict:
-        """解析官网数据"""
+        """Parse official data"""
         red_str = raw.get('red', '')
         blue_str = raw.get('blue', '')
         
@@ -106,32 +105,32 @@ class HybridLotteryScraper:
         }
     
     def save_data(self, data: List[Dict]):
-        """保存数据"""
+        """Save data to files"""
         if not data:
-            print("⚠️  没有数据需要保存")
+            print("No data to save")
             return
         
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         
-        # 保存JSON
+        # Save JSON
         json_path = os.path.join(self.data_dir, 'history.json')
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
-        print(f"💾 JSON已保存: {json_path}")
+        print(f"JSON saved: {json_path}")
         
-        # 保存备份
+        # Save backup
         backup_path = os.path.join(self.data_dir, f'history_{timestamp}.json')
         with open(backup_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
-        print(f"💾 备份已保存: {backup_path}")
+        print(f"Backup saved: {backup_path}")
         
-        # 保存CSV格式
+        # Save CSV
         self._save_csv(data)
         
-        print(f"📊 共保存 {len(data)} 期数据")
+        print(f"Total: {len(data)} periods saved")
     
     def _save_csv(self, data: List[Dict]):
-        """保存为CSV格式"""
+        """Save as CSV"""
         try:
             import pandas as pd
             
@@ -154,13 +153,13 @@ class HybridLotteryScraper:
             df = pd.DataFrame(rows)
             csv_path = os.path.join(self.data_dir, 'lottery_history.csv')
             df.to_csv(csv_path, index=False, encoding='utf-8')
-            print(f"💾 CSV已保存: {csv_path}")
+            print(f"CSV saved: {csv_path}")
             
         except ImportError:
-            print("ℹ️  pandas未安装，跳过CSV保存")
+            print("pandas not installed, skipping CSV")
     
     def load_data(self) -> List[Dict]:
-        """加载现有数据"""
+        """Load existing data"""
         json_path = os.path.join(self.data_dir, 'history.json')
         if not os.path.exists(json_path):
             return []
@@ -169,27 +168,27 @@ class HybridLotteryScraper:
             return json.load(f)
     
     def update_data(self, max_new: int = 50):
-        """增量更新数据"""
+        """Update data incrementally"""
         existing = self.load_data()
         
         if not existing:
-            print("📝 首次运行，获取历史数据\n")
+            print("First run, fetching all data")
             new_data = self.fetch_data(count=100)
             self.save_data(new_data)
             self._print_stats(new_data)
             return
         
-        print(f"📚 已有 {len(existing)} 期数据")
-        print(f"   最新期号: {existing[0]['period']}\n")
+        print(f"Existing: {len(existing)} periods")
+        print(f"Latest: {existing[0]['period']}")
         
         fresh_data = self.fetch_data(count=max_new)
         
         if not fresh_data:
-            print("❌ 无法获取新数据")
+            print("Failed to fetch new data")
             return
         
         if fresh_data[0]['period'] == existing[0]['period']:
-            print(f"✅ 数据已是最新（最新期: {existing[0]['period']}）")
+            print(f"Already up to date: {existing[0]['period']}")
             return
         
         existing_periods = {d['period'] for d in existing}
@@ -198,68 +197,40 @@ class HybridLotteryScraper:
         if new_items:
             updated_data = new_items + existing
             self.save_data(updated_data)
-            print(f"\n✅ 新增 {len(new_items)} 期数据")
+            print(f"Added {len(new_items)} new periods")
             self._print_stats(updated_data)
         else:
-            print("ℹ️  无新数据")
+            print("No new data")
     
     def _print_stats(self, data: List[Dict]):
-        """打印统计信息"""
+        """Print statistics"""
         if not data:
             return
         
         print("\n" + "="*60)
-        print("📊 数据统计")
+        print("Data Statistics")
         print("="*60)
-        print(f"总期数: {len(data)}")
-        print(f"期号范围: {data[-1]['period']} ~ {data[0]['period']}")
-        print(f"日期范围: {data[-1]['date']} ~ {data[0]['date']}")
-        print(f"\n最新一期:")
-        print(f"  期号: {data[0]['period']}")
-        print(f"  日期: {data[0]['date']}")
-        print(f"  号码: {data[0]['original_code']}")
-        print(f"  来源: {data[0].get('source', 'unknown')}")
+        print(f"Total periods: {len(data)}")
+        print(f"Period range: {data[-1]['period']} ~ {data[0]['period']}")
+        print(f"Date range: {data[-1]['date']} ~ {data[0]['date']}")
+        print(f"\nLatest:")
+        print(f"  Period: {data[0]['period']}")
+        print(f"  Date: {data[0]['date']}")
+        print(f"  Numbers: {data[0]['original_code']}")
+        print(f"  Source: {data[0].get('source', 'unknown')}")
         print("="*60 + "\n")
 
 def main():
-    """主函数"""
+    """Main function"""
     print("\n" + "="*60)
-    print("🎯 AI彩票分析实验室 - 数据采集工具")
+    print("AI Lottery Analysis Lab - Data Collection")
     print("="*60)
-    print("⚠️  教育项目 - 仅用于学习数据科学")
-    print("="*60 + "\n")
+    print("Educational project only\n")
     
     scraper = HybridLotteryScraper()
     scraper.update_data(max_new=50)
     
-    print("✅ 数据采集完成！\n")
+    print("Complete!\n")
 
 if __name__ == '__main__':
     main()
-```
-
-### 步骤 6: 提交文件
-
-滚动到页面底部，你会看到 "Commit new file" 部分：
-
-1. **Commit message** 输入：
-```
-   ✨ Add hybrid data scraper with fallback strategies
-```
-
-2. **Extended description**（可选）输入：
-```
-   - 整合多种数据采集策略
-   - 官网爬取 + 模拟数据备份
-   - 支持CSV和JSON格式输出
-```
-
-3. 点击绿色按钮 **`Commit new file`**
-
----
-
-## ✅ 完成后验证
-
-创建成功后，你会看到文件出现在：
-```
-https://github.com/Baggio200cn/Large-model-post-training/blob/main/scripts/collect_data_hybrid.py

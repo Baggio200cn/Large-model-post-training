@@ -2,7 +2,6 @@ from http.server import BaseHTTPRequestHandler
 import json
 from datetime import datetime
 
-# 内联数据
 LOTTERY_DATA = [
   {
     "period": "25123",
@@ -1110,22 +1109,22 @@ class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
             if not LOTTERY_DATA:
-                raise Exception("数据为空")
+                raise Exception("No data")
             
-            total_draws = len(LOTTERY_DATA)
+            total = len(LOTTERY_DATA)
             
             # 前区统计
             front_freq = {}
-            for record in LOTTERY_DATA:
+            for rec in LOTTERY_DATA:
                 for i in range(1, 6):
-                    num = record[f'front_{i}']
+                    num = rec[f'front_{i}']
                     front_freq[num] = front_freq.get(num, 0) + 1
             
             # 后区统计
             back_freq = {}
-            for record in LOTTERY_DATA:
+            for rec in LOTTERY_DATA:
                 for i in range(1, 3):
-                    num = record[f'back_{i}']
+                    num = rec[f'back_{i}']
                     back_freq[num] = back_freq.get(num, 0) + 1
             
             hot_front = sorted(front_freq.items(), key=lambda x: x[1], reverse=True)
@@ -1135,7 +1134,7 @@ class handler(BaseHTTPRequestHandler):
                 'status': 'success',
                 'analysis': {
                     'data_overview': {
-                        'total_draws': total_draws,
+                        'total_draws': total,
                         'analysis_period': f'{LOTTERY_DATA[-1]["period"]} 至 {LOTTERY_DATA[0]["period"]}',
                         'last_update': LOTTERY_DATA[0]['date']
                     },
@@ -1162,8 +1161,14 @@ class handler(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            error = {'status': 'error', 'message': str(e)}
-            self.wfile.write(json.dumps(error).encode('utf-8'))
+            
+            import traceback
+            error = {
+                'status': 'error',
+                'message': str(e),
+                'trace': traceback.format_exc()
+            }
+            self.wfile.write(json.dumps(error, ensure_ascii=False).encode('utf-8'))
     
     def do_OPTIONS(self):
         self.send_response(200)

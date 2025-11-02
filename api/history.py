@@ -2,6 +2,7 @@ from http.server import BaseHTTPRequestHandler
 import json
 from datetime import datetime
 
+# 内联的100期历史数据
 LOTTERY_DATA = [
   {
     "period": "25123",
@@ -1108,17 +1109,29 @@ LOTTERY_DATA = [
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
-            recent_10 = LOTTERY_DATA[:10]
+            if not LOTTERY_DATA:
+                raise Exception("LOTTERY_DATA is empty")
+            
+            # 获取最近10期
+            recent = LOTTERY_DATA[:10]
+            
+            # 格式化输出
             history = []
-            for record in recent_10:
+            for record in recent:
                 history.append({
                     'period': record['period'],
                     'date': record['date'],
                     'front_zone': [
-                        record['front_1'], record['front_2'],
-                        record['front_3'], record['front_4'], record['front_5']
+                        record['front_1'],
+                        record['front_2'],
+                        record['front_3'],
+                        record['front_4'],
+                        record['front_5']
                     ],
-                    'back_zone': [record['back_1'], record['back_2']]
+                    'back_zone': [
+                        record['back_1'],
+                        record['back_2']
+                    ]
                 })
             
             response = {
@@ -1139,8 +1152,14 @@ class handler(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            error = {'status': 'error', 'message': str(e)}
-            self.wfile.write(json.dumps(error).encode('utf-8'))
+            
+            import traceback
+            error = {
+                'status': 'error',
+                'message': str(e),
+                'traceback': traceback.format_exc()
+            }
+            self.wfile.write(json.dumps(error, ensure_ascii=False).encode('utf-8'))
     
     def do_OPTIONS(self):
         self.send_response(200)

@@ -6,8 +6,7 @@ from datetime import datetime
 LOTTERY_DATA = [
   {
     "period": "25123",
-    "date": "2025-10-29",
-    "front_1": 8,
+    "date": "2025-10-29",    "front_1": 8,
     "front_2": 13,
     "front_3": 24,
     "front_4": 25,

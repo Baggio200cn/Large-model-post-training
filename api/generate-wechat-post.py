@@ -23,6 +23,8 @@ class handler(BaseHTTPRequestHandler):
             # 生成推文内容
             post_content = f'''🎯 大乐透AI智能预测 | {date_str}
 
+━━━━━━━━━━━━━━━━━━
+
 📊 本期AI推荐号码
 
 🔴 前区推荐
@@ -31,26 +33,30 @@ class handler(BaseHTTPRequestHandler):
 🔵 后区推荐  
 {' '.join([f'{n:02d}' for n in back])}
 
+━━━━━━━━━━━━━━━━━━
+
 📈 预测详情
 - AI置信度：{confidence*100:.1f}%
-- 数据基础：100期历史
+- 数据基础：100期历史真实数据
 - 模型组合：LSTM + Transformer + XGBoost
 
-🧠 AI分析
-本期预测综合考虑了：
-✓ 号码出现频率
-✓ 时序变化趋势
-✓ 号码关联模式
-✓ 统计学特征
+🧠 本期分析
+✓ 综合号码出现频率分析
+✓ 时序变化趋势预测
+✓ 号码关联模式识别
+✓ 多维度统计学特征提取
 
-⚠️ 理性提示
+━━━━━━━━━━━━━━━━━━
+
+⚠️ 理性购彩提示
 彩票具有随机性，AI预测仅供参考。
-请理性购彩，量力而行。
+请理性购彩，量力而行，切勿沉迷。
 
----
-🤖 由大乐透AI预测系统生成
-📅 预测时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-'''
+━━━━━━━━━━━━━━━━━━
+
+🤖 大乐透AI预测系统
+📅 生成时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+💡 基于深度学习的智能预测平台'''
             
             response = {
                 'status': 'success',
@@ -67,6 +73,7 @@ class handler(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
+            
             self.wfile.write(json.dumps(response, ensure_ascii=False).encode('utf-8'))
             
         except Exception as e:
@@ -74,8 +81,14 @@ class handler(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            error = {'status': 'error', 'message': str(e)}
-            self.wfile.write(json.dumps(error).encode('utf-8'))
+            
+            import traceback
+            error_response = {
+                'status': 'error',
+                'message': str(e),
+                'traceback': traceback.format_exc()
+            }
+            self.wfile.write(json.dumps(error_response).encode('utf-8'))
     
     def do_OPTIONS(self):
         self.send_response(200)

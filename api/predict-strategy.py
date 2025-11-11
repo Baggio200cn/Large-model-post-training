@@ -3,14 +3,18 @@ import json
 from datetime import datetime
 import random
 
-# 内联100期历史数据（与history.py相同的数据）
+# 内联历史数据（简化版，包含前10期）
 LOTTERY_DATA = [
   {"period": "25123", "date": "2025-10-29", "front_1": 8, "front_2": 13, "front_3": 24, "front_4": 25, "front_5": 31, "back_1": 4, "back_2": 10},
   {"period": "25122", "date": "2025-10-27", "front_1": 2, "front_2": 3, "front_3": 6, "front_4": 16, "front_5": 17, "back_1": 4, "back_2": 5},
   {"period": "25121", "date": "2025-10-25", "front_1": 2, "front_2": 3, "front_3": 8, "front_4": 13, "front_5": 21, "back_1": 7, "back_2": 12},
   {"period": "25120", "date": "2025-10-22", "front_1": 11, "front_2": 13, "front_3": 22, "front_4": 26, "front_5": 35, "back_1": 2, "back_2": 8},
   {"period": "25119", "date": "2025-10-20", "front_1": 4, "front_2": 11, "front_3": 15, "front_4": 21, "front_5": 34, "back_1": 2, "back_2": 11},
-  # ... 这里应该包含所有100期数据，为了演示简化
+  {"period": "25118", "date": "2025-10-18", "front_1": 3, "front_2": 10, "front_3": 19, "front_4": 23, "front_5": 33, "back_1": 1, "back_2": 8},
+  {"period": "25117", "date": "2025-10-15", "front_1": 5, "front_2": 7, "front_3": 18, "front_4": 28, "front_5": 35, "back_1": 5, "back_2": 9},
+  {"period": "25116", "date": "2025-10-13", "front_1": 1, "front_2": 4, "front_3": 14, "front_4": 23, "front_5": 30, "back_1": 3, "back_2": 12},
+  {"period": "25115", "date": "2025-10-11", "front_1": 6, "front_2": 12, "front_3": 16, "front_4": 27, "front_5": 34, "back_1": 2, "back_2": 7},
+  {"period": "25114", "date": "2025-10-08", "front_1": 9, "front_2": 15, "front_3": 20, "front_4": 25, "front_5": 32, "back_1": 4, "back_2": 11}
 ]
 
 def calculate_frequency():
@@ -32,11 +36,9 @@ def strategy_conservative():
     """保守型：选择高频号码"""
     front_freq, back_freq = calculate_frequency()
     
-    # 前区选前5个高频
     front_sorted = sorted(front_freq.items(), key=lambda x: x[1], reverse=True)
     front_zone = [x[0] for x in front_sorted[:5]]
     
-    # 后区选前2个高频
     back_sorted = sorted(back_freq.items(), key=lambda x: x[1], reverse=True)
     back_zone = [x[0] for x in back_sorted[:2]]
     
@@ -46,35 +48,46 @@ def strategy_balanced():
     """平衡型：频率+随机"""
     front_freq, back_freq = calculate_frequency()
     
-    # 前区：3个高频 + 2个随机
     front_sorted = sorted(front_freq.items(), key=lambda x: x[1], reverse=True)
     front_high = [x[0] for x in front_sorted[:3]]
     
-    # 从中频号码中随机选2个
-    mid_freq_nums = [x[0] for x in front_sorted[5:15]]
-    front_random = random.sample(mid_freq_nums, 2)
+    mid_freq_nums = [x[0] for x in front_sorted[5:15]] if len(front_sorted) > 15 else [x[0] for x in front_sorted[3:]]
+    front_random = random.sample(mid_freq_nums, min(2, len(mid_freq_nums)))
     front_zone = front_high + front_random
     
-    # 后区：1个高频 + 1个随机
     back_sorted = sorted(back_freq.items(), key=lambda x: x[1], reverse=True)
-    back_high = [back_sorted[0][0]]
-    back_mid = [x[0] for x in back_sorted[2:7]]
-    back_random = random.sample(back_mid, 1)
+    back_high = [back_sorted[0][0]] if back_sorted else [random.randint(1, 12)]
+    back_mid = [x[0] for x in back_sorted[2:7]] if len(back_sorted) > 7 else [x[0] for x in back_sorted[1:]]
+    back_random = random.sample(back_mid, min(1, len(back_mid))) if back_mid else [random.randint(1, 12)]
     back_zone = back_high + back_random
     
     return sorted(front_zone), sorted(back_zone), 0.78
 
 def strategy_aggressive():
-    """激进型：选择低频号码（冷门号）"""
+    """激进型：选择低频号码（冷门）"""
     front_freq, back_freq = calculate_frequency()
     
-    # 前区选后5个低频（冷门）
+    # 获取所有可能的号码
+    all_front = set(range(1, 36))
+    all_back = set(range(1, 13))
+    
+    # 找出出现次数最少的号码
     front_sorted = sorted(front_freq.items(), key=lambda x: x[1])
     front_zone = [x[0] for x in front_sorted[:5]]
     
-    # 后区选后2个低频
+    # 如果不足5个，从未出现的号码中随机选择
+    if len(front_zone) < 5:
+        appeared = set(front_freq.keys())
+        not_appeared = list(all_front - appeared)
+        front_zone.extend(random.sample(not_appeared, 5 - len(front_zone)))
+    
     back_sorted = sorted(back_freq.items(), key=lambda x: x[1])
     back_zone = [x[0] for x in back_sorted[:2]]
+    
+    if len(back_zone) < 2:
+        appeared = set(back_freq.keys())
+        not_appeared = list(all_back - appeared)
+        back_zone.extend(random.sample(not_appeared, 2 - len(back_zone)))
     
     return sorted(front_zone), sorted(back_zone), 0.65
 
@@ -131,6 +144,7 @@ class handler(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
+            
             self.wfile.write(json.dumps(response, ensure_ascii=False).encode('utf-8'))
             
         except Exception as e:
@@ -138,8 +152,14 @@ class handler(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            error = {'status': 'error', 'message': str(e)}
-            self.wfile.write(json.dumps(error).encode('utf-8'))
+            
+            import traceback
+            error_response = {
+                'status': 'error',
+                'message': str(e),
+                'traceback': traceback.format_exc()
+            }
+            self.wfile.write(json.dumps(error_response).encode('utf-8'))
     
     def do_OPTIONS(self):
         self.send_response(200)

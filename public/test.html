@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>系统时间测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .time-display {
+            font-size: 3em;
+            text-align: center;
+            padding: 40px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+        }
+        .label {
+            font-size: 0.5em;
+            opacity: 0.8;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="time-display">
+        <div class="label">当前系统时间</div>
+        <div id="time">加载中...</div>
+    </div>
+    
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.getFullYear() + '-' + 
+                          String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                          String(now.getDate()).padStart(2, '0') + ' ' +
+                          String(now.getHours()).padStart(2, '0') + ':' +
+                          String(now.getMinutes()).padStart(2, '0') + ':' +
+                          String(now.getSeconds()).padStart(2, '0');
+            
+            document.getElementById('time').textContent = timeStr;
+        }
+        
+        // 立即更新
+        updateTime();
+        
+        // 每秒更新
+        setInterval(updateTime, 1000);
+        
+        console.log('时间更新脚本已启动');
+    </script>
+</body>
+</html>

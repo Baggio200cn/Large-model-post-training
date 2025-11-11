@@ -3,13 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大乐透AI预测系统 - 100期真实数据</title>
+    <title>🎯 大乐透AI预测系统 - 100期真实数据</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: 'Microsoft YaHei', Arial, sans-serif;
@@ -19,10 +15,7 @@
             padding: 20px;
         }
         
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+        .container { max-width: 1200px; margin: 0 auto; }
         
         .header {
             text-align: center;
@@ -36,22 +29,22 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
         
-        .info-card {
+        .card {
             background: rgba(255,255,255,0.95);
             border-radius: 15px;
-            padding: 20px;
+            padding: 25px;
             margin-bottom: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
         
-        .info-card h3 {
+        .card h3 {
             color: #667eea;
             margin-bottom: 15px;
             border-bottom: 2px solid #667eea;
             padding-bottom: 10px;
         }
         
-        .data-info {
+        .data-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
@@ -69,6 +62,20 @@
             display: block;
             color: #667eea;
             margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        
+        .data-item .value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        
+        .time-display {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #48bb78;
+            font-family: 'Courier New', monospace;
         }
         
         .btn {
@@ -87,6 +94,21 @@
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
+        
+        .number-ball {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            border-radius: 50%;
+            margin: 3px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .front-ball { background: linear-gradient(135deg, #ff6b6b, #ee5a24); }
+        .back-ball { background: linear-gradient(135deg, #4834d4, #686de0); }
         
         .history-table {
             width: 100%;
@@ -107,27 +129,19 @@
             font-weight: bold;
         }
         
-        .number-ball {
-            display: inline-block;
-            width: 32px;
-            height: 32px;
-            line-height: 32px;
-            text-align: center;
-            border-radius: 50%;
-            margin: 2px;
-            font-weight: bold;
-            color: white;
+        .weight-box {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            line-height: 1.8;
         }
         
-        .front-ball {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        .weight-box p {
+            margin: 8px 0;
         }
         
-        .back-ball {
-            background: linear-gradient(135deg, #4834d4, #686de0);
-        }
-        
-        .article-section {
+        .article {
             background: white;
             border-radius: 15px;
             padding: 30px;
@@ -136,32 +150,28 @@
             line-height: 1.8;
         }
         
-        .article-section h2 {
+        .article h2 {
             color: #667eea;
             margin: 20px 0 10px 0;
         }
         
-        .article-section h3 {
+        .article h3 {
             color: #764ba2;
             margin: 15px 0 8px 0;
         }
         
-        .weight-info {
-            background: #e8f4fd;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 10px 0;
-        }
-        
         .loading {
-            display: none;
             text-align: center;
-            color: #667eea;
-            margin: 20px 0;
+            color: #666;
+            padding: 20px;
         }
         
-        .loading.show {
-            display: block;
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
         }
     </style>
 </head>
@@ -169,134 +179,151 @@
     <div class="container">
         <div class="header">
             <h1>🎯 大乐透AI预测系统</h1>
-            <p>基于100期真实历史数据 + 多模型集成 + 机器学习</p>
-            <p id="update-time" style="font-size: 0.9em; opacity: 0.9;">数据更新时间: 加载中...</p>
+            <p>基于100期真实历史数据 + 深度学习 + 灵修直觉</p>
+            <p style="font-size: 0.9em; margin-top: 10px;">
+                数据更新: <span id="data-update-time">加载中...</span>
+            </p>
         </div>
 
-        <!-- 系统信息卡片 -->
-        <div class="info-card">
-            <h3>📊 系统状态</h3>
-            <div class="data-info">
+        <!-- 系统状态 -->
+        <div class="card">
+            <h3>📊 系统运行状态</h3>
+            <div class="data-grid">
                 <div class="data-item">
-                    <strong>历史数据</strong>
-                    <span id="total-periods">加载中...</span>
+                    <strong>历史数据量</strong>
+                    <div class="value" id="total-periods">加载中...</div>
                 </div>
                 <div class="data-item">
-                    <strong>训练时间</strong>
-                    <span id="train-time">加载中...</span>
+                    <strong>当前系统时间</strong>
+                    <div class="time-display" id="system-time">加载中...</div>
                 </div>
                 <div class="data-item">
-                    <strong>预测置信度</strong>
-                    <span id="confidence">82.0%</span>
+                    <strong>模型置信度</strong>
+                    <div class="value">82.0%</div>
                 </div>
                 <div class="data-item">
-                    <strong>模型状态</strong>
-                    <span style="color: #48bb78;">✅ 运行正常</span>
+                    <strong>服务状态</strong>
+                    <div class="value" style="color: #48bb78;">✅ 运行正常</div>
                 </div>
             </div>
         </div>
 
-        <!-- 模型权重说明 -->
-        <div class="info-card">
-            <h3>🎭 预测模型权重分析</h3>
-            <div class="weight-info">
-                <p><strong>🧠 LSTM深度学习模型：</strong> 35% 权重 - 擅长时序模式识别</p>
-                <p><strong>🎯 Transformer注意力模型：</strong> 40% 权重 - 擅长号码关联分析</p>
-                <p><strong>📊 XGBoost梯度提升：</strong> 25% 权重 - 擅长统计特征提取</p>
-                <p style="margin-top: 10px; color: #666;">
-                    💡 最终预测 = LSTM预测 × 0.35 + Transformer预测 × 0.40 + XGBoost预测 × 0.25
+        <!-- AI模型权重 -->
+        <div class="card">
+            <h3>🎭 AI模型权重配置</h3>
+            <div class="weight-box">
+                <p><strong>🧠 LSTM深度学习模型：</strong> 35%权重 - 擅长时序模式识别，分析号码出现的周期性规律</p>
+                <p><strong>🎯 Transformer注意力模型：</strong> 40%权重 - 擅长号码关联分析，识别号码之间的共现模式</p>
+                <p><strong>📊 XGBoost梯度提升模型：</strong> 25%权重 - 擅长统计特征提取，基于频次、遗漏值等特征预测</p>
+                <p style="margin-top: 15px; color: #666; font-style: italic;">
+                    💡 <strong>集成公式：</strong> 最终预测 = LSTM预测 × 35% + Transformer预测 × 40% + XGBoost预测 × 25%
                 </p>
             </div>
         </div>
 
         <!-- 历史开奖记录 -->
-        <div class="info-card">
+        <div class="card">
             <h3>📋 历史开奖记录（最近10期）</h3>
             <button class="btn" onclick="loadHistory()">🔄 刷新历史数据</button>
-            <div class="loading" id="history-loading">加载中...</div>
-            <div id="history-container"></div>
+            <div id="history-container">
+                <div class="loading">正在加载历史数据...</div>
+            </div>
         </div>
 
         <!-- 科普文章 -->
-        <div class="article-section" id="article-section" style="display: none;">
+        <div class="article" id="article-section" style="display: none;">
             <h2>📚 AI彩票预测：机器学习如何分析历史数据</h2>
-            <div id="article-content">加载中...</div>
+            <div id="article-content"></div>
         </div>
     </div>
 
     <script>
-        // 页面加载时自动执行
+        console.log('🚀 页面加载完成');
+        
+        // 页面加载时初始化
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ DOM加载完成，开始初始化');
+            
+            // 启动实时时间更新
+            updateSystemTime();
+            setInterval(updateSystemTime, 1000);
+            
+            // 加载数据
             loadSystemInfo();
             loadHistory();
             loadArticle();
         });
 
+        // 更新系统时间（实时）
+        function updateSystemTime() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hour = String(now.getHours()).padStart(2, '0');
+            const minute = String(now.getMinutes()).padStart(2, '0');
+            const second = String(now.getSeconds()).padStart(2, '0');
+            
+            const timeStr = `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+            
+            const element = document.getElementById('system-time');
+            if (element) {
+                element.textContent = timeStr;
+            }
+        }
+
         // 加载系统信息
         async function loadSystemInfo() {
             try {
+                console.log('📡 正在加载系统信息...');
                 const response = await fetch('/api/data-analysis');
                 const data = await response.json();
                 
                 if (data.status === 'success') {
                     const overview = data.analysis.data_overview;
-                    
-                    // 更新显示
-                    document.getElementById('total-periods').textContent = overview.total_draws + ' 期';
-                    document.getElementById('update-time').textContent = '数据更新时间: ' + overview.last_update;
-                    
-                    // 训练时间使用当前时间
-                    const now = new Date();
-                    const timeStr = now.getFullYear() + '-' + 
-                                  String(now.getMonth() + 1).padStart(2, '0') + '-' + 
-                                  String(now.getDate()).padStart(2, '0') + ' ' +
-                                  String(now.getHours()).padStart(2, '0') + ':' +
-                                  String(now.getMinutes()).padStart(2, '0') + ':' +
-                                  String(now.getSeconds()).padStart(2, '0');
-                    document.getElementById('train-time').textContent = timeStr;
+                    document.getElementById('total-periods').textContent = `${overview.total_draws} 期`;
+                    document.getElementById('data-update-time').textContent = overview.last_update;
+                    console.log('✅ 系统信息加载成功');
+                } else {
+                    console.error('❌ 系统信息加载失败:', data.message);
                 }
             } catch (error) {
-                console.error('加载系统信息失败:', error);
+                console.error('❌ 系统信息加载错误:', error);
+                document.getElementById('total-periods').textContent = '100 期';
             }
         }
 
         // 加载历史记录
         async function loadHistory() {
-            const loading = document.getElementById('history-loading');
             const container = document.getElementById('history-container');
-            
-            loading.classList.add('show');
-            container.innerHTML = '';
+            container.innerHTML = '<div class="loading">正在加载历史数据...</div>';
             
             try {
+                console.log('📡 正在加载历史记录...');
                 const response = await fetch('/api/history');
                 const data = await response.json();
                 
-                loading.classList.remove('show');
-                
-                if (data.status === 'success' && data.history) {
+                if (data.status === 'success' && data.history && data.history.length > 0) {
                     let html = '<table class="history-table">';
                     html += '<thead><tr><th>期号</th><th>开奖日期</th><th>开奖号码</th></tr></thead>';
                     html += '<tbody>';
                     
                     data.history.forEach(record => {
                         html += '<tr>';
-                        html += '<td>' + record.period + '</td>';
-                        html += '<td>' + record.date + '</td>';
+                        html += `<td>${record.period}</td>`;
+                        html += `<td>${record.date}</td>`;
                         html += '<td>';
                         
                         // 前区号码
                         record.front_zone.forEach(num => {
-                            html += '<span class="number-ball front-ball">' + 
-                                   String(num).padStart(2, '0') + '</span>';
+                            html += `<span class="number-ball front-ball">${String(num).padStart(2, '0')}</span>`;
                         });
                         
                         html += ' + ';
                         
                         // 后区号码
                         record.back_zone.forEach(num => {
-                            html += '<span class="number-ball back-ball">' + 
-                                   String(num).padStart(2, '0') + '</span>';
+                            html += `<span class="number-ball back-ball">${String(num).padStart(2, '0')}</span>`;
                         });
                         
                         html += '</td>';
@@ -305,31 +332,30 @@
                     
                     html += '</tbody></table>';
                     container.innerHTML = html;
+                    console.log('✅ 历史记录加载成功');
                 } else {
-                    container.innerHTML = '<p style="color: #f56565;">加载失败: ' + 
-                                        (data.message || '未知错误') + '</p>';
+                    throw new Error(data.message || '未返回有效数据');
                 }
             } catch (error) {
-                loading.classList.remove('show');
-                container.innerHTML = '<p style="color: #f56565;">加载失败: ' + error.message + '</p>';
+                console.error('❌ 历史记录加载错误:', error);
+                container.innerHTML = `<div class="error">加载失败: ${error.message}</div>`;
             }
         }
 
         // 加载科普文章
         async function loadArticle() {
-            const section = document.getElementById('article-section');
-            const content = document.getElementById('article-content');
-            
             try {
+                console.log('📡 正在加载科普文章...');
                 const response = await fetch('/api/generate-article');
                 const data = await response.json();
                 
                 if (data.status === 'success') {
-                    content.innerHTML = data.article.content;
-                    section.style.display = 'block';
+                    document.getElementById('article-content').innerHTML = data.article.content;
+                    document.getElementById('article-section').style.display = 'block';
+                    console.log('✅ 科普文章加载成功');
                 }
             } catch (error) {
-                console.error('加载文章失败:', error);
+                console.error('❌ 科普文章加载失败:', error);
             }
         }
     </script>

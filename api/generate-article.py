@@ -64,12 +64,28 @@ class handler(BaseHTTPRequestHandler):
                 <li>从最终概率分布中选择概率最高的5个号码作为前区预测，2个号码作为后区预测</li>
             </ol>
             
-            <h2>四、技术亮点与创新</h2>
+            <h2>四、灵修直觉集成</h2>
             
-            <h3>4.1 自适应权重调整</h3>
+            <h3>4.1 灵修扰动模块</h3>
+            <p>除了传统的AI模型，系统还融入了<strong>灵修直觉因子</strong>（占15%权重），这是一个创新的尝试，结合了：</p>
+            <ul>
+                <li><strong>时间能量场：</strong>基于不同时段的能量强度（如清晨、正午、傍晚）</li>
+                <li><strong>宇宙调谐：</strong>通过随机选择的灵修图片（莲花、山川、海洋等）获取能量指数</li>
+                <li><strong>混沌与和谐平衡：</strong>引入随机性因子，模拟不可预测的宇宙变化</li>
+            </ul>
+            
+            <h3>4.2 最终预测公式</h3>
+            <p style="background: #f0f9ff; padding: 15px; border-left: 4px solid #3b82f6; border-radius: 5px;">
+                <strong>最终预测 = AI模型输出 × 85% + 灵修调整 × 15%</strong><br>
+                其中AI模型输出 = LSTM×35% + Transformer×40% + XGBoost×25%
+            </p>
+            
+            <h2>五、技术亮点与创新</h2>
+            
+            <h3>5.1 自适应权重调整</h3>
             <p>系统会根据历史预测准确率，动态调整三个模型的权重。表现好的模型权重会自动提升。</p>
             
-            <h3>4.2 实时学习更新</h3>
+            <h3>5.2 实时学习更新</h3>
             <p>每当新的开奖结果公布，系统会自动：</p>
             <ul>
                 <li>将新数据加入训练集</li>
@@ -78,28 +94,30 @@ class handler(BaseHTTPRequestHandler):
                 <li>更新权重分配</li>
             </ul>
             
-            <h3>4.3 置信度评估</h3>
+            <h3>5.3 置信度评估</h3>
             <p>系统为每次预测生成置信度指标（通常在70%-90%之间），反映模型对预测结果的确信程度。这个指标综合考虑：</p>
             <ul>
                 <li>三个模型预测的一致性</li>
                 <li>历史数据的支持度</li>
                 <li>最近预测的准确率</li>
+                <li>灵修能量场的稳定性</li>
             </ul>
             
-            <h2>五、理性看待预测结果</h2>
+            <h2>六、理性看待预测结果</h2>
             
-            <p><strong>重要提示：</strong>虽然本系统运用了先进的机器学习技术，但彩票本质上仍是随机事件。历史数据和统计规律只能提供参考，不能保证未来结果。</p>
+            <p><strong>重要提示：</strong>虽然本系统运用了先进的机器学习技术和创新的灵修理念，但彩票本质上仍是随机事件。历史数据和统计规律只能提供参考，不能保证未来结果。</p>
             
             <p><strong>系统价值：</strong></p>
             <ul>
                 <li>✅ 展示机器学习在时间序列预测中的应用</li>
                 <li>✅ 提供数据分析和模式识别的实践案例</li>
                 <li>✅ 帮助理解集成学习的工作原理</li>
+                <li>✅ 探索AI与直觉结合的可能性</li>
                 <li>⚠️ 不应作为投注决策的唯一依据</li>
             </ul>
             
             <p style="margin-top: 30px; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 5px;">
-                <strong>⚠️ 风险提示：</strong>彩票投注需理性，请根据自身经济状况量力而行。本系统仅供学习和研究使用。
+                <strong>⚠️ 风险提示：</strong>彩票投注需理性，请根据自身经济状况量力而行。本系统仅供学习和研究使用，不构成任何投注建议。
             </p>
             
             <p style="text-align: center; margin-top: 30px; color: #999; font-size: 0.9em;">
@@ -120,6 +138,7 @@ class handler(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
+            
             self.wfile.write(json.dumps(response, ensure_ascii=False).encode('utf-8'))
             
         except Exception as e:
@@ -127,8 +146,14 @@ class handler(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            error = {'status': 'error', 'message': str(e)}
-            self.wfile.write(json.dumps(error).encode('utf-8'))
+            
+            import traceback
+            error_response = {
+                'status': 'error',
+                'message': str(e),
+                'traceback': traceback.format_exc()
+            }
+            self.wfile.write(json.dumps(error_response).encode('utf-8'))
     
     def do_OPTIONS(self):
         self.send_response(200)

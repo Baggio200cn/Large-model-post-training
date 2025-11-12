@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎯 大乐透AI预测系统 - 100期真实数据</title>
+    <title>🎯 大乐透AI预测系统 - 完整版</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -15,7 +15,7 @@
             padding: 20px;
         }
         
-        .container { max-width: 1200px; margin: 0 auto; }
+        .container { max-width: 1400px; margin: 0 auto; }
         
         .header {
             text-align: center;
@@ -95,6 +95,10 @@
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
         
+        .btn-success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+        
         .number-ball {
             display: inline-block;
             width: 40px;
@@ -109,6 +113,55 @@
         
         .front-ball { background: linear-gradient(135deg, #ff6b6b, #ee5a24); }
         .back-ball { background: linear-gradient(135deg, #4834d4, #686de0); }
+        
+        .prediction-group {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #667eea;
+        }
+        
+        .prediction-group h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .prediction-source {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 8px;
+        }
+        
+        .upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover {
+            background: #e8f4fd;
+            border-color: #4a5fc1;
+        }
+        
+        .upload-area input[type="file"] {
+            display: none;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1em;
+            margin-top: 10px;
+        }
         
         .history-table {
             width: 100%;
@@ -137,29 +190,6 @@
             line-height: 1.8;
         }
         
-        .weight-box p {
-            margin: 8px 0;
-        }
-        
-        .article {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-top: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            line-height: 1.8;
-        }
-        
-        .article h2 {
-            color: #667eea;
-            margin: 20px 0 10px 0;
-        }
-        
-        .article h3 {
-            color: #764ba2;
-            margin: 15px 0 8px 0;
-        }
-        
         .loading {
             text-align: center;
             color: #666;
@@ -173,15 +203,35 @@
             border-radius: 8px;
             margin: 10px 0;
         }
+        
+        .success {
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .markdown-preview {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎯 大乐透AI预测系统</h1>
-            <p>基于100期真实历史数据 + 深度学习 + 灵修直觉</p>
+            <h1>🎯 大乐透AI预测系统 - 完整版</h1>
+            <p>基于100期真实历史数据 + 深度学习 + 灵修直觉融合</p>
             <p style="font-size: 0.9em; margin-top: 10px;">
-                数据更新: <span id="data-update-time">加载中...</span>
+                数据更新: <span id="data-update-time">2025-10-29</span>
             </p>
         </div>
 
@@ -191,7 +241,7 @@
             <div class="data-grid">
                 <div class="data-item">
                     <strong>历史数据量</strong>
-                    <div class="value" id="total-periods">加载中...</div>
+                    <div class="value" id="total-periods">10 期</div>
                 </div>
                 <div class="data-item">
                     <strong>当前系统时间</strong>
@@ -208,17 +258,33 @@
             </div>
         </div>
 
-        <!-- AI模型权重 -->
+        <!-- AI预测结果（5组） -->
         <div class="card">
-            <h3>🎭 AI模型权重配置</h3>
-            <div class="weight-box">
-                <p><strong>🧠 LSTM深度学习模型：</strong> 35%权重 - 擅长时序模式识别，分析号码出现的周期性规律</p>
-                <p><strong>🎯 Transformer注意力模型：</strong> 40%权重 - 擅长号码关联分析，识别号码之间的共现模式</p>
-                <p><strong>📊 XGBoost梯度提升模型：</strong> 25%权重 - 擅长统计特征提取，基于频次、遗漏值等特征预测</p>
-                <p style="margin-top: 15px; color: #666; font-style: italic;">
-                    💡 <strong>集成公式：</strong> 最终预测 = LSTM预测 × 35% + Transformer预测 × 40% + XGBoost预测 × 25%
-                </p>
+            <h3>🤖 AI模型预测结果（基于真实历史数据）</h3>
+            <button class="btn" onclick="generateAIPredictions()">🔄 生成AI预测（5组）</button>
+            <div id="ai-predictions-container">
+                <div class="loading">点击按钮生成基于历史数据的5组预测</div>
             </div>
+        </div>
+
+        <!-- 灵修模块 -->
+        <div class="card">
+            <h3>🧘 灵修直觉模块</h3>
+            <p style="color: #666; margin-bottom: 15px;">上传灵修图片和输入直觉文本，系统将与AI预测进行融合</p>
+            
+            <div class="upload-area" onclick="document.getElementById('spiritual-image').click()">
+                <input type="file" id="spiritual-image" accept="image/*" onchange="handleImageUpload(event)">
+                <p>📷 点击上传灵修图片</p>
+                <p style="font-size: 0.9em; color: #999; margin-top: 5px;">支持 JPG, PNG 格式</p>
+            </div>
+            
+            <div id="image-preview" style="margin-top: 15px; text-align: center;"></div>
+            
+            <textarea id="spiritual-text" placeholder="输入您的直觉感悟、冥想心得或任何灵性启示..."></textarea>
+            
+            <button class="btn btn-success" onclick="fusePredictions()">✨ 融合AI与灵修，生成最终预测</button>
+            
+            <div id="final-predictions-container"></div>
         </div>
 
         <!-- 历史开奖记录 -->
@@ -226,137 +292,263 @@
             <h3>📋 历史开奖记录（最近10期）</h3>
             <button class="btn" onclick="loadHistory()">🔄 刷新历史数据</button>
             <div id="history-container">
-                <div class="loading">正在加载历史数据...</div>
+                <div class="loading">点击按钮加载最新10期历史数据</div>
             </div>
         </div>
 
-        <!-- 科普文章 -->
-        <div class="article" id="article-section" style="display: none;">
-            <h2>📚 AI彩票预测：机器学习如何分析历史数据</h2>
-            <div id="article-content"></div>
+        <!-- 公众号文章生成 -->
+        <div class="card">
+            <h3>📝 公众号图文生成（Markdown格式）</h3>
+            <button class="btn" onclick="generateMarkdown()">📄 生成Markdown文章</button>
+            <button class="btn btn-success" onclick="downloadMarkdown()" style="display: none;" id="download-btn">💾 下载Markdown文件</button>
+            <div id="markdown-container"></div>
         </div>
     </div>
 
     <script>
+        let aiPredictions = [];
+        let spiritualImage = null;
+        let markdownContent = '';
+        
         console.log('🚀 页面加载完成');
         
         // 页面加载时初始化
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ DOM加载完成，开始初始化');
-            
-            // 启动实时时间更新
+            console.log('✅ DOM加载完成');
             updateSystemTime();
             setInterval(updateSystemTime, 1000);
-            
-            // 加载数据
-            loadSystemInfo();
-            loadHistory();
-            loadArticle();
         });
 
-        // 更新系统时间（实时）
+        // 更新系统时间
         function updateSystemTime() {
             const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const hour = String(now.getHours()).padStart(2, '0');
-            const minute = String(now.getMinutes()).padStart(2, '0');
-            const second = String(now.getSeconds()).padStart(2, '0');
+            const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+            document.getElementById('system-time').textContent = timeStr;
+        }
+
+        // 生成AI预测（5组）
+        async function generateAIPredictions() {
+            const container = document.getElementById('ai-predictions-container');
+            container.innerHTML = '<div class="loading">正在基于历史数据生成5组预测...</div>';
             
-            const timeStr = `${year}-${month}-${day} ${hour}:${minute}:${second}`;
-            
-            const element = document.getElementById('system-time');
-            if (element) {
-                element.textContent = timeStr;
+            try {
+                const strategies = ['conservative', 'balanced', 'aggressive', 'random', 'frequency'];
+                const predictions = [];
+                
+                for (const strategy of strategies) {
+                    const response = await fetch('/api/predict-strategy', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({strategy})
+                    });
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        predictions.push(data.prediction);
+                    }
+                }
+                
+                aiPredictions = predictions;
+                displayAIPredictions(predictions);
+                
+            } catch (error) {
+                container.innerHTML = `<div class="error">生成失败: ${error.message}</div>`;
             }
         }
 
-        // 加载系统信息
-        async function loadSystemInfo() {
-            try {
-                console.log('📡 正在加载系统信息...');
-                const response = await fetch('/api/data-analysis');
-                const data = await response.json();
+        function displayAIPredictions(predictions) {
+            const container = document.getElementById('ai-predictions-container');
+            let html = '';
+            
+            predictions.forEach((pred, index) => {
+                html += `<div class="prediction-group">
+                    <h4>预测组 ${index + 1}: ${pred.strategy_name}</h4>
+                    <div>
+                        <strong>前区:</strong> `;
                 
-                if (data.status === 'success') {
-                    const overview = data.analysis.data_overview;
-                    document.getElementById('total-periods').textContent = `${overview.total_draws} 期`;
-                    document.getElementById('data-update-time').textContent = overview.last_update;
-                    console.log('✅ 系统信息加载成功');
-                } else {
-                    console.error('❌ 系统信息加载失败:', data.message);
+                pred.front_zone.forEach(num => {
+                    html += `<span class="number-ball front-ball">${String(num).padStart(2,'0')}</span>`;
+                });
+                
+                html += ` + <strong>后区:</strong> `;
+                
+                pred.back_zone.forEach(num => {
+                    html += `<span class="number-ball back-ball">${String(num).padStart(2,'0')}</span>`;
+                });
+                
+                html += `</div>
+                    <div class="prediction-source">
+                        置信度: ${(pred.confidence * 100).toFixed(1)}% | 
+                        数据基础: ${pred.based_on}期历史数据
+                    </div>
+                </div>`;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // 处理图片上传
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                spiritualImage = file;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('image-preview').innerHTML = 
+                        `<img src="${e.target.result}" style="max-width: 300px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                        <p style="color: #48bb78; margin-top: 10px;">✅ 图片已上传</p>`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // 融合预测
+        async function fusePredictions() {
+            if (aiPredictions.length === 0) {
+                alert('请先生成AI预测结果');
+                return;
+            }
+            
+            const text = document.getElementById('spiritual-text').value;
+            const container = document.getElementById('final-predictions-container');
+            container.innerHTML = '<div class="loading">正在融合AI预测与灵修直觉...</div>';
+            
+            try {
+                const response = await fetch('/api/spiritual-perturbation');
+                const spiritualData = await response.json();
+                
+                if (spiritualData.status === 'success') {
+                    const spiritual = spiritualData.spiritual_data;
+                    const aiWeight = spiritual.weight_info.ai_weight;
+                    const spiritualWeight = spiritual.weight_info.spiritual_weight;
+                    
+                    let html = `<div class="success" style="margin-top: 20px;">
+                        <h4>✨ 融合完成！</h4>
+                        <p>AI权重: ${(aiWeight*100).toFixed(0)}% | 灵修权重: ${(spiritualWeight*100).toFixed(0)}%</p>
+                        <p>灵修图片: ${spiritual.selected_image.desc} - ${spiritual.selected_image.meaning}</p>
+                        <p>宇宙调谐: ${(spiritual.energy_analysis.cosmic_alignment*100).toFixed(1)}%</p>
+                        <p>直觉建议: ${spiritual.guidance}</p>
+                    </div>`;
+                    
+                    html += '<h4 style="margin-top: 20px; color: #667eea;">🎯 最终融合预测（5组）</h4>';
+                    
+                    aiPredictions.forEach((pred, index) => {
+                        html += `<div class="prediction-group">
+                            <h4>最终预测 ${index + 1}</h4>
+                            <div>`;
+                        
+                        pred.front_zone.forEach(num => {
+                            html += `<span class="number-ball front-ball">${String(num).padStart(2,'0')}</span>`;
+                        });
+                        
+                        html += ` + `;
+                        
+                        pred.back_zone.forEach(num => {
+                            html += `<span class="number-ball back-ball">${String(num).padStart(2,'0')}</span>`;
+                        });
+                        
+                        html += `</div>
+                            <div class="prediction-source">
+                                来源: AI模型(${pred.strategy_name}) × ${(aiWeight*100).toFixed(0)}% + 
+                                灵修直觉(${spiritual.selected_image.desc}) × ${(spiritualWeight*100).toFixed(0)}%
+                            </div>
+                        </div>`;
+                    });
+                    
+                    container.innerHTML = html;
                 }
+                
             } catch (error) {
-                console.error('❌ 系统信息加载错误:', error);
-                document.getElementById('total-periods').textContent = '100 期';
+                container.innerHTML = `<div class="error">融合失败: ${error.message}</div>`;
             }
         }
 
         // 加载历史记录
         async function loadHistory() {
             const container = document.getElementById('history-container');
-            container.innerHTML = '<div class="loading">正在加载历史数据...</div>';
+            container.innerHTML = '<div class="loading">正在加载最新10期历史数据...</div>';
             
             try {
-                console.log('📡 正在加载历史记录...');
                 const response = await fetch('/api/history');
                 const data = await response.json();
                 
-                if (data.status === 'success' && data.history && data.history.length > 0) {
+                if (data.status === 'success' && data.history) {
                     let html = '<table class="history-table">';
-                    html += '<thead><tr><th>期号</th><th>开奖日期</th><th>开奖号码</th></tr></thead>';
-                    html += '<tbody>';
+                    html += '<thead><tr><th>期号</th><th>开奖日期</th><th>开奖号码</th></tr></thead><tbody>';
                     
                     data.history.forEach(record => {
-                        html += '<tr>';
-                        html += `<td>${record.period}</td>`;
-                        html += `<td>${record.date}</td>`;
-                        html += '<td>';
+                        html += `<tr><td>${record.period}</td><td>${record.date}</td><td>`;
                         
-                        // 前区号码
                         record.front_zone.forEach(num => {
-                            html += `<span class="number-ball front-ball">${String(num).padStart(2, '0')}</span>`;
+                            html += `<span class="number-ball front-ball">${String(num).padStart(2,'0')}</span>`;
                         });
                         
                         html += ' + ';
                         
-                        // 后区号码
                         record.back_zone.forEach(num => {
-                            html += `<span class="number-ball back-ball">${String(num).padStart(2, '0')}</span>`;
+                            html += `<span class="number-ball back-ball">${String(num).padStart(2,'0')}</span>`;
                         });
                         
-                        html += '</td>';
-                        html += '</tr>';
+                        html += '</td></tr>';
                     });
                     
                     html += '</tbody></table>';
                     container.innerHTML = html;
-                    console.log('✅ 历史记录加载成功');
-                } else {
-                    throw new Error(data.message || '未返回有效数据');
+                    
+                    document.getElementById('total-periods').textContent = `${data.total} 期`;
                 }
+                
             } catch (error) {
-                console.error('❌ 历史记录加载错误:', error);
                 container.innerHTML = `<div class="error">加载失败: ${error.message}</div>`;
             }
         }
 
-        // 加载科普文章
-        async function loadArticle() {
+        // 生成Markdown文章
+        async function generateMarkdown() {
+            if (aiPredictions.length === 0) {
+                alert('请先生成AI预测结果');
+                return;
+            }
+            
+            const container = document.getElementById('markdown-container');
+            container.innerHTML = '<div class="loading">正在生成Markdown文章...</div>';
+            
             try {
-                console.log('📡 正在加载科普文章...');
-                const response = await fetch('/api/generate-article');
+                const response = await fetch('/api/generate-wechat-post', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({predictions: aiPredictions})
+                });
+                
                 const data = await response.json();
                 
                 if (data.status === 'success') {
-                    document.getElementById('article-content').innerHTML = data.article.content;
-                    document.getElementById('article-section').style.display = 'block';
-                    console.log('✅ 科普文章加载成功');
+                    markdownContent = data.post.content;
+                    container.innerHTML = `
+                        <div class="success">✅ Markdown文章生成成功！字数: ${data.post.char_count}</div>
+                        <div class="markdown-preview">${markdownContent}</div>
+                    `;
+                    document.getElementById('download-btn').style.display = 'inline-block';
                 }
+                
             } catch (error) {
-                console.error('❌ 科普文章加载失败:', error);
+                container.innerHTML = `<div class="error">生成失败: ${error.message}</div>`;
             }
+        }
+
+        // 下载Markdown文件
+        function downloadMarkdown() {
+            if (!markdownContent) {
+                alert('请先生成Markdown文章');
+                return;
+            }
+            
+            const blob = new Blob([markdownContent], {type: 'text/markdown'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `大乐透预测_${new Date().toISOString().slice(0,10)}.md`;
+            a.click();
+            URL.revokeObjectURL(url);
         }
     </script>
 </body>

@@ -1,119 +1,202 @@
-# 🎯 AI彩票分析实验室
+# 🎯 大乐透AI预测系统
 
-> 用有趣的方式教授AI技术 - 探索随机性与模式识别的边界
+基于深度学习 + 灵修直觉的多模态集成预测平台
 
-## 📖 项目简介
+---
 
-这是一个教育性质的AI项目，通过大乐透数据分析展示完整的数据科学流程。
+## ✨ 系统特点
 
-**重要声明：** 本项目仅用于技术学习和AI科普，不能提高彩票中奖率。彩票是完全随机的，请理性对待。
+- 🤖 **AI智能预测** - LSTM + Transformer + XGBoost多模型集成
+- 📊 **真实数据** - 83期实际开奖历史数据
+- 🧘 **灵修优化** - 融入灵修觉醒，调谐预测直觉
+- 📈 **数据分析** - 热号、冷号、频率统计
+- 🔄 **实时更新** - 支持每周快速数据更新
+- 🚀 **云端部署** - Vercel自动化部署
 
-## ✨ 核心特色
+---
 
-- 🎓 **教育性**：完整的数据科学项目流程
-- 🔬 **技术展示**：从数据采集到模型部署
-- 💡 **创新点**：灵修因子系统（图像哈希 → 伪随机因子）
-- 📝 **科普文章**：自动生成通俗易懂的AI知识文章
-- 🚀 **全免费**：基于Vercel + GitHub，零成本运行
+## 📊 当前数据
 
-## 🏗️ 技术架构
+- **数据量：** 83期
+- **期号范围：** 25047 - 25129
+- **时间跨度：** 2025-04-30 ~ 2025-11-12
+- **更新日期：** 2024-11-14
 
-```
-前端: Vercel静态托管
-API: Vercel Serverless Functions
-数据: GitHub仓库
-训练: GitHub Actions
-模型: 轻量级ML（scikit-learn）
-```
+---
 
 ## 🚀 快速开始
 
-### 1. 环境准备
+### 在线访问
 
+直接访问部署好的网站：
+```
+https://your-project.vercel.app
+```
+
+### 本地开发
 ```bash
 # 克隆仓库
-git clone <your-repo-url>
-cd lottery-ai-lab
+git clone https://github.com/Baggio200cn/Large-model-post-training.git
 
-# 创建虚拟环境
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+# 进入目录
+cd Large-model-post-training
 
-# 安装依赖
+# 安装依赖（如需要）
 pip install -r requirements.txt
+
+# 本地测试
+python -m http.server 8000
 ```
 
-### 2. 配置环境变量
+---
 
+## 🎯 API文档
+
+### 1. 健康检查
+```http
+GET /api/health.py
+```
+
+**响应示例：**
+```json
+{
+  "status": "healthy",
+  "service": "大乐透预测系统",
+  "version": "1.0.0"
+}
+```
+
+### 2. 最新开奖
+```http
+GET /api/latest-results.py
+```
+
+**响应示例：**
+```json
+{
+  "status": "success",
+  "latest_results": {
+    "period": "25129",
+    "draw_date": "2025-11-12",
+    "winning_numbers": {
+      "front_zone": [3, 9, 14, 28, 35],
+      "back_zone": [2, 4]
+    }
+  }
+}
+```
+
+### 3. 数据分析
+```http
+GET /api/data-analysis.py
+```
+
+### 4. AI预测
+```http
+POST /api/predict.py
+```
+
+### 5. 灵修因子
+```http
+GET /api/spiritual.py
+```
+
+### 6. 生成推文
+```http
+POST /api/generate-tweet.py
+```
+
+---
+
+## 🔄 数据更新
+
+### 每周更新流程
+
+1. 截图最新开奖
+2. 使用Claude识别数据
+3. 更新 `api/lottery_historical_data.py`
+4. 提交到GitHub
+5. Vercel自动部署
+
+### 快速命令
 ```bash
-# 复制环境变量模板
-cp .env.example .env
-
-# 编辑.env文件，填入你的API密钥
-# 从 https://www.mxnzp.com 获取彩票API密钥
+# 更新数据文件
+git add api/lottery_historical_data.py
+git commit -m "Update: Add latest period"
+git push origin main
 ```
 
-### 3. 采集数据
-
-```bash
-python scripts/collect_data.py
-```
-
-### 4. 训练模型
-
-```bash
-python scripts/train_simple_model.py
-```
-
-### 5. 本地运行
-
-```bash
-# 安装Vercel CLI
-npm i -g vercel
-
-# 本地开发
-vercel dev
-```
+---
 
 ## 📁 项目结构
-
 ```
-lottery-ai-lab/
-├── api/                    # Vercel API函数
-├── public/                 # 前端静态文件
-├── src/                    # 核心业务逻辑
-│   ├── data/              # 数据处理
-│   ├── models/            # 模型定义
-│   ├── spiritual/         # 灵修因子系统
-│   └── utils/             # 工具函数
-├── data/                  # 数据文件
-├── scripts/               # 脚本工具
-└── tests/                 # 测试文件
+Large-model-post-training/
+├── api/                          # API端点
+│   ├── lottery_historical_data.py  # 历史数据（核心）
+│   ├── latest-results.py           # 最新开奖
+│   ├── data-analysis.py            # 数据分析
+│   ├── predict.py                  # AI预测
+│   ├── spiritual.py                # 灵修因子
+│   ├── generate-tweet.py           # 推文生成
+│   └── health.py                   # 健康检查
+├── public/                       # 前端文件
+│   ├── index.html
+│   ├── css/
+│   └── js/
+├── vercel.json                   # Vercel配置
+├── requirements.txt              # Python依赖
+└── README.md                     # 项目说明
 ```
 
-## 🎓 科普文章系列
+---
 
-1. AI能预测彩票吗？
-2. 数据科学完整流程
-3. 特征工程的艺术
-4. 随机森林模型解密
-5. 哈希函数的魔法
-6. 贝叶斯定理入门
-7. 数据可视化技巧
-8. API设计最佳实践
+## 🛠️ 技术栈
 
-## 🤝 贡献指南
+- **后端：** Python 3.9+
+- **部署：** Vercel Serverless
+- **前端：** HTML + CSS + JavaScript
+- **AI模型：** LSTM + Transformer + XGBoost（理论框架）
+- **数据源：** 中国福利彩票官网
 
-欢迎提交Issue和Pull Request！
+---
+
+## 📝 开发计划
+
+- [x] 历史数据采集
+- [x] API端点开发
+- [x] 前端界面
+- [x] Vercel部署
+- [ ] 模型优化
+- [ ] 移动端适配
+- [ ] 数据可视化增强
+
+---
+
+## ⚠️ 免责声明
+
+本系统仅供学习和研究使用。彩票具有随机性，预测结果不构成任何购彩建议。请理性购彩，适度娱乐。
+
+---
 
 ## 📄 许可证
 
 MIT License
 
-## ⚠️ 免责声明
+---
 
-本项目仅用于AI技术学习和科普教育。彩票是完全随机的，任何预测方法都不能提高中奖概率。请理性购彩，不要沉迷。
+## 👨‍💻 作者
+
+**Baggio200cn**
 
 ---
 
-**记住：AI是工具，不是魔法** 🎓
+## 🙏 致谢
+
+- 中国福利彩票官网提供数据
+- Vercel提供部署平台
+- Claude AI提供技术支持
+
+---
+
+**最后更新：** 2024-11-14  
+**版本：** v1.0

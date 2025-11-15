@@ -13,10 +13,12 @@ except ImportError:
     from lottery_historical_data import get_historical_data, get_hot_and_cold_numbers
 
 class handler(BaseHTTPRequestHandler):
-    def do_POST(self):
+    
+    def _generate_prediction(self):
+        """生成预测的核心逻辑"""
         try:
             # 获取历史数据用于预测
-            historical_data = get_historical_data(50)  # 使用最近50期数据
+            historical_data = get_historical_data(50)
             hot_cold_front = get_hot_and_cold_numbers('front', 15)
             hot_cold_back = get_hot_and_cold_numbers('back', 8)
             
@@ -26,8 +28,8 @@ class handler(BaseHTTPRequestHandler):
             
             # 前区预测：基于热号的智能选择
             front_candidates = list(range(1, 36))
-            # 创建权重列表（热号重复3次增加被选中概率）
             weighted_front = hot_front * 3 + [n for n in front_candidates if n not in hot_front]
+            
             # 从权重列表中随机选择5个不重复的号码
             selected_front = []
             attempts = 0
@@ -37,15 +39,16 @@ class handler(BaseHTTPRequestHandler):
                     selected_front.append(num)
                 attempts += 1
             
-            # 如果选择失败，使用备用方案
+            # 备用方案
             if len(selected_front) < 5:
                 selected_front = random.sample(front_candidates, 5)
             
             front_zone = sorted(selected_front)
             
-            # 后区预测：优先选择热号
+            # 后区预测
             back_candidates = list(range(1, 13))
             weighted_back = hot_back * 2 + [n for n in back_candidates if n not in hot_back]
+            
             selected_back = []
             attempts = 0
             while len(selected_back) < 2 and attempts < 50:
@@ -54,17 +57,16 @@ class handler(BaseHTTPRequestHandler):
                     selected_back.append(num)
                 attempts += 1
             
-            # 如果选择失败，使用备用方案
             if len(selected_back) < 2:
                 selected_back = random.sample(back_candidates, 2)
             
             back_zone = sorted(selected_back)
             
-            # 计算置信度（基于热号使用情况）
+            # 计算置信度
             hot_count = sum(1 for n in front_zone if n in hot_front[:5])
             confidence = 0.65 + (hot_count * 0.05) + random.uniform(0, 0.1)
             
-            # 生成其他模型的预测（用于展示多模型集成）
+            # 生成其他模型的预测
             lstm_front = sorted(random.sample(front_candidates, 5))
             lstm_back = sorted(random.sample(back_candidates, 2))
             
@@ -74,7 +76,7 @@ class handler(BaseHTTPRequestHandler):
             xgboost_front = sorted(random.sample(front_candidates, 5))
             xgboost_back = sorted(random.sample(back_candidates, 2))
             
-            response = {
+            return {
                 'status': 'success',
                 'prediction': {
                     'ensemble_prediction': {
@@ -112,13 +114,55 @@ class handler(BaseHTTPRequestHandler):
                 },
                 'timestamp': datetime.now().isoformat()
             }
+        except Exception as e:
+            return {
+                'status': 'error',
+                'message': str(e),
+                'timestamp': datetime.now().isoformat()
+            }
+    
+    def do_GET(self):
+        """支持GET方法用于测试"""
+        try:
+            result = self._generate_prediction()
+            result['note'] = 'GET method for testing. Use POST for production.'
             
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             
-            self.wfile.write(json.dumps(response, ensure_ascii=False).encode('utf-8'))
+            self.wfile.write(json.dumps(result, ensure_ascii=False).encode('utf-8'))
+            
+        except Exception as e:
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            error_response = {
+                'status': 'error',
+                'message': str(e),
+                'timestamp': datetime.now().isoformat()
+            }
+            self.wfile.write(json.dumps(error_response).encode('utf-8'))
+    
+    def do_POST(self):
+        """处理POST请求"""
+        try:
+            # 读取请求数据（如果有）
+            content_length = int(self.headers.get('Content-Length', 0))
+            if content_length > 0:
+                post_data = self.rfile.read(content_length)
+                request_data = json.loads(post_data.decode('utf-8'))
+            
+            result = self._generate_prediction()
+            
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            
+            self.wfile.write(json.dumps(result, ensure_ascii=False).encode('utf-8'))
             
         except Exception as e:
             self.send_response(500)
@@ -135,6 +179,32 @@ class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.end_headers()
+```
+
+4. **滚动到底部提交**
+   - Commit message: `Add GET support and fix random.sample error`
+   - 点击 **"Commit changes"**
+
+---
+
+## ⏰ 等待部署（2-3分钟）
+
+### 查看Vercel部署状态：
+```
+https://vercel.com/baggio200cns-projects/large-model-post-training
+```
+
+**等待显示：** 🟢 Ready
+
+---
+
+## 🧪 部署完成后测试
+
+### 测试1：浏览器GET测试
+
+**直接访问：**
+```
+https://large-model-post-training.vercel.app/api/predict.py

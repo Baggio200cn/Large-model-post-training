@@ -14,6 +14,7 @@
 # 历史开奖数据
 LOTTERY_HISTORY = [
     # ===== 2025年11月数据 =====
+     {"period": "25130", "draw_date": "2025-11-15", "front_zone": [1, 13, 16, 27, 29], "back_zone": [2, 11]},
     {"period": "25129", "draw_date": "2025-11-12", "front_zone": [3, 9, 14, 28, 35], "back_zone": [2, 4]},
     {"period": "25128", "draw_date": "2025-11-10", "front_zone": [3, 6, 26, 30, 33], "back_zone": [11, 12]},
     {"period": "25127", "draw_date": "2025-11-08", "front_zone": [4, 5, 19, 28, 29], "back_zone": [5, 8]},

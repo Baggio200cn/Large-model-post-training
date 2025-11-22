@@ -1,7 +1,7 @@
 """ML预测模型"""
 import random
 import statistics
-from ml_features import LotteryFeatureExtractor
+from _ml_features import LotteryFeatureExtractor
 
 class MLPredictor:
     def __init__(self, historical_data):

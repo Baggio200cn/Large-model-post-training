@@ -1,8 +1,10 @@
 from http.server import BaseHTTPRequestHandler
 import json
 from datetime import datetime
-from api.lottery_historical_data import LOTTERY_HISTORY
-from api.ml_predictor import MLPredictor
+
+# 正确的import路径（无api.前缀）
+from lottery_historical_data import LOTTERY_HISTORY
+from ml_predictor import MLPredictor
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
@@ -21,7 +23,7 @@ class handler(BaseHTTPRequestHandler):
                 'status': 'success',
                 'prediction': {
                     'all_predictions': predictions,
-                    'ensemble_prediction': predictions[0],  # 第一组作为主推荐
+                    'ensemble_prediction': predictions[0],
                     'based_on_data': {
                         'periods_analyzed': len(LOTTERY_HISTORY),
                         'data_range': f"{LOTTERY_HISTORY[0]['period']}-{LOTTERY_HISTORY[-1]['period']}",
@@ -60,16 +62,17 @@ class handler(BaseHTTPRequestHandler):
         except Exception as e:
             self.send_response(500)
             self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             error_response = {
                 'status': 'error',
                 'message': str(e),
+                'error_type': type(e).__name__,
                 'timestamp': datetime.now().isoformat()
             }
             self.wfile.write(json.dumps(error_response).encode('utf-8'))
     
     def do_GET(self):
-        # GET请求返回系统信息
         self.do_POST()
     
     def do_OPTIONS(self):
@@ -78,3 +81,18 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.end_headers()
+```
+
+---
+
+## ✅ 完整操作清单
+
+**需要修改的文件（共3个）：**
+
+1. ✅ **替换** `api/ml_features.py` - 移除numpy，用statistics
+2. ✅ **替换** `api/ml_predictor.py` - 移除numpy，用标准库
+3. ✅ **替换** `api/predict.py` - 确保import路径正确
+
+**Commit消息：**
+```
+Fix: Remove numpy dependency and fix import paths for Vercel

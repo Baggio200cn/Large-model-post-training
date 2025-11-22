@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎯 大乐透AI预测系统</title>
+    <title>🎯 大乐透AI预测系统 - ML版</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -24,6 +24,14 @@
             margin-bottom: 10px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
+        .header .badge {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
         .card {
             background: white;
             border-radius: 15px;
@@ -36,6 +44,17 @@
             margin-bottom: 15px;
             border-bottom: 2px solid #667eea;
             padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .ml-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 3px 12px;
+            border-radius: 15px;
+            font-size: 0.75em;
+            font-weight: normal;
         }
         .btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -76,6 +95,21 @@
             margin: 10px 0;
             border-left: 4px solid #667eea;
         }
+        .prediction-group h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .strategy-tag {
+            background: #e6f3ff;
+            color: #2c5282;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: normal;
+        }
         .loading { 
             text-align: center; 
             color: #666; 
@@ -102,29 +136,64 @@
             border-radius: 10px;
             margin-top: 15px;
         }
+        .data-stats h4 {
+            color: #2c5282;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
         .data-stats p {
             margin: 5px 0;
+            font-size: 0.95em;
         }
-        .status-indicator {
+        .ml-info-box {
+            background: linear-gradient(135deg, #f0f4ff, #e6f3ff);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border-left: 4px solid #667eea;
+        }
+        .ml-info-box h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .feature-tag {
             display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            margin-right: 8px;
+            background: white;
+            color: #667eea;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            margin: 3px;
+            border: 1px solid #667eea;
         }
-        .status-ok { background: #48bb78; }
-        .status-error { background: #f56565; }
+        .confidence-bar {
+            background: #e2e8f0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #38a169);
+            transition: width 0.3s ease;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        @media (max-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>🎯 大乐透AI预测系统</h1>
-            <p>基于85期真实历史数据（25047-25131）</p>
-            <p style="font-size: 0.9em; margin-top: 10px;">
-                <span class="status-indicator status-ok"></span>
-                <span id="system-status">系统正常</span>
-            </p>
+            <p>基于85期真实历史数据 + 机器学习特征工程</p>
+            <div class="badge">🤖 ML-Powered Prediction System</div>
         </div>
 
         <!-- API状态检测 -->
@@ -136,23 +205,27 @@
 
         <!-- AI预测 -->
         <div class="card">
-            <h3>🤖 AI预测（5组）</h3>
-            <button class="btn" onclick="generatePrediction()" id="predict-btn">生成预测</button>
+            <h3>
+                🤖 ML智能预测（5组）
+                <span class="ml-badge">Machine Learning</span>
+            </h3>
+            <button class="btn" onclick="generatePrediction()" id="predict-btn">生成ML预测</button>
             <div id="prediction-result"></div>
         </div>
 
-        <!-- 最新开奖 -->
-        <div class="card">
-            <h3>📋 最新开奖</h3>
-            <button class="btn" onclick="loadLatest()">查看最新</button>
-            <div id="latest-result"></div>
-        </div>
+        <!-- 最新开奖 & 数据分析 -->
+        <div class="grid-2">
+            <div class="card">
+                <h3>📋 最新开奖</h3>
+                <button class="btn" onclick="loadLatest()">查看最新</button>
+                <div id="latest-result"></div>
+            </div>
 
-        <!-- 数据分析 -->
-        <div class="card">
-            <h3>📊 数据分析</h3>
-            <button class="btn" onclick="analyzeData()">分析数据</button>
-            <div id="analysis-result"></div>
+            <div class="card">
+                <h3>📊 数据分析</h3>
+                <button class="btn" onclick="analyzeData()">分析数据</button>
+                <div id="analysis-result"></div>
+            </div>
         </div>
 
         <!-- 灵修因子 -->
@@ -164,9 +237,8 @@
     </div>
 
     <script>
-        console.log('🚀 系统启动...');
+        console.log('🚀 ML预测系统启动...');
 
-        // ✅ 修复：去掉所有.py后缀
         const API_ENDPOINTS = {
             predict: '/api/predict',
             latest: '/api/latest-results',
@@ -181,7 +253,7 @@
             el.innerHTML = '<div class="loading">正在检查API端点...</div>';
             
             const apis = [
-                { name: '预测API', url: API_ENDPOINTS.predict, method: 'POST' },
+                { name: 'ML预测API', url: API_ENDPOINTS.predict, method: 'POST' },
                 { name: '最新开奖API', url: API_ENDPOINTS.latest, method: 'GET' },
                 { name: '灵修API', url: API_ENDPOINTS.spiritual, method: 'GET' },
                 { name: '数据分析API', url: API_ENDPOINTS.analysis, method: 'GET' },
@@ -202,27 +274,21 @@
                     allOK = allOK && ok;
                     
                     html += `<p>${ok ? '✅' : '❌'} ${api.name}: HTTP ${res.status}</p>`;
-                    
-                    if (ok) {
-                        console.log(`✅ ${api.name} 测试成功`);
-                    }
                 } catch (e) {
                     allOK = false;
                     html += `<p>❌ ${api.name}: ${e.message}</p>`;
-                    console.error(`❌ ${api.name} 测试失败:`, e);
                 }
             }
             
             el.innerHTML = `<div class="${allOK ? 'success' : 'error'}">${html}</div>`;
-            document.getElementById('system-status').textContent = allOK ? '系统正常' : '部分API异常';
         }
 
-        // 生成预测
+        // 生成ML预测
         async function generatePrediction() {
             const el = document.getElementById('prediction-result');
             const btn = document.getElementById('predict-btn');
             
-            el.innerHTML = '<div class="loading">正在生成预测...</div>';
+            el.innerHTML = '<div class="loading">ML模型正在分析85期历史数据...</div>';
             btn.disabled = true;
             
             try {
@@ -237,36 +303,10 @@
                 }
                 
                 const data = await res.json();
-                console.log('预测数据:', data);
+                console.log('ML预测数据:', data);
                 
                 if (data.status === 'success') {
-                    const preds = data.prediction.all_predictions;
-                    const info = data.prediction.based_on_data;
-                    
-                    let html = '<div class="success">✅ 预测生成成功！</div>';
-                    
-                    preds.forEach((p, i) => {
-                        html += `<div class="prediction-group">
-                            <h4>第${i+1}组预测</h4>
-                            <div>前区: `;
-                        p.front_zone.forEach(n => {
-                            html += `<span class="number-ball front-ball">${String(n).padStart(2,'0')}</span>`;
-                        });
-                        html += ` 后区: `;
-                        p.back_zone.forEach(n => {
-                            html += `<span class="number-ball back-ball">${String(n).padStart(2,'0')}</span>`;
-                        });
-                        html += `</div><p style="margin-top:8px;">置信度: ${(p.confidence*100).toFixed(1)}%</p></div>`;
-                    });
-                    
-                    html += `<div class="data-stats">
-                        <p><strong>分析期数:</strong> ${info.periods_analyzed} 期</p>
-                        <p><strong>数据范围:</strong> ${info.data_range}</p>
-                        <p><strong>前区热号:</strong> ${info.hot_numbers_front.join(', ')}</p>
-                        <p><strong>后区热号:</strong> ${info.hot_numbers_back.join(', ')}</p>
-                    </div>`;
-                    
-                    el.innerHTML = html;
+                    displayMLPrediction(data);
                 } else {
                     throw new Error(data.message || '预测失败');
                 }
@@ -276,6 +316,75 @@
             } finally {
                 btn.disabled = false;
             }
+        }
+
+        function displayMLPrediction(data) {
+            const el = document.getElementById('prediction-result');
+            const preds = data.prediction.all_predictions;
+            const info = data.prediction.based_on_data;
+            const mlInfo = data.ml_info;
+            
+            let html = '<div class="success">✅ ML预测生成成功！</div>';
+            
+            // 显示ML模型信息
+            html += `<div class="ml-info-box">
+                <h4>🤖 ML模型信息</h4>
+                <p><strong>模型类型:</strong> ${mlInfo.model_type}</p>
+                <p><strong>使用特征:</strong></p>
+                <div style="margin-top: 8px;">`;
+            
+            mlInfo.features_used.forEach(feature => {
+                html += `<span class="feature-tag">${feature}</span>`;
+            });
+            
+            html += `</div></div>`;
+            
+            // 显示5组预测
+            preds.forEach((p, i) => {
+                html += `<div class="prediction-group">
+                    <h4>
+                        第${i+1}组预测
+                        <span class="strategy-tag">${p.strategy}</span>
+                    </h4>
+                    <div>
+                        <strong>前区:</strong> `;
+                
+                p.front_zone.forEach(n => {
+                    html += `<span class="number-ball front-ball">${String(n).padStart(2,'0')}</span>`;
+                });
+                
+                html += ` <strong>后区:</strong> `;
+                
+                p.back_zone.forEach(n => {
+                    html += `<span class="number-ball back-ball">${String(n).padStart(2,'0')}</span>`;
+                });
+                
+                html += `</div>
+                    <div style="margin-top: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.9em;">置信度: ${(p.confidence*100).toFixed(1)}%</span>
+                        </div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: ${(p.confidence*100).toFixed(1)}%"></div>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            
+            // 显示数据统计
+            html += `<div class="data-stats">
+                <h4>📊 数据统计与特征</h4>
+                <p><strong>分析期数:</strong> ${info.periods_analyzed} 期 (${info.data_range})</p>
+                <p><strong>前区热号:</strong> ${info.hot_numbers_front.join(', ')}</p>
+                <p><strong>后区热号:</strong> ${info.hot_numbers_back.join(', ')}</p>
+                <p><strong>前区冷号:</strong> ${info.cold_numbers_front.join(', ')}</p>
+                <p><strong>后区冷号:</strong> ${info.cold_numbers_back.join(', ')}</p>
+                <p><strong>前区奇偶比:</strong> ${(info.front_odd_ratio * 100).toFixed(1)}%</p>
+                <p><strong>前区平均和值:</strong> ${info.front_sum_mean.toFixed(2)}</p>
+                <p><strong>前区平均跨度:</strong> ${info.front_span_mean.toFixed(2)}</p>
+            </div>`;
+            
+            el.innerHTML = html;
         }
 
         // 加载最新开奖
@@ -288,7 +397,6 @@
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 
                 const data = await res.json();
-                console.log('最新开奖:', data);
                 
                 if (data.status === 'success') {
                     const latest = data.latest_results;
@@ -317,7 +425,6 @@
                 }
             } catch (e) {
                 el.innerHTML = `<div class="error">❌ 错误: ${e.message}</div>`;
-                console.error('加载错误:', e);
             }
         }
 
@@ -331,7 +438,6 @@
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 
                 const data = await res.json();
-                console.log('数据分析:', data);
                 
                 if (data.status === 'success') {
                     const analysis = data.analysis;
@@ -339,7 +445,6 @@
                     let html = '<div class="success">✅ 分析完成</div>';
                     html += `<div class="data-stats">
                         <p><strong>总期数:</strong> ${analysis.data_overview.total_draws}</p>
-                        <p><strong>分析周期:</strong> ${analysis.data_overview.analysis_period}</p>
                         <p><strong>前区热号:</strong> ${analysis.front_zone_analysis.hot_numbers.join(', ')}</p>
                         <p><strong>前区冷号:</strong> ${analysis.front_zone_analysis.cold_numbers.join(', ')}</p>
                         <p><strong>后区热号:</strong> ${analysis.back_zone_analysis.hot_numbers.join(', ')}</p>
@@ -352,7 +457,6 @@
                 }
             } catch (e) {
                 el.innerHTML = `<div class="error">❌ 错误: ${e.message}</div>`;
-                console.error('分析错误:', e);
             }
         }
 
@@ -366,7 +470,6 @@
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 
                 const data = await res.json();
-                console.log('灵修因子:', data);
                 
                 if (data.status === 'success') {
                     const sp = data.spiritual_perturbation;
@@ -376,10 +479,7 @@
                         <p><strong>灵修图片:</strong> ${sp.spiritual_image.description}</p>
                         <p><strong>能量等级:</strong> ${sp.perturbation_factors.energy_level}</p>
                         <p><strong>宇宙调谐:</strong> ${(sp.perturbation_factors.cosmic_alignment*100).toFixed(1)}%</p>
-                        <p><strong>混沌因子:</strong> ${sp.perturbation_factors.chaos_factor.toFixed(3)}</p>
-                        <p><strong>和谐因子:</strong> ${sp.perturbation_factors.harmony_factor.toFixed(3)}</p>
                         <p><strong>冥想建议:</strong> ${sp.spiritual_guidance.recommended_mantra}</p>
-                        <p><strong>冥想时长:</strong> ${sp.spiritual_guidance.meditation_time}</p>
                     </div>`;
                     
                     el.innerHTML = html;
@@ -388,13 +488,12 @@
                 }
             } catch (e) {
                 el.innerHTML = `<div class="error">❌ 错误: ${e.message}</div>`;
-                console.error('灵修错误:', e);
             }
         }
 
         // 页面加载时自动检查API
         window.addEventListener('load', () => {
-            console.log('✅ 页面加载完成');
+            console.log('✅ ML系统加载完成');
             setTimeout(checkAPIs, 500);
         });
     </script>

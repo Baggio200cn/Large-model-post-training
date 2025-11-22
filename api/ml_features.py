@@ -3,7 +3,7 @@
 提取彩票数据的统计特征
 """
 
-import numpy as np
+import statistics
 from collections import Counter
 from datetime import datetime, timedelta
 
@@ -91,14 +91,14 @@ class LotteryFeatureExtractor:
             odd_count = sum(1 for num in zone_data if num % 2 == 1)
             odd_counts.append(odd_count / len(zone_data))
         
-        return np.mean(odd_counts)
+        return statistics.mean(odd_counts) if odd_counts else 0.5
     
     def calculate_sum_value(self, zone='front', last_n=20):
         """
         计算号码和值趋势
         :param zone: 'front' 或 'back'
         :param last_n: 最近N期
-        :return: 平均和值
+        :return: 平均和值, 标准差
         """
         recent_data = self.data[-last_n:] if len(self.data) >= last_n else self.data
         sum_values = []
@@ -107,14 +107,17 @@ class LotteryFeatureExtractor:
             zone_data = record['front_zone'] if zone == 'front' else record['back_zone']
             sum_values.append(sum(zone_data))
         
-        return np.mean(sum_values), np.std(sum_values)
+        if len(sum_values) < 2:
+            return (sum(sum_values) if sum_values else 0, 0)
+        
+        return statistics.mean(sum_values), statistics.stdev(sum_values)
     
     def calculate_span(self, zone='front', last_n=20):
         """
         计算跨度（最大值-最小值）
         :param zone: 'front' 或 'back'
         :param last_n: 最近N期
-        :return: 平均跨度
+        :return: 平均跨度, 标准差
         """
         recent_data = self.data[-last_n:] if len(self.data) >= last_n else self.data
         spans = []
@@ -123,7 +126,10 @@ class LotteryFeatureExtractor:
             zone_data = record['front_zone'] if zone == 'front' else record['back_zone']
             spans.append(max(zone_data) - min(zone_data))
         
-        return np.mean(spans), np.std(spans)
+        if len(spans) < 2:
+            return (statistics.mean(spans) if spans else 0, 0)
+        
+        return statistics.mean(spans), statistics.stdev(spans)
     
     def calculate_ac_value(self, numbers):
         """

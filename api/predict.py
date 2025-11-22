@@ -1,24 +1,16 @@
 from http.server import BaseHTTPRequestHandler
 import json
 from datetime import datetime
-
-# 正确的import路径（无api.前缀）
 from lottery_historical_data import LOTTERY_HISTORY
 from ml_predictor import MLPredictor
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
-            # 创建ML预测器
             predictor = MLPredictor(LOTTERY_HISTORY)
-            
-            # 提取特征
             features = predictor.features
-            
-            # 生成5组预测
             predictions = predictor.generate_predictions(5)
             
-            # 准备响应
             response = {
                 'status': 'success',
                 'prediction': {
@@ -56,7 +48,6 @@ class handler(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            
             self.wfile.write(json.dumps(response, ensure_ascii=False).encode('utf-8'))
             
         except Exception as e:
@@ -81,18 +72,3 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.end_headers()
-```
-
----
-
-## ✅ 完整操作清单
-
-**需要修改的文件（共3个）：**
-
-1. ✅ **替换** `api/ml_features.py` - 移除numpy，用statistics
-2. ✅ **替换** `api/ml_predictor.py` - 移除numpy，用标准库
-3. ✅ **替换** `api/predict.py` - 确保import路径正确
-
-**Commit消息：**
-```
-Fix: Remove numpy dependency and fix import paths for Vercel

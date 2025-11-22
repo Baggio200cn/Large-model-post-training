@@ -3,81 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎯 大乐透AI预测系统 - 完整版</title>
+    <title>🎯 大乐透AI预测系统</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
         body {
             font-family: 'Microsoft YaHei', Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            color: #333;
             padding: 20px;
+            color: #333;
         }
-        
-        .container { max-width: 1400px; margin: 0 auto; }
-        
+        .container { max-width: 1200px; margin: 0 auto; }
         .header {
             text-align: center;
             color: white;
             margin-bottom: 30px;
         }
-        
         .header h1 {
             font-size: 2.5em;
             margin-bottom: 10px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
-        
         .card {
-            background: rgba(255,255,255,0.95);
+            background: white;
             border-radius: 15px;
             padding: 25px;
             margin-bottom: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
-        
         .card h3 {
             color: #667eea;
             margin-bottom: 15px;
             border-bottom: 2px solid #667eea;
             padding-bottom: 10px;
         }
-        
-        .data-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin: 15px 0;
-        }
-        
-        .data-item {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 10px;
-            border-left: 4px solid #667eea;
-        }
-        
-        .data-item strong {
-            display: block;
-            color: #667eea;
-            margin-bottom: 5px;
-            font-size: 0.9em;
-        }
-        
-        .data-item .value {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #2d3748;
-        }
-        
-        .time-display {
-            font-size: 1.3em;
-            font-weight: bold;
-            color: #48bb78;
-            font-family: 'Courier New', monospace;
-        }
-        
         .btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -86,19 +45,17 @@
             border-radius: 25px;
             cursor: pointer;
             font-size: 1em;
-            transition: all 0.3s ease;
             margin: 5px;
+            transition: all 0.3s ease;
         }
-        
         .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
-        
-        .btn-success {
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
-        
         .number-ball {
             display: inline-block;
             width: 40px;
@@ -110,467 +67,336 @@
             font-weight: bold;
             color: white;
         }
-        
         .front-ball { background: linear-gradient(135deg, #ff6b6b, #ee5a24); }
         .back-ball { background: linear-gradient(135deg, #4834d4, #686de0); }
-        
         .prediction-group {
             background: #f8f9fa;
-            padding: 20px;
+            padding: 15px;
             border-radius: 10px;
-            margin: 15px 0;
+            margin: 10px 0;
             border-left: 4px solid #667eea;
         }
-        
-        .prediction-group h4 {
-            color: #667eea;
-            margin-bottom: 10px;
-        }
-        
-        .prediction-source {
-            font-size: 0.9em;
-            color: #666;
-            margin-top: 8px;
-        }
-        
-        .upload-area {
-            border: 2px dashed #667eea;
-            border-radius: 10px;
-            padding: 30px;
-            text-align: center;
-            background: #f8f9fa;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .upload-area:hover {
-            background: #e8f4fd;
-            border-color: #4a5fc1;
-        }
-        
-        .upload-area input[type="file"] {
-            display: none;
-        }
-        
-        textarea {
-            width: 100%;
-            min-height: 100px;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-family: inherit;
-            font-size: 1em;
-            margin-top: 10px;
-        }
-        
-        .history-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        
-        .history-table th,
-        .history-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
-        .history-table th {
-            background: #667eea;
-            color: white;
-            font-weight: bold;
-        }
-        
-        .weight-box {
-            background: #e8f4fd;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 10px 0;
-            line-height: 1.8;
-        }
-        
-        .loading {
-            text-align: center;
-            color: #666;
+        .loading { 
+            text-align: center; 
+            color: #666; 
             padding: 20px;
+            font-style: italic;
         }
-        
-        .error {
-            background: #fed7d7;
-            color: #c53030;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 10px 0;
+        .error { 
+            background: #fed7d7; 
+            color: #c53030; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin: 10px 0; 
         }
-        
-        .success {
-            background: #c6f6d5;
-            color: #22543d;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 10px 0;
+        .success { 
+            background: #c6f6d5; 
+            color: #22543d; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin: 10px 0; 
         }
-        
-        .markdown-preview {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            border: 1px solid #ddd;
-            max-height: 400px;
-            overflow-y: auto;
-            font-family: 'Courier New', monospace;
-            white-space: pre-wrap;
-            font-size: 0.9em;
-        }
-        
         .data-stats {
             background: #e6f3ff;
             padding: 15px;
             border-radius: 10px;
             margin-top: 15px;
         }
-        
-        .data-stats h4 {
-            color: #2c5282;
-            margin-bottom: 10px;
+        .data-stats p {
+            margin: 5px 0;
         }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-ok { background: #48bb78; }
+        .status-error { background: #f56565; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎯 大乐透AI预测系统 - 完整版</h1>
-            <p>基于84期真实历史数据 + 深度学习 + 灵修直觉融合</p>
+            <h1>🎯 大乐透AI预测系统</h1>
+            <p>基于85期真实历史数据（25047-25131）</p>
             <p style="font-size: 0.9em; margin-top: 10px;">
-                数据更新: <span id="data-update-time">2025-11-17</span>
+                <span class="status-indicator status-ok"></span>
+                <span id="system-status">系统正常</span>
             </p>
         </div>
 
-        <!-- 系统状态 -->
+        <!-- API状态检测 -->
         <div class="card">
-            <h3>📊 系统运行状态</h3>
-            <div class="data-grid">
-                <div class="data-item">
-                    <strong>历史数据量</strong>
-                    <div class="value" id="total-periods">84 期</div>
-                </div>
-                <div class="data-item">
-                    <strong>当前系统时间</strong>
-                    <div class="time-display" id="system-time">加载中...</div>
-                </div>
-                <div class="data-item">
-                    <strong>模型置信度</strong>
-                    <div class="value">85.0%</div>
-                </div>
-                <div class="data-item">
-                    <strong>服务状态</strong>
-                    <div class="value" style="color: #48bb78;">✅ 运行正常</div>
-                </div>
-            </div>
+            <h3>🔍 系统诊断</h3>
+            <button class="btn" onclick="checkAPIs()">检查所有API</button>
+            <div id="api-status-result"></div>
         </div>
 
-        <!-- AI预测结果（5组） -->
+        <!-- AI预测 -->
         <div class="card">
-            <h3>🤖 AI模型预测结果（基于真实历史数据）</h3>
-            <button class="btn" onclick="generateAIPredictions()">🔄 生成AI预测（5组）</button>
-            <div id="ai-predictions-container">
-                <div class="loading">点击按钮生成基于84期真实历史数据的5组预测</div>
-            </div>
+            <h3>🤖 AI预测（5组）</h3>
+            <button class="btn" onclick="generatePrediction()" id="predict-btn">生成预测</button>
+            <div id="prediction-result"></div>
         </div>
 
-        <!-- 灵修模块 -->
+        <!-- 最新开奖 -->
         <div class="card">
-            <h3>🧘 灵修直觉模块</h3>
-            <p style="color: #666; margin-bottom: 15px;">上传灵修图片和输入直觉文本，系统将与AI预测进行融合</p>
-            
-            <div class="upload-area" onclick="document.getElementById('spiritual-image').click()">
-                <input type="file" id="spiritual-image" accept="image/*" onchange="handleImageUpload(event)">
-                <p>📷 点击上传灵修图片</p>
-                <p style="font-size: 0.9em; color: #999; margin-top: 5px;">支持 JPG, PNG 格式</p>
-            </div>
-            
-            <div id="image-preview" style="margin-top: 15px; text-align: center;"></div>
-            
-            <textarea id="spiritual-text" placeholder="输入您的直觉感悟、冥想心得或任何灵性启示..."></textarea>
-            
-            <button class="btn btn-success" onclick="fusePredictions()">✨ 融合AI与灵修，生成最终预测</button>
-            
-            <div id="final-predictions-container"></div>
+            <h3>📋 最新开奖</h3>
+            <button class="btn" onclick="loadLatest()">查看最新</button>
+            <div id="latest-result"></div>
         </div>
 
-        <!-- 历史开奖记录 -->
+        <!-- 数据分析 -->
         <div class="card">
-            <h3>📋 历史开奖记录（最近一期）</h3>
-            <button class="btn" onclick="loadHistory()">🔄 刷新历史数据</button>
-            <div id="history-container">
-                <div class="loading">点击按钮加载最新开奖数据</div>
-            </div>
+            <h3>📊 数据分析</h3>
+            <button class="btn" onclick="analyzeData()">分析数据</button>
+            <div id="analysis-result"></div>
+        </div>
+
+        <!-- 灵修因子 -->
+        <div class="card">
+            <h3>🧘 灵修因子</h3>
+            <button class="btn" onclick="getSpiritual()">获取因子</button>
+            <div id="spiritual-result"></div>
         </div>
     </div>
 
     <script>
-        let aiPredictions = [];
-        let spiritualImage = null;
-        let markdownContent = '';
-        
-        console.log('🚀 页面加载完成');
-        
-        // 页面加载时初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ DOM加载完成');
-            updateSystemTime();
-            setInterval(updateSystemTime, 1000);
-        });
+        console.log('🚀 系统启动...');
 
-        // 更新系统时间
-        function updateSystemTime() {
-            const now = new Date();
-            const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
-            document.getElementById('system-time').textContent = timeStr;
+        // ✅ 修复：去掉所有.py后缀
+        const API_ENDPOINTS = {
+            predict: '/api/predict',
+            latest: '/api/latest-results',
+            spiritual: '/api/spiritual',
+            analysis: '/api/data-analysis',
+            health: '/api/health'
+        };
+
+        // 检查所有API端点
+        async function checkAPIs() {
+            const el = document.getElementById('api-status-result');
+            el.innerHTML = '<div class="loading">正在检查API端点...</div>';
+            
+            const apis = [
+                { name: '预测API', url: API_ENDPOINTS.predict, method: 'POST' },
+                { name: '最新开奖API', url: API_ENDPOINTS.latest, method: 'GET' },
+                { name: '灵修API', url: API_ENDPOINTS.spiritual, method: 'GET' },
+                { name: '数据分析API', url: API_ENDPOINTS.analysis, method: 'GET' },
+                { name: '健康检查API', url: API_ENDPOINTS.health, method: 'GET' }
+            ];
+            
+            let html = '';
+            let allOK = true;
+            
+            for (const api of apis) {
+                try {
+                    const options = api.method === 'POST' 
+                        ? { method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{}' }
+                        : { method: 'GET' };
+                    
+                    const res = await fetch(api.url, options);
+                    const ok = res.status === 200;
+                    allOK = allOK && ok;
+                    
+                    html += `<p>${ok ? '✅' : '❌'} ${api.name}: HTTP ${res.status}</p>`;
+                    
+                    if (ok) {
+                        console.log(`✅ ${api.name} 测试成功`);
+                    }
+                } catch (e) {
+                    allOK = false;
+                    html += `<p>❌ ${api.name}: ${e.message}</p>`;
+                    console.error(`❌ ${api.name} 测试失败:`, e);
+                }
+            }
+            
+            el.innerHTML = `<div class="${allOK ? 'success' : 'error'}">${html}</div>`;
+            document.getElementById('system-status').textContent = allOK ? '系统正常' : '部分API异常';
         }
 
-        // ✅ 生成AI预测（5组）- 基于84期真实数据
-        async function generateAIPredictions() {
-            const container = document.getElementById('ai-predictions-container');
-            container.innerHTML = '<div class="loading">正在基于84期真实历史数据生成5组预测...</div>';
+        // 生成预测
+        async function generatePrediction() {
+            const el = document.getElementById('prediction-result');
+            const btn = document.getElementById('predict-btn');
+            
+            el.innerHTML = '<div class="loading">正在生成预测...</div>';
+            btn.disabled = true;
             
             try {
-                // 调用正确的API端点
-                const response = await fetch('/api/predict.py', {
+                const res = await fetch(API_ENDPOINTS.predict, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({})
                 });
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
                 }
                 
-                const data = await response.json();
-                console.log('API返回数据:', data);
+                const data = await res.json();
+                console.log('预测数据:', data);
                 
                 if (data.status === 'success') {
-                    // 从返回的数据中提取5组预测
-                    const predictions = data.prediction.all_predictions || [];
-                    const basedOnData = data.prediction.based_on_data;
+                    const preds = data.prediction.all_predictions;
+                    const info = data.prediction.based_on_data;
                     
-                    // 转换数据格式
-                    const formattedPredictions = predictions.map((pred, index) => ({
-                        strategy_name: ['保守策略', '平衡策略', '激进策略', '随机策略', '频率策略'][index] || `策略${index + 1}`,
-                        front_zone: pred.front_zone,
-                        back_zone: pred.back_zone,
-                        confidence: pred.confidence,
-                        based_on: basedOnData?.periods_analyzed || 84
-                    }));
+                    let html = '<div class="success">✅ 预测生成成功！</div>';
                     
-                    aiPredictions = formattedPredictions;
-                    displayAIPredictions(formattedPredictions, basedOnData);
+                    preds.forEach((p, i) => {
+                        html += `<div class="prediction-group">
+                            <h4>第${i+1}组预测</h4>
+                            <div>前区: `;
+                        p.front_zone.forEach(n => {
+                            html += `<span class="number-ball front-ball">${String(n).padStart(2,'0')}</span>`;
+                        });
+                        html += ` 后区: `;
+                        p.back_zone.forEach(n => {
+                            html += `<span class="number-ball back-ball">${String(n).padStart(2,'0')}</span>`;
+                        });
+                        html += `</div><p style="margin-top:8px;">置信度: ${(p.confidence*100).toFixed(1)}%</p></div>`;
+                    });
                     
-                    // 更新页面上的历史数据量
-                    if (basedOnData?.periods_analyzed) {
-                        document.getElementById('total-periods').textContent = `${basedOnData.periods_analyzed} 期`;
-                    }
+                    html += `<div class="data-stats">
+                        <p><strong>分析期数:</strong> ${info.periods_analyzed} 期</p>
+                        <p><strong>数据范围:</strong> ${info.data_range}</p>
+                        <p><strong>前区热号:</strong> ${info.hot_numbers_front.join(', ')}</p>
+                        <p><strong>后区热号:</strong> ${info.hot_numbers_back.join(', ')}</p>
+                    </div>`;
+                    
+                    el.innerHTML = html;
                 } else {
                     throw new Error(data.message || '预测失败');
                 }
-                
-            } catch (error) {
-                console.error('预测错误:', error);
-                container.innerHTML = `<div class="error">生成失败: ${error.message}<br>请查看控制台了解详情</div>`;
+            } catch (e) {
+                el.innerHTML = `<div class="error">❌ 错误: ${e.message}</div>`;
+                console.error('预测错误:', e);
+            } finally {
+                btn.disabled = false;
             }
         }
 
-        function displayAIPredictions(predictions, basedOnData) {
-            const container = document.getElementById('ai-predictions-container');
-            let html = '<div class="success">✅ 基于84期真实历史数据生成成功！</div>';
-            
-            predictions.forEach((pred, index) => {
-                html += `<div class="prediction-group">
-                    <h4>预测组 ${index + 1}: ${pred.strategy_name}</h4>
-                    <div>
-                        <strong>前区:</strong> `;
-                
-                pred.front_zone.forEach(num => {
-                    html += `<span class="number-ball front-ball">${String(num).padStart(2,'0')}</span>`;
-                });
-                
-                html += ` + <strong>后区:</strong> `;
-                
-                pred.back_zone.forEach(num => {
-                    html += `<span class="number-ball back-ball">${String(num).padStart(2,'0')}</span>`;
-                });
-                
-                html += `</div>
-                    <div class="prediction-source">
-                        置信度: ${(pred.confidence * 100).toFixed(1)}% | 
-                        数据基础: ${pred.based_on}期历史数据
-                    </div>
-                </div>`;
-            });
-            
-            // 显示数据统计
-            if (basedOnData) {
-                html += `<div class="data-stats">
-                    <h4>📊 数据统计信息</h4>
-                    <p><strong>分析期数:</strong> ${basedOnData.periods_analyzed} 期</p>
-                    <p><strong>前区热号:</strong> ${basedOnData.hot_numbers_front?.join(', ') || 'N/A'}</p>
-                    <p><strong>后区热号:</strong> ${basedOnData.hot_numbers_back?.join(', ') || 'N/A'}</p>
-                    <p><strong>前区冷号:</strong> ${basedOnData.cold_numbers_front?.join(', ') || 'N/A'}</p>
-                    <p><strong>后区冷号:</strong> ${basedOnData.cold_numbers_back?.join(', ') || 'N/A'}</p>
-                    <p><strong>数据来源:</strong> ${basedOnData.data_source || '真实历史数据'}</p>
-                    <p><strong>数据范围:</strong> ${basedOnData.data_range || '25047-25130'}</p>
-                </div>`;
-            }
-            
-            container.innerHTML = html;
-        }
-
-        // 处理图片上传
-        function handleImageUpload(event) {
-            const file = event.target.files[0];
-            if (file) {
-                spiritualImage = file;
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('image-preview').innerHTML = 
-                        `<img src="${e.target.result}" style="max-width: 300px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                        <p style="color: #48bb78; margin-top: 10px;">✅ 图片已上传</p>`;
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        // 融合预测
-        async function fusePredictions() {
-            if (aiPredictions.length === 0) {
-                alert('请先生成AI预测结果');
-                return;
-            }
-            
-            const text = document.getElementById('spiritual-text').value;
-            const container = document.getElementById('final-predictions-container');
-            container.innerHTML = '<div class="loading">正在融合AI预测与灵修直觉...</div>';
+        // 加载最新开奖
+        async function loadLatest() {
+            const el = document.getElementById('latest-result');
+            el.innerHTML = '<div class="loading">加载中...</div>';
             
             try {
-                const response = await fetch('/api/spiritual.py');
-                const spiritualData = await response.json();
+                const res = await fetch(API_ENDPOINTS.latest);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 
-                if (spiritualData.status === 'success') {
-                    const spiritual = spiritualData.spiritual_perturbation;
-                    
-                    let html = `<div class="success" style="margin-top: 20px;">
-                        <h4>✨ 融合完成！</h4>
-                        <p>灵修图片: ${spiritual.spiritual_image.description}</p>
-                        <p>能量等级: ${spiritual.perturbation_factors.energy_level}</p>
-                        <p>宇宙调谐: ${(spiritual.perturbation_factors.cosmic_alignment * 100).toFixed(1)}%</p>
-                        <p>冥想建议: ${spiritual.spiritual_guidance.recommended_mantra}</p>
-                    </div>`;
-                    
-                    html += '<h4 style="margin-top: 20px; color: #667eea;">🎯 最终融合预测（5组）</h4>';
-                    
-                    aiPredictions.forEach((pred, index) => {
-                        html += `<div class="prediction-group">
-                            <h4>最终预测 ${index + 1}</h4>
-                            <div>`;
-                        
-                        pred.front_zone.forEach(num => {
-                            html += `<span class="number-ball front-ball">${String(num).padStart(2,'0')}</span>`;
-                        });
-                        
-                        html += ` + `;
-                        
-                        pred.back_zone.forEach(num => {
-                            html += `<span class="number-ball back-ball">${String(num).padStart(2,'0')}</span>`;
-                        });
-                        
-                        html += `</div>
-                            <div class="prediction-source">
-                                来源: AI模型(${pred.strategy_name}) + 灵修直觉(${spiritual.spiritual_image.description})
-                            </div>
-                        </div>`;
-                    });
-                    
-                    container.innerHTML = html;
-                }
-                
-            } catch (error) {
-                console.error('融合错误:', error);
-                container.innerHTML = `<div class="error">融合失败: ${error.message}</div>`;
-            }
-        }
-
-        // 加载历史记录
-        async function loadHistory() {
-            const container = document.getElementById('history-container');
-            container.innerHTML = '<div class="loading">正在加载最新开奖数据...</div>';
-            
-            try {
-                const response = await fetch('/api/latest-results.py');
-                const data = await response.json();
+                const data = await res.json();
+                console.log('最新开奖:', data);
                 
                 if (data.status === 'success') {
                     const latest = data.latest_results;
                     
-                    let html = '<div class="success">✅ 数据加载成功</div>';
-                    html += '<table class="history-table">';
-                    html += '<thead><tr><th>期号</th><th>开奖日期</th><th>开奖号码</th></tr></thead><tbody>';
+                    let html = '<div class="success">✅ 加载成功</div>';
+                    html += `<div class="prediction-group">
+                        <h4>第${latest.period}期 (${latest.draw_date})</h4>
+                        <div>前区: `;
                     
-                    // 显示最新一期
-                    html += `<tr><td>${latest.period}</td><td>${latest.draw_date}</td><td>`;
-                    
-                    latest.winning_numbers.front_zone.forEach(num => {
-                        html += `<span class="number-ball front-ball">${String(num).padStart(2,'0')}</span>`;
+                    latest.winning_numbers.front_zone.forEach(n => {
+                        html += `<span class="number-ball front-ball">${String(n).padStart(2,'0')}</span>`;
                     });
                     
-                    html += ' + ';
+                    html += ` 后区: `;
                     
-                    latest.winning_numbers.back_zone.forEach(num => {
-                        html += `<span class="number-ball back-ball">${String(num).padStart(2,'0')}</span>`;
+                    latest.winning_numbers.back_zone.forEach(n => {
+                        html += `<span class="number-ball back-ball">${String(n).padStart(2,'0')}</span>`;
                     });
                     
-                    html += '</td></tr>';
-                    html += '</tbody></table>';
+                    html += `</div></div>`;
+                    html += `<p style="margin-top:10px;">总期数: ${data.data_info.total_periods} 期</p>`;
                     
-                    html += `<div class="data-stats">
-                        <h4>📊 数据信息</h4>
-                        <p><strong>总期数:</strong> ${data.data_info.total_periods} 期</p>
-                        <p><strong>数据来源:</strong> ${data.data_info.data_source}</p>
-                    </div>`;
-                    
-                    container.innerHTML = html;
+                    el.innerHTML = html;
+                } else {
+                    throw new Error(data.message);
                 }
-                
-            } catch (error) {
-                console.error('加载错误:', error);
-                container.innerHTML = `<div class="error">加载失败: ${error.message}</div>`;
+            } catch (e) {
+                el.innerHTML = `<div class="error">❌ 错误: ${e.message}</div>`;
+                console.error('加载错误:', e);
             }
         }
+
+        // 数据分析
+        async function analyzeData() {
+            const el = document.getElementById('analysis-result');
+            el.innerHTML = '<div class="loading">分析中...</div>';
+            
+            try {
+                const res = await fetch(API_ENDPOINTS.analysis);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                
+                const data = await res.json();
+                console.log('数据分析:', data);
+                
+                if (data.status === 'success') {
+                    const analysis = data.analysis;
+                    
+                    let html = '<div class="success">✅ 分析完成</div>';
+                    html += `<div class="data-stats">
+                        <p><strong>总期数:</strong> ${analysis.data_overview.total_draws}</p>
+                        <p><strong>分析周期:</strong> ${analysis.data_overview.analysis_period}</p>
+                        <p><strong>前区热号:</strong> ${analysis.front_zone_analysis.hot_numbers.join(', ')}</p>
+                        <p><strong>前区冷号:</strong> ${analysis.front_zone_analysis.cold_numbers.join(', ')}</p>
+                        <p><strong>后区热号:</strong> ${analysis.back_zone_analysis.hot_numbers.join(', ')}</p>
+                        <p><strong>后区冷号:</strong> ${analysis.back_zone_analysis.cold_numbers.join(', ')}</p>
+                    </div>`;
+                    
+                    el.innerHTML = html;
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (e) {
+                el.innerHTML = `<div class="error">❌ 错误: ${e.message}</div>`;
+                console.error('分析错误:', e);
+            }
+        }
+
+        // 灵修因子
+        async function getSpiritual() {
+            const el = document.getElementById('spiritual-result');
+            el.innerHTML = '<div class="loading">获取中...</div>';
+            
+            try {
+                const res = await fetch(API_ENDPOINTS.spiritual);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                
+                const data = await res.json();
+                console.log('灵修因子:', data);
+                
+                if (data.status === 'success') {
+                    const sp = data.spiritual_perturbation;
+                    
+                    let html = '<div class="success">✅ 获取成功</div>';
+                    html += `<div class="data-stats">
+                        <p><strong>灵修图片:</strong> ${sp.spiritual_image.description}</p>
+                        <p><strong>能量等级:</strong> ${sp.perturbation_factors.energy_level}</p>
+                        <p><strong>宇宙调谐:</strong> ${(sp.perturbation_factors.cosmic_alignment*100).toFixed(1)}%</p>
+                        <p><strong>混沌因子:</strong> ${sp.perturbation_factors.chaos_factor.toFixed(3)}</p>
+                        <p><strong>和谐因子:</strong> ${sp.perturbation_factors.harmony_factor.toFixed(3)}</p>
+                        <p><strong>冥想建议:</strong> ${sp.spiritual_guidance.recommended_mantra}</p>
+                        <p><strong>冥想时长:</strong> ${sp.spiritual_guidance.meditation_time}</p>
+                    </div>`;
+                    
+                    el.innerHTML = html;
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (e) {
+                el.innerHTML = `<div class="error">❌ 错误: ${e.message}</div>`;
+                console.error('灵修错误:', e);
+            }
+        }
+
+        // 页面加载时自动检查API
+        window.addEventListener('load', () => {
+            console.log('✅ 页面加载完成');
+            setTimeout(checkAPIs, 500);
+        });
     </script>
 </body>
 </html>
-```
-
----
-
-## ✅ 更新内容总结
-
-**已更新的位置：**
-
-1. ✅ **第245行** - 标题：`基于84期真实历史数据`
-2. ✅ **第248行** - 更新日期：`2025-11-17`
-3. ✅ **第258行** - 历史数据量：`84 期`
-4. ✅ **第264行** - 模型置信度：`85.0%`（微调）
-5. ✅ **第282行** - 预测说明：`基于84期真实历史数据`
-6. ✅ **第330行** - 加载提示：`基于84期真实历史数据`
-7. ✅ **第363行** - 显示文字：`基于84期真实历史数据生成成功`
-8. ✅ **第401行** - 数据范围：`25047-25130`
-
----
-
-## 📋 提交步骤
-
-1. **粘贴完整代码到 index.html**
-2. **Commit 提交：**
-```
-   Update: Refresh index.html with 84 periods data (25047-25130)

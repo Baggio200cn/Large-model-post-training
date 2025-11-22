@@ -1,8 +1,10 @@
-"""ML特征提取"""
+"""ML特征工程模块 - 无numpy依赖版本"""
 import statistics
 from collections import Counter
 
 class LotteryFeatureExtractor:
+    """彩票特征提取器"""
+    
     def __init__(self, historical_data):
         self.data = historical_data
         self.front_numbers = []
@@ -12,11 +14,13 @@ class LotteryFeatureExtractor:
             self.back_numbers.extend(record['back_zone'])
     
     def calculate_frequency(self, zone='front', top_n=10):
+        """计算号码出现频率"""
         numbers = self.front_numbers if zone == 'front' else self.back_numbers
         counter = Counter(numbers)
         return [num for num, count in counter.most_common(top_n)]
     
     def calculate_cold_numbers(self, zone='front', bottom_n=10):
+        """计算冷号"""
         numbers = self.front_numbers if zone == 'front' else self.back_numbers
         max_num = 35 if zone == 'front' else 12
         counter = Counter(numbers)
@@ -25,6 +29,7 @@ class LotteryFeatureExtractor:
         return sorted_nums[:bottom_n]
     
     def calculate_missing_values(self, zone='front', last_n=10):
+        """计算遗漏值"""
         max_num = 35 if zone == 'front' else 12
         missing = {}
         recent_data = self.data[-last_n:] if len(self.data) >= last_n else self.data
@@ -39,6 +44,7 @@ class LotteryFeatureExtractor:
         return missing
     
     def calculate_odd_even_ratio(self, zone='front', last_n=20):
+        """计算奇偶比例"""
         recent_data = self.data[-last_n:] if len(self.data) >= last_n else self.data
         odd_counts = []
         for record in recent_data:
@@ -48,6 +54,7 @@ class LotteryFeatureExtractor:
         return statistics.mean(odd_counts) if odd_counts else 0.5
     
     def calculate_sum_value(self, zone='front', last_n=20):
+        """计算和值"""
         recent_data = self.data[-last_n:] if len(self.data) >= last_n else self.data
         sum_values = [sum(record['front_zone'] if zone == 'front' else record['back_zone']) for record in recent_data]
         if len(sum_values) < 2:
@@ -55,6 +62,7 @@ class LotteryFeatureExtractor:
         return statistics.mean(sum_values), statistics.stdev(sum_values)
     
     def calculate_span(self, zone='front', last_n=20):
+        """计算跨度"""
         recent_data = self.data[-last_n:] if len(self.data) >= last_n else self.data
         spans = []
         for record in recent_data:
@@ -65,6 +73,7 @@ class LotteryFeatureExtractor:
         return statistics.mean(spans), statistics.stdev(spans)
     
     def extract_all_features(self):
+        """提取所有特征"""
         return {
             'front_hot': self.calculate_frequency('front', 10),
             'front_cold': self.calculate_cold_numbers('front', 10),

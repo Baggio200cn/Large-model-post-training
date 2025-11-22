@@ -25,44 +25,25 @@ class LotteryFeatureExtractor:
             self.back_numbers.extend(record['back_zone'])
     
     def calculate_frequency(self, zone='front', top_n=10):
-        """
-        计算号码出现频率
-        :param zone: 'front' 或 'back'
-        :param top_n: 返回前N个高频号码
-        :return: 高频号码列表
-        """
+        """计算号码出现频率"""
         numbers = self.front_numbers if zone == 'front' else self.back_numbers
         counter = Counter(numbers)
         return [num for num, count in counter.most_common(top_n)]
     
     def calculate_cold_numbers(self, zone='front', bottom_n=10):
-        """
-        计算冷号（低频号码）
-        :param zone: 'front' 或 'back'
-        :param bottom_n: 返回最冷的N个号码
-        :return: 冷号列表
-        """
+        """计算冷号"""
         numbers = self.front_numbers if zone == 'front' else self.back_numbers
         max_num = 35 if zone == 'front' else 12
         
         counter = Counter(numbers)
         all_numbers = range(1, max_num + 1)
-        
-        # 按出现次数排序（从少到多）
         sorted_nums = sorted(all_numbers, key=lambda x: counter.get(x, 0))
         return sorted_nums[:bottom_n]
     
     def calculate_missing_values(self, zone='front', last_n=10):
-        """
-        计算遗漏值（多少期没出现）
-        :param zone: 'front' 或 'back'
-        :param last_n: 检查最近N期
-        :return: {号码: 遗漏期数}
-        """
+        """计算遗漏值"""
         max_num = 35 if zone == 'front' else 12
         missing = {}
-        
-        # 获取最近N期数据
         recent_data = self.data[-last_n:] if len(self.data) >= last_n else self.data
         
         for num in range(1, max_num + 1):
@@ -77,12 +58,7 @@ class LotteryFeatureExtractor:
         return missing
     
     def calculate_odd_even_ratio(self, zone='front', last_n=20):
-        """
-        计算奇偶比例趋势
-        :param zone: 'front' 或 'back'
-        :param last_n: 最近N期
-        :return: 平均奇数比例
-        """
+        """计算奇偶比例"""
         recent_data = self.data[-last_n:] if len(self.data) >= last_n else self.data
         odd_counts = []
         
@@ -94,18 +70,10 @@ class LotteryFeatureExtractor:
         return statistics.mean(odd_counts) if odd_counts else 0.5
     
     def calculate_sum_value(self, zone='front', last_n=20):
-        """
-        计算号码和值趋势
-        :param zone: 'front' 或 'back'
-        :param last_n: 最近N期
-        :return: 平均和值, 标准差
-        """
+        """计算和值"""
         recent_data = self.data[-last_n:] if len(self.data) >= last_n else self.data
-        sum_values = []
-        
-        for record in recent_data:
-            zone_data = record['front_zone'] if zone == 'front' else record['back_zone']
-            sum_values.append(sum(zone_data))
+        sum_values = [sum(record['front_zone'] if zone == 'front' else record['back_zone']) 
+                      for record in recent_data]
         
         if len(sum_values) < 2:
             return (sum(sum_values) if sum_values else 0, 0)
@@ -113,12 +81,7 @@ class LotteryFeatureExtractor:
         return statistics.mean(sum_values), statistics.stdev(sum_values)
     
     def calculate_span(self, zone='front', last_n=20):
-        """
-        计算跨度（最大值-最小值）
-        :param zone: 'front' 或 'back'
-        :param last_n: 最近N期
-        :return: 平均跨度, 标准差
-        """
+        """计算跨度"""
         recent_data = self.data[-last_n:] if len(self.data) >= last_n else self.data
         spans = []
         
@@ -131,31 +94,9 @@ class LotteryFeatureExtractor:
         
         return statistics.mean(spans), statistics.stdev(spans)
     
-    def calculate_ac_value(self, numbers):
-        """
-        计算AC值（号码复杂度）
-        AC值 = 号码差值的种类数 - (号码个数-1)
-        :param numbers: 号码列表
-        :return: AC值
-        """
-        if len(numbers) < 2:
-            return 0
-        
-        sorted_nums = sorted(numbers)
-        differences = set()
-        
-        for i in range(len(sorted_nums)):
-            for j in range(i + 1, len(sorted_nums)):
-                differences.add(abs(sorted_nums[i] - sorted_nums[j]))
-        
-        return len(differences) - (len(numbers) - 1)
-    
     def extract_all_features(self):
-        """
-        提取所有特征
-        :return: 特征字典
-        """
-        features = {
+        """提取所有特征"""
+        return {
             'front_hot': self.calculate_frequency('front', 10),
             'front_cold': self.calculate_cold_numbers('front', 10),
             'back_hot': self.calculate_frequency('back', 5),
@@ -173,5 +114,3 @@ class LotteryFeatureExtractor:
             'back_span_mean': self.calculate_span('back')[0],
             'back_span_std': self.calculate_span('back')[1],
         }
-        
-        return features

@@ -4,8 +4,8 @@
 """
 
 import random
-import numpy as np
-from api.ml_features import LotteryFeatureExtractor
+import statistics
+from ml_features import LotteryFeatureExtractor
 
 class MLPredictor:
     """机器学习预测器"""
@@ -44,8 +44,8 @@ class MLPredictor:
             current_total = sum(current_probs)
             current_probs = [p / current_total for p in current_probs]
             
-            # 选择一个
-            chosen_idx = np.random.choice(available_indices, p=current_probs)
+            # 使用random.choices进行加权随机选择
+            chosen_idx = random.choices(available_indices, weights=current_probs, k=1)[0]
             selected.append(numbers[chosen_idx])
             available_indices.remove(chosen_idx)
         
@@ -175,7 +175,7 @@ class MLPredictor:
             ('模式匹配', self.pattern_based_prediction),
             ('遗漏补偿', self.missing_based_prediction),
             ('平衡策略', self.balanced_prediction),
-            ('综合推荐', self.balanced_prediction),  # 最后一组也用平衡策略
+            ('综合推荐', self.balanced_prediction),
         ]
         
         predictions = []

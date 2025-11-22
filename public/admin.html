@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 大乐透数据管理后台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .header h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .login-box, .main-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #4a5568;
+            font-weight: bold;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+        .input-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+        .input-row input {
+            width: 100%;
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #f56565, #c53030);
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .data-table th, .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .data-table th {
+            background: #f7fafc;
+            color: #4a5568;
+            font-weight: bold;
+        }
+        .data-table tr:hover {
+            background: #f7fafc;
+        }
+        .hidden { display: none; }
+        .alert {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        .alert-error {
+            background: #fed7d7;
+            color: #c53030;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 大乐透数据管理后台</h1>
+            <p>添加、查看、编辑历史开奖数据</p>
+        </div>
+
+        <!-- 登录框 -->
+        <div id="login-box" class="login-box">
+            <h2>请输入管理密码</h2>
+            <div class="input-group">
+                <label>密码：</label>
+                <input type="password" id="admin-password" placeholder="输入管理密码">
+            </div>
+            <button class="btn" onclick="login()">登录</button>
+            <div id="login-error"></div>
+        </div>
+
+        <!-- 主内容区 -->
+        <div id="main-content" class="main-content hidden">
+            <h2>添加新的开奖数据</h2>
+            
+            <div class="input-group">
+                <label>期数：</label>
+                <input type="text" id="new-period" placeholder="例如: 25132">
+            </div>
+            
+            <div class="input-group">
+                <label>日期：</label>
+                <input type="date" id="new-date">
+            </div>
+            
+            <div class="input-group">
+                <label>前区（5个号码）：</label>
+                <div class="input-row">
+                    <input type="number" id="front-1" min="1" max="35" placeholder="1">
+                    <input type="number" id="front-2" min="1" max="35" placeholder="2">
+                    <input type="number" id="front-3" min="1" max="35" placeholder="3">
+                    <input type="number" id="front-4" min="1" max="35" placeholder="4">
+                    <input type="number" id="front-5" min="1" max="35" placeholder="5">
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>后区（2个号码）：</label>
+                <div class="input-row" style="grid-template-columns: 1fr 1fr;">
+                    <input type="number" id="back-1" min="1" max="12" placeholder="1">
+                    <input type="number" id="back-2" min="1" max="12" placeholder="2">
+                </div>
+            </div>
+            
+            <button class="btn" onclick="addData()">➕ 添加数据</button>
+            <button class="btn" onclick="loadData()">🔄 刷新列表</button>
+            
+            <div id="message"></div>
+            
+            <h2 style="margin-top: 30px;">📋 历史数据列表</h2>
+            <div id="data-list">
+                <p>加载中...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let adminPassword = '';
+
+        function login() {
+            adminPassword = document.getElementById('admin-password').value;
+            
+            if (!adminPassword) {
+                alert('请输入密码');
+                return;
+            }
+            
+            // 验证密码（通过加载数据来验证）
+            fetch('/api/admin-data', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    password: adminPassword,
+                    action: 'list'
+                })
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.status === 'success') {
+                    document.getElementById('login-box').classList.add('hidden');
+                    document.getElementById('main-content').classList.remove('hidden');
+                    loadData();
+                } else {
+                    document.getElementById('login-error').innerHTML = '<div class="alert alert-error">密码错误！</div>';
+                }
+            })
+            .catch(e => {
+                document.getElementById('login-error').innerHTML = '<div class="alert alert-error">登录失败: ' + e.message + '</div>';
+            });
+        }
+
+        function addData() {
+            const period = document.getElementById('new-period').value;
+            const date = document.getElementById('new-date').value;
+            const front = [
+                parseInt(document.getElementById('front-1').value),
+                parseInt(document.getElementById('front-2').value),
+                parseInt(document.getElementById('front-3').value),
+                parseInt(document.getElementById('front-4').value),
+                parseInt(document.getElementById('front-5').value)
+            ];
+            const back = [
+                parseInt(document.getElementById('back-1').value),
+                parseInt(document.getElementById('back-2').value)
+            ];
+            
+            // 验证
+            if (!period || !date) {
+                alert('请填写期数和日期');
+                return;
+            }
+            
+            if (front.some(isNaN) || back.some(isNaN)) {
+                alert('请填写所有号码');
+                return;
+            }
+            
+            fetch('/api/admin-data', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    password: adminPassword,
+                    action: 'add',
+                    period: period,
+                    date: date,
+                    front_zone: front,
+                    back_zone: back
+                })
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.status === 'success') {
+                    document.getElementById('message').innerHTML = '<div class="alert alert-success">✅ ' + d.result.message + '</div>';
+                    // 清空表单
+                    document.getElementById('new-period').value = '';
+                    document.getElementById('new-date').value = '';
+                    for (let i = 1; i <= 5; i++) {
+                        document.getElementById('front-' + i).value = '';
+                    }
+                    for (let i = 1; i <= 2; i++) {
+                        document.getElementById('back-' + i).value = '';
+                    }
+                    // 刷新列表
+                    loadData();
+                } else {
+                    document.getElementById('message').innerHTML = '<div class="alert alert-error">❌ ' + d.result.message + '</div>';
+                }
+            })
+            .catch(e => {
+                document.getElementById('message').innerHTML = '<div class="alert alert-error">❌ 添加失败: ' + e.message + '</div>';
+            });
+        }
+
+        function loadData() {
+            fetch('/api/admin-data', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    password: adminPassword,
+                    action: 'list'
+                })
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.status === 'success') {
+                    displayData(d.result.data);
+                } else {
+                    document.getElementById('data-list').innerHTML = '<div class="alert alert-error">加载失败</div>';
+                }
+            })
+            .catch(e => {
+                document.getElementById('data-list').innerHTML = '<div class="alert alert-error">加载失败: ' + e.message + '</div>';
+            });
+        }
+
+        function displayData(data) {
+            if (!data || data.length === 0) {
+                document.getElementById('data-list').innerHTML = '<p>暂无数据</p>';
+                return;
+            }
+            
+            let html = `<table class="data-table">
+                <thead>
+                    <tr>
+                        <th>期数</th>
+                        <th>日期</th>
+                        <th>前区</th>
+                        <th>后区</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+            
+            // 倒序显示（最新的在上面）
+            data.reverse().forEach(item => {
+                html += `<tr>
+                    <td>${item.period}</td>
+                    <td>${item.date}</td>
+                    <td>${item.front_zone.map(n => String(n).padStart(2, '0')).join(', ')}</td>
+                    <td>${item.back_zone.map(n => String(n).padStart(2, '0')).join(', ')}</td>
+                    <td>
+                        <button class="btn btn-danger" onclick="deleteData('${item.period}')">删除</button>
+                    </td>
+                </tr>`;
+            });
+            
+            html += '</tbody></table>';
+            html += '<p style="margin-top: 10px; color: #718096;">共 ' + data.length + ' 条数据</p>';
+            
+            document.getElementById('data-list').innerHTML = html;
+        }
+
+        function deleteData(period) {
+            if (!confirm('确定要删除期数 ' + period + ' 的数据吗？')) {
+                return;
+            }
+            
+            fetch('/api/admin-data', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    password: adminPassword,
+                    action: 'delete',
+                    period: period
+                })
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.status === 'success') {
+                    alert('✅ 删除成功');
+                    loadData();
+                } else {
+                    alert('❌ 删除失败: ' + d.result.message);
+                }
+            })
+            .catch(e => {
+                alert('❌ 删除失败: ' + e.message);
+            });
+        }
+    </script>
+</body>
+</html>
+```
+
+---
+
+## 🎯 部署步骤总结
+
+### 第1步：修复ML系统（重命名文件）
+```
+1. lottery_historical_data.py → _lottery_data.py
+2. ml_features.py → _ml_features.py
+3. ml_predictor.py → _ml_predictor.py
+4. 更新_ml_predictor.py的import
+5. 更新predict.py的import
+6. Commit并测试
+```
+
+### 第2步：配置MongoDB
+```
+1. 注册MongoDB Atlas
+2. 获取连接字符串
+3. 在Vercel设置环境变量MONGODB_URI
+4. 更新requirements.txt
+5. 创建_db.py
+6. 创建admin-data.py
+7. 更新predict.py使用数据库
+```
+
+### 第3步：创建管理后台
+```
+1. 创建public/admin.html
+2. Commit所有改动
+3. 访问 https://你的域名/admin.html
+4. 输入密码登录
+5. 开始管理数据！

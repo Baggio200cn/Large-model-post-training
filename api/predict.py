@@ -1,25 +1,51 @@
+"""预测API - 主要endpoint"""
 from http.server import BaseHTTPRequestHandler
 import json
 from datetime import datetime
-from _lottery_data import LOTTERY_HISTORY
+
+# 尝试从数据库加载，如果失败则使用本地数据
+try:
+    from _db import get_all_lottery_data
+    USE_DATABASE = True
+except:
+    from _lottery_data import LOTTERY_HISTORY
+    USE_DATABASE = False
+
 from _ml_predictor import MLPredictor
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
-            predictor = MLPredictor(LOTTERY_HISTORY)
+            # 获取数据
+            if USE_DATABASE:
+                lottery_data = get_all_lottery_data()
+                if not lottery_data or len(lottery_data) == 0:
+                    lottery_data = []
+                    data_source = 'Database (empty - using fallback)'
+                else:
+                    data_source = f'MongoDB ({len(lottery_data)} periods)'
+            else:
+                lottery_data = LOTTERY_HISTORY
+                data_source = f'Local file ({len(lottery_data)} periods)'
+            
+            if not lottery_data or len(lottery_data) < 10:
+                raise Exception(f"历史数据不足（需要至少10期，当前{len(lottery_data)}期）")
+            
+            # 创建预测器
+            predictor = MLPredictor(lottery_data)
             features = predictor.features
             predictions = predictor.generate_predictions(5)
             
+            # 构建响应
             response = {
                 'status': 'success',
                 'prediction': {
                     'all_predictions': predictions,
                     'ensemble_prediction': predictions[0],
                     'based_on_data': {
-                        'periods_analyzed': len(LOTTERY_HISTORY),
-                        'data_range': f"{LOTTERY_HISTORY[0]['period']}-{LOTTERY_HISTORY[-1]['period']}",
-                        'data_source': 'Real ML analysis',
+                        'periods_analyzed': len(lottery_data),
+                        'data_range': f"{lottery_data[0]['period']}-{lottery_data[-1]['period']}",
+                        'data_source': data_source,
                         'hot_numbers_front': features['front_hot'],
                         'hot_numbers_back': features['back_hot'],
                         'cold_numbers_front': features['front_cold'],
@@ -31,7 +57,14 @@ class handler(BaseHTTPRequestHandler):
                 },
                 'ml_info': {
                     'model_type': 'Statistical ML with Feature Engineering',
-                    'features_used': ['Frequency Analysis', 'Missing Value', 'Odd-Even Ratio', 'Sum Value', 'Span Analysis', 'Pattern Recognition'],
+                    'features_used': [
+                        'Frequency Analysis',
+                        'Missing Value Tracking',
+                        'Odd-Even Ratio',
+                        'Sum Value Trend',
+                        'Span Analysis',
+                        'Pattern Recognition'
+                    ],
                     'strategies': [p['strategy'] for p in predictions]
                 },
                 'timestamp': datetime.now().isoformat()
@@ -48,7 +81,12 @@ class handler(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            error_response = {'status': 'error', 'message': str(e), 'error_type': type(e).__name__, 'timestamp': datetime.now().isoformat()}
+            error_response = {
+                'status': 'error',
+                'message': str(e),
+                'error_type': type(e).__name__,
+                'timestamp': datetime.now().isoformat()
+            }
             self.wfile.write(json.dumps(error_response).encode('utf-8'))
     
     def do_GET(self):
@@ -60,34 +98,3 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.end_headers()
-```
-
-**Commit: "Fix: Update imports to use underscore prefix"**
-
-**等待2分钟部署，测试预测功能！**
-
----
-
-# 🗄️ 阶段2：MongoDB数据存储
-
-## 步骤1：注册MongoDB Atlas（免费）
-
-1. **访问：** https://www.mongodb.com/cloud/atlas/register
-2. **注册免费账号**
-3. **创建免费集群**（选择最近的区域）
-4. **创建数据库用户**（记住用户名和密码）
-5. **添加IP白名单**：选择 "Allow Access from Anywhere" (0.0.0.0/0)
-6. **获取连接字符串**（类似）：
-```
-   mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/lottery?retryWrites=true&w=majority
-```
-
----
-
-## 步骤2：更新requirements.txt
-
-**编辑 `requirements.txt`，添加：**
-```
-requests==2.31.0
-python-dateutil==2.8.2
-pymongo==4.6.1

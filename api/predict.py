@@ -10,7 +10,6 @@ class handler(BaseHTTPRequestHandler):
             predictor = MLPredictor(LOTTERY_HISTORY)
             features = predictor.features
             predictions = predictor.generate_predictions(5)
-            
             response = {
                 'status': 'success',
                 'prediction': {
@@ -31,36 +30,22 @@ class handler(BaseHTTPRequestHandler):
                 },
                 'ml_info': {
                     'model_type': 'Statistical ML with Feature Engineering',
-                    'features_used': [
-                        'Frequency Analysis',
-                        'Missing Value Tracking',
-                        'Odd-Even Ratio',
-                        'Sum Value Trend',
-                        'Span Analysis',
-                        'Pattern Recognition'
-                    ],
+                    'features_used': ['Frequency Analysis', 'Missing Value Tracking', 'Odd-Even Ratio', 'Sum Value Trend', 'Span Analysis', 'Pattern Recognition'],
                     'strategies': [p['strategy'] for p in predictions]
                 },
                 'timestamp': datetime.now().isoformat()
             }
-            
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             self.wfile.write(json.dumps(response, ensure_ascii=False).encode('utf-8'))
-            
         except Exception as e:
             self.send_response(500)
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            error_response = {
-                'status': 'error',
-                'message': str(e),
-                'error_type': type(e).__name__,
-                'timestamp': datetime.now().isoformat()
-            }
+            error_response = {'status': 'error', 'message': str(e), 'error_type': type(e).__name__, 'timestamp': datetime.now().isoformat()}
             self.wfile.write(json.dumps(error_response).encode('utf-8'))
     
     def do_GET(self):

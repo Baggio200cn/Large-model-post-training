@@ -1,15 +1,18 @@
-"""ML预测模型"""
+"""ML预测模型 - 无numpy依赖版本"""
 import random
 import statistics
 from _ml_features import LotteryFeatureExtractor
 
 class MLPredictor:
+    """ML预测器"""
+    
     def __init__(self, historical_data):
         self.data = historical_data
         self.feature_extractor = LotteryFeatureExtractor(historical_data)
         self.features = self.feature_extractor.extract_all_features()
     
     def weighted_random_choice(self, numbers, weights, k):
+        """加权随机选择"""
         total_weight = sum(weights)
         probabilities = [w / total_weight for w in weights]
         selected = []
@@ -26,6 +29,7 @@ class MLPredictor:
         return sorted(selected)
     
     def frequency_based_prediction(self, zone='front', count=5):
+        """基于频率的预测"""
         max_num = 35 if zone == 'front' else 12
         hot_numbers = self.features[f'{zone}_hot']
         missing = self.features[f'{zone}_missing']
@@ -38,6 +42,7 @@ class MLPredictor:
         return self.weighted_random_choice(numbers, weights, count)
     
     def pattern_based_prediction(self, zone='front', count=5):
+        """基于模式的预测"""
         max_num = 35 if zone == 'front' else 12
         numbers = list(range(1, max_num + 1))
         target_odd_ratio = self.features[f'{zone}_odd_ratio']
@@ -54,6 +59,7 @@ class MLPredictor:
         return sorted(selected_odds + selected_evens)
     
     def missing_based_prediction(self, zone='front', count=5):
+        """基于遗漏值的预测"""
         missing = self.features[f'{zone}_missing']
         sorted_by_missing = sorted(missing.items(), key=lambda x: x[1], reverse=True)
         candidates = [num for num, _ in sorted_by_missing[:count * 2]]
@@ -61,6 +67,7 @@ class MLPredictor:
         return self.weighted_random_choice(candidates, weights, count)
     
     def balanced_prediction(self, zone='front', count=5):
+        """平衡预测"""
         max_num = 35 if zone == 'front' else 12
         numbers = list(range(1, max_num + 1))
         hot_nums = set(self.features[f'{zone}_hot'])
@@ -78,6 +85,7 @@ class MLPredictor:
         return self.weighted_random_choice(numbers, weights, count)
     
     def generate_predictions(self, num_groups=5):
+        """生成多组预测"""
         strategies = [
             ('频率优先', self.frequency_based_prediction),
             ('模式匹配', self.pattern_based_prediction),
@@ -100,6 +108,7 @@ class MLPredictor:
         return predictions
     
     def calculate_confidence(self, front, back, strategy):
+        """计算置信度"""
         confidence = 0.65
         front_hot_coverage = len(set(front) & set(self.features['front_hot'])) / 5
         back_hot_coverage = len(set(back) & set(self.features['back_hot'])) / 2

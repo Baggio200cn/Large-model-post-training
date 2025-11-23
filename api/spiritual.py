@@ -1,4 +1,4 @@
-"""灵修API - 简化版（向后兼容）"""
+"""灵修API - All-in-One简化版"""
 from http.server import BaseHTTPRequestHandler
 import json
 from datetime import datetime
@@ -7,7 +7,6 @@ import random
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
-            # 简化版灵修响应（不需要上传图片/文字）
             time_seed = int(datetime.now().timestamp()) % 10000
             random.seed(time_seed)
             
@@ -19,7 +18,6 @@ class handler(BaseHTTPRequestHandler):
                 'sunset_chakra.jpg'
             ]
             
-            selected_image = random.choice(spiritual_images)
             descriptions = {
                 'lotus_meditation.jpg': '莲花冥想图，象征纯净与觉醒',
                 'mountain_zen.jpg': '高山禅境图，代表稳定与高远',
@@ -28,9 +26,10 @@ class handler(BaseHTTPRequestHandler):
                 'sunset_chakra.jpg': '夕阳脉轮图，展现能量与平衡'
             }
             
+            selected_image = random.choice(spiritual_images)
+            
             response = {
                 'status': 'success',
-                'message': '这是简化版灵修API，完整功能请使用 /api/spiritual-upload 和 /api/spiritual-predict',
                 'spiritual_perturbation': {
                     'spiritual_image': {
                         'filename': selected_image,
@@ -59,7 +58,6 @@ class handler(BaseHTTPRequestHandler):
                     'earth_energy': f'{random.randint(50, 90)}%',
                     'personal_energy': f'{random.randint(70, 100)}%'
                 },
-                'upgrade_tip': '💡 使用新版灵修系统获得更精准的预测：上传您的灵修图片和文字到 /spiritual.html',
                 'timestamp': datetime.now().isoformat()
             }
             
@@ -78,7 +76,6 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(error_response).encode('utf-8'))
     
     def do_POST(self):
-        # POST请求也支持
         self.do_GET()
     
     def do_OPTIONS(self):
@@ -91,16 +88,15 @@ class handler(BaseHTTPRequestHandler):
 
 ---
 
-## 🎯 更新后的系统架构
+## ✅ 操作步骤
+
+### 1. 更新这3个文件
 ```
-灵修系统 API 层级：
+✅ 替换 api/latest-results.py
+✅ 替换 api/data-analysis.py
+✅ 替换 api/spiritual.py
+```
 
-Level 1 - 快速接口（旧版兼容）
-├── /api/spiritual              # 简化版，随机灵修因子
-    └── 用途：主页快速测试
-
-Level 2 - 完整系统（新版）
-├── /api/spiritual-upload       # 上传图片+文字
-├── /api/spiritual-predict      # 生成灵修预测
-└── /api/predict-final          # ML+灵修融合
-    └── 用途：/spiritual.html 专用页面
+### 2. Commit
+```
+"Fix: Convert 3 APIs to All-in-One version (no external imports)"

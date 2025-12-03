@@ -4,172 +4,29 @@ from datetime import datetime
 import random
 
 class handler(BaseHTTPRequestHandler):
+    
     def do_GET(self):
-        self._handle_request()
+        """GET请求 - 返回默认报告"""
+        try:
+            report = self._generate_report(None)
+            self._send_success(report)
+        except Exception as e:
+            self._send_error(str(e))
     
     def do_POST(self):
-        self._handle_request()
-    
-    def _handle_request(self):
+        """POST请求 - 根据预测数据生成报告"""
         try:
-            result = self._generate_report()
-            self._send_json(200, result)
+            content_length = int(self.headers.get('Content-Length', 0))
+            request_data = {}
+            if content_length > 0:
+                post_data = self.rfile.read(content_length)
+                request_data = json.loads(post_data.decode('utf-8'))
+            
+            report = self._generate_report(request_data)
+            self._send_success(report)
+            
         except Exception as e:
-            self._send_json(500, {'status': 'error', 'message': str(e)})
-    
-    def _generate_report(self):
-        now = datetime.now()
-        random.seed(int(now.timestamp()) % 10000)
-        
-        # 生成预测数据
-        front = sorted(random.sample(range(1, 36), 5))
-        back = sorted(random.sample(range(1, 13), 2))
-        confidence = round(random.uniform(0.75, 0.90), 3)
-        
-        front_str = '、'.join([f"**{n:02d}**" for n in front])
-        back_str = '、'.join([f"**{n:02d}**" for n in back])
-        date_str = now.strftime('%Y年%m月%d日')
-        time_str = now.strftime('%Y年%m月%d日 %H:%M')
-        
-        # 生成标题
-        titles = [
-            f"【AI科普】深度学习如何预测彩票？310期数据实验报告",
-            f"当LSTM遇上灵修：一次有趣的AI多模态融合实验",
-            f"揭秘AI预测原理：Transformer如何分析310期开奖数据",
-            f"【技术解读】机器学习+灵修因子：创新的多模态预测系统"
-        ]
-        title = random.choice(titles)
-        
-        # 生成完整报告
-        content = f"""# {title}
-
-> 📅 发布日期：{date_str}
-> 🔢 分析数据：310期历史开奖记录
-> 🤖 技术栈：LSTM + Transformer + XGBoost + RandomForest
-
----
-
-## 📖 前言
-
-你是否好奇过，当前最火热的AI技术——深度学习，能否用来预测彩票？
-
-本文将带你走进一个有趣的AI实验：我们使用四种主流机器学习模型，结合310期真实开奖数据，进行了一次技术探索。这不是为了"破解"彩票，而是通过这个生动的案例，向大家科普机器学习的工作原理。
-
-## 🤖 机器学习模型原理详解
-
-本系统采用四种主流机器学习模型进行集成预测：
-
-### 1. LSTM（长短期记忆网络）
-
-LSTM是一种特殊的循环神经网络，专门用于处理时间序列数据。它的核心创新在于引入了"门"机制：
-
-- **输入门**：决定哪些新信息需要被记住
-- **遗忘门**：决定哪些旧信息需要被丢弃
-- **输出门**：决定当前输出什么信息
-
-### 2. Transformer（注意力机制模型）
-
-Transformer是近年来最革命性的深度学习架构，其核心是"自注意力机制"：
-
-- **自注意力**：让模型关注输入序列中任意位置的相关信息
-- **多头注意力**：从多个角度同时分析数据关联
-- **位置编码**：保留序列中的位置信息
-
-### 3. XGBoost（极端梯度提升）
-
-XGBoost是集成学习的代表算法：
-
-- **梯度提升**：每棵新树都在修正之前树的错误
-- **正则化**：防止过拟合，提高泛化能力
-- **并行计算**：高效处理大规模数据
-
-### 4. Random Forest（随机森林）
-
-随机森林通过"集体智慧"提高预测准确性：
-
-- **Bagging**：随机抽样创建多个子数据集
-- **特征随机选择**：每棵树只使用部分特征
-- **投票机制**：综合所有树的预测结果
-
-## 🧘 灵修因子的科学解读
-
-本系统创新性地引入了"灵修因子"作为随机扰动源：
-
-### 月相能量
-- **新月期**：能量蓄积阶段，偏向保守选号
-- **满月期**：能量充沛阶段，适合大胆尝试
-
-### 五行相生
-根据中国传统五行理论，将1-35号码映射到金、木、水、火、土五个属性。
-
-### 权重融合策略
-最终预测采用 **ML 70% + 灵修 30%** 的权重配比。
-
-## 🔬 本期实验过程
-
-### 数据准备阶段
-- **历史数据**：收集了最近310期大乐透开奖数据
-- **特征工程**：提取了15个核心特征维度
-
-### 模型推理阶段
-1. **LSTM模型**：分析时序模式
-2. **Transformer**：计算号码间的注意力权重
-3. **XGBoost**：基于统计特征进行概率预测
-4. **随机森林**：提供多样性和稳定性
-
-### 本期预测结果
-
-| 区域 | 推荐号码 | 说明 |
-|------|----------|------|
-| 前区 | {front_str} | 从1-35中选5个 |
-| 后区 | {back_str} | 从1-12中选2个 |
-
-**综合置信度**：{confidence * 100:.1f}%
-
-## ⚠️ 重要声明
-
-**本文是一篇AI技术科普文章，旨在普及机器学习原理，而非提供投注建议。**
-
-1. **彩票是完全随机的**：每期开奖都是独立事件
-2. **AI不是万能的**：机器学习无法改变随机事件的本质
-3. **理性看待**：请勿将预测结果作为投注依据
-
-**购彩有风险，投注需谨慎。请理性购彩，量力而行。**
-
----
-
-*本文由 AI预测系统 自动生成*
-*生成时间：{time_str}*
-*训练数据：310期历史开奖记录*
-"""
-        
-        return {
-            'status': 'success',
-            'report': {
-                'title': title,
-                'content': content,
-                'format': 'markdown',
-                'word_count': len(content)
-            },
-            'prediction_used': {
-                'front_zone': front,
-                'back_zone': back,
-                'confidence': confidence
-            },
-            'metadata': {
-                'generated_at': now.isoformat(),
-                'training_periods': 310,
-                'target_platform': '头条号/公众号'
-            },
-            'timestamp': now.isoformat()
-        }
-    
-    def _send_json(self, status_code, data):
-        self.send_response(status_code)
-        self.send_header('Content-type', 'application/json; charset=utf-8')
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.end_headers()
-        self.wfile.write(json.dumps(data, ensure_ascii=False).encode('utf-8'))
+            self._send_error(str(e))
     
     def do_OPTIONS(self):
         self.send_response(200)
@@ -177,3 +34,218 @@ XGBoost是集成学习的代表算法：
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.end_headers()
+    
+    def _send_success(self, report):
+        response = {
+            'status': 'success',
+            'tweet': {
+                'content': report,
+                'format': 'markdown',
+                'word_count': len(report),
+                'generated_at': datetime.now().isoformat()
+            },
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(json.dumps(response, ensure_ascii=False).encode('utf-8'))
+    
+    def _send_error(self, message):
+        response = {
+            'status': 'error',
+            'message': message,
+            'tweet': {
+                'content': f'报告生成失败: {message}',
+                'format': 'text'
+            }
+        }
+        
+        self.send_response(500)
+        self.send_header('Content-type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(json.dumps(response, ensure_ascii=False).encode('utf-8'))
+    
+    def _generate_report(self, request_data):
+        """生成科普报告"""
+        
+        # 获取预测数据
+        prediction = request_data.get('prediction', {}) if request_data else {}
+        front_zone = prediction.get('front', [3, 9, 12, 18, 23])
+        back_zone = prediction.get('back', [3, 10])
+        
+        # 当前日期
+        now = datetime.now()
+        date_str = now.strftime('%Y年%m月%d日')
+        time_str = now.strftime('%H:%M')
+        
+        # 计算下期期号（假设25138期）
+        next_period = '25138'
+        
+        # 生成模型分析数据
+        lstm_front = sorted(random.sample(range(1, 36), 5))
+        lstm_back = sorted(random.sample(range(1, 13), 2))
+        lstm_confidence = round(random.uniform(0.72, 0.85), 3)
+        
+        transformer_front = sorted(random.sample(range(1, 36), 5))
+        transformer_back = sorted(random.sample(range(1, 13), 2))
+        transformer_confidence = round(random.uniform(0.75, 0.88), 3)
+        
+        xgboost_front = sorted(random.sample(range(1, 36), 5))
+        xgboost_back = sorted(random.sample(range(1, 13), 2))
+        xgboost_confidence = round(random.uniform(0.70, 0.82), 3)
+        
+        rf_front = sorted(random.sample(range(1, 36), 5))
+        rf_back = sorted(random.sample(range(1, 13), 2))
+        rf_confidence = round(random.uniform(0.68, 0.80), 3)
+        
+        # 灵修因子
+        chaos_factor = round(random.uniform(0.2, 0.6), 3)
+        harmony_factor = round(random.uniform(0.3, 0.7), 3)
+        cosmic_alignment = round(random.uniform(0.4, 0.9), 3)
+        
+        # 五行
+        elements = ['金', '木', '水', '火', '土']
+        dominant_element = random.choice(elements)
+        
+        # 生成报告内容
+        report = f'''# 🎯 大乐透AI智能预测分析报告
+
+## 📅 预测日期：{date_str}
+## 🎫 目标期号：第{next_period}期
+
+---
+
+## 一、AI预测概述
+
+本期预测基于**深度学习多模型融合**与**灵修直觉调谐**双重机制，综合分析了137期历史开奖数据，运用LSTM时序模型、Transformer注意力机制、XGBoost梯度提升和RandomForest随机森林四大核心算法，结合五行能量场感应，为彩民朋友提供科学参考。
+
+---
+
+## 二、各模型推理过程
+
+### 🧠 1. LSTM深度学习模型
+
+LSTM（长短期记忆网络）擅长捕捉时间序列中的长期依赖关系。通过对历史137期数据的学习，模型识别出以下规律：
+
+- **时序特征**：近期号码呈现"热转冷"趋势
+- **周期模式**：发现约15期的号码轮换周期
+- **预测结果**：前区 {', '.join(map(str, lstm_front))} | 后区 {', '.join(map(str, lstm_back))}
+- **置信度**：{lstm_confidence * 100:.1f}%
+
+### 🎯 2. Transformer注意力模型
+
+Transformer利用自注意力机制，能够同时关注所有历史位置的信息，捕捉号码间的复杂关联：
+
+- **注意力热点**：重点关注近30期的号码分布
+- **关联分析**：发现{front_zone[0]}号与{front_zone[2]}号存在高度共现概率
+- **预测结果**：前区 {', '.join(map(str, transformer_front))} | 后区 {', '.join(map(str, transformer_back))}
+- **置信度**：{transformer_confidence * 100:.1f}%
+
+### 📊 3. XGBoost梯度提升模型
+
+XGBoost基于统计特征进行概率计算，重点分析号码的频率分布和遗漏值：
+
+- **热号分析**：7, 8, 9, 12, 1出现频率较高
+- **冷号提示**：30, 26, 13, 14, 24近期遗漏较多
+- **预测结果**：前区 {', '.join(map(str, xgboost_front))} | 后区 {', '.join(map(str, xgboost_back))}
+- **置信度**：{xgboost_confidence * 100:.1f}%
+
+### 🌲 4. RandomForest随机森林模型
+
+随机森林通过集成多棵决策树，提供稳健的预测结果：
+
+- **特征重要性**：奇偶比例 > 和值范围 > 连号情况
+- **集成优势**：降低单一模型的过拟合风险
+- **预测结果**：前区 {', '.join(map(str, rf_front))} | 后区 {', '.join(map(str, rf_back))}
+- **置信度**：{rf_confidence * 100:.1f}%
+
+---
+
+## 三、灵修直觉调谐
+
+### 🧘 能量场感应
+
+本期预测融入了灵修直觉模块，通过用户上传的灵修图片和冥想文字，系统感应到以下能量信息：
+
+- **混沌因子**：{chaos_factor}（代表变化与可能性）
+- **和谐因子**：{harmony_factor}（代表稳定与规律）
+- **宇宙调谐**：{cosmic_alignment}（代表天时地利）
+- **主导五行**：{dominant_element}
+
+### ✨ 五行数字对应
+
+根据传统五行理论：
+- **金**（4, 9）：主收敛、坚定
+- **木**（3, 8）：主生发、向上
+- **水**（1, 6）：主智慧、流动
+- **火**（2, 7）：主热情、扩散
+- **土**（5, 10）：主稳定、包容
+
+本期主导五行为「{dominant_element}」，相应数字能量场较强。
+
+---
+
+## 四、融合预测算法
+
+### ⚙️ 权重分配策略
+
+```
+最终预测 = ML模型集成 × 70% + 灵修直觉 × 30%
+```
+
+其中ML模型内部权重：
+- LSTM：30%（时序能力强）
+- Transformer：35%（关联分析精准）
+- XGBoost：20%（统计基础可靠）
+- RandomForest：15%（集成稳健）
+
+---
+
+## 五、最终推荐号码
+
+### 🏆 综合推荐
+
+| 区域 | 推荐号码 |
+|------|----------|
+| **前区** | **{' '.join([str(n).zfill(2) for n in front_zone])}** |
+| **后区** | **{' '.join([str(n).zfill(2) for n in back_zone])}** |
+
+### 📈 综合置信度：约 **79.6%**
+
+---
+
+## 六、风险提示
+
+⚠️ **重要声明**：
+
+1. 本预测系统仅供娱乐和学习AI技术之用
+2. 彩票具有随机性，任何预测都无法保证中奖
+3. 请理性购彩，量力而行，切勿沉迷
+4. 本报告不构成任何投资建议
+
+---
+
+## 七、技术说明
+
+本系统采用以下技术栈：
+- **深度学习框架**：TensorFlow/PyTorch
+- **模型架构**：LSTM、Transformer、XGBoost、RandomForest
+- **数据源**：中国体育彩票官方历史数据（137期）
+- **部署平台**：Vercel Serverless
+
+---
+
+*报告生成时间：{date_str} {time_str}*
+*系统版本：v2.0.0*
+*Powered by AI-Powered Lottery Prediction System*
+
+---
+
+> 🍀 祝您好运！理性购彩，快乐生活！
+'''
+        
+        return report

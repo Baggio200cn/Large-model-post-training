@@ -1,0 +1,67 @@
+name: 自动更新大乐透开奖数据
+
+on:
+  # 定时执行：每天北京时间 22:00 (UTC 14:00) 执行
+  # 大乐透开奖时间：周一、周三、周六 21:15
+  schedule:
+    - cron: '0 14 * * 1,3,6'  # UTC时间，对应北京时间22:00
+  
+  # 手动触发
+  workflow_dispatch:
+    inputs:
+      force_update:
+        description: '强制更新数据'
+        required: false
+        default: 'false'
+
+jobs:
+  update-lottery-data:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: 安装依赖
+        run: |
+          pip install requests beautifulsoup4
+      
+      - name: 运行抓取脚本
+        id: fetch
+        run: |
+          python scripts/fetch_lottery.py
+        env:
+          FORCE_UPDATE: ${{ github.event.inputs.force_update }}
+      
+      - name: 检查是否有更新
+        id: check_changes
+        run: |
+          if git diff --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "没有新数据需要更新"
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "检测到数据更新"
+          fi
+      
+      - name: 提交更新
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add -A
+          git commit -m "🎯 自动更新开奖数据 - $(date +'%Y-%m-%d %H:%M')"
+          git push
+      
+      - name: 发送通知（可选）
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          echo "✅ 数据更新成功！"
+          echo "更新时间: $(date +'%Y-%m-%d %H:%M:%S')"

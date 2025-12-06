@@ -3,390 +3,809 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔐 大乐透数据管理后台</title>
+    <title>大乐透AI预测系统 - 后台管理</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             font-family: 'Microsoft YaHei', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             min-height: 100vh;
+            color: #e0e0e0;
             padding: 20px;
         }
-        .container { max-width: 1200px; margin: 0 auto; }
-        .header {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
         }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+        }
+        
         .header h1 {
-            color: #667eea;
+            font-size: 1.8em;
+            color: #f39c12;
             margin-bottom: 10px;
         }
-        .login-box, .main-content {
-            background: white;
-            padding: 30px;
+        
+        .header p {
+            color: #888;
+        }
+        
+        .card {
+            background: rgba(255,255,255,0.05);
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        .input-group {
-            margin-bottom: 15px;
+        
+        .card-title {
+            font-size: 1.3em;
+            color: #4facfe;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-        .input-group label {
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
             display: block;
-            margin-bottom: 5px;
-            color: #4a5568;
+            margin-bottom: 8px;
+            color: #aaa;
+            font-size: 0.95em;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .form-input {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            padding: 12px 15px;
+            color: #fff;
+            font-size: 1em;
+            width: 100%;
+            transition: border-color 0.3s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+        
+        .form-input::placeholder {
+            color: #666;
+        }
+        
+        .number-input {
+            width: 70px;
+            text-align: center;
+            font-size: 1.2em;
             font-weight: bold;
         }
-        .input-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #cbd5e0;
-            border-radius: 8px;
-            font-size: 1em;
+        
+        .number-input.front {
+            border-color: #ff6b6b;
         }
-        .input-row {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
+        
+        .number-input.front:focus {
+            border-color: #ff6b6b;
+            box-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
         }
-        .input-row input {
-            width: 100%;
+        
+        .number-input.back {
+            border-color: #4834d4;
         }
+        
+        .number-input.back:focus {
+            border-color: #4834d4;
+            box-shadow: 0 0 10px rgba(72, 52, 212, 0.3);
+        }
+        
+        .separator {
+            display: flex;
+            align-items: center;
+            font-size: 1.5em;
+            color: #888;
+            padding: 0 5px;
+        }
+        
         .btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
             padding: 12px 30px;
+            border: none;
             border-radius: 25px;
             cursor: pointer;
             font-size: 1em;
-            margin: 5px;
+            font-weight: bold;
             transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+            color: white;
+        }
+        
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
         }
-        .btn-danger {
-            background: linear-gradient(135deg, #f56565, #c53030);
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
+        
+        .result-area {
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            min-height: 60px;
+        }
+        
+        .status-success {
+            background: rgba(56, 239, 125, 0.2);
+            border-left: 3px solid #38ef7d;
+            color: #38ef7d;
+            padding: 12px 15px;
+            border-radius: 0 8px 8px 0;
+            margin: 10px 0;
+        }
+        
+        .status-error {
+            background: rgba(245, 87, 108, 0.2);
+            border-left: 3px solid #f5576c;
+            color: #f5576c;
+            padding: 12px 15px;
+            border-radius: 0 8px 8px 0;
+            margin: 10px 0;
+        }
+        
+        .status-info {
+            background: rgba(79, 172, 254, 0.2);
+            border-left: 3px solid #4facfe;
+            color: #4facfe;
+            padding: 12px 15px;
+            border-radius: 0 8px 8px 0;
+            margin: 10px 0;
+        }
+        
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 15px;
         }
-        .data-table th, .data-table td {
+        
+        .data-table th,
+        .data-table td {
             padding: 12px;
             text-align: left;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
+        
         .data-table th {
-            background: #f7fafc;
-            color: #4a5568;
+            background: rgba(0,0,0,0.2);
+            color: #4facfe;
             font-weight: bold;
         }
+        
         .data-table tr:hover {
-            background: #f7fafc;
+            background: rgba(255,255,255,0.05);
         }
-        .hidden { display: none; }
-        .alert {
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 8px;
+        
+        .number-display {
+            display: inline-flex;
+            gap: 5px;
+        }
+        
+        .mini-ball {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
             font-weight: bold;
         }
-        .alert-success {
-            background: #c6f6d5;
-            color: #22543d;
+        
+        .mini-ball.front {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
         }
-        .alert-error {
-            background: #fed7d7;
-            color: #c53030;
+        
+        .mini-ball.back {
+            background: linear-gradient(135deg, #4834d4, #686de0);
+            color: white;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: #4facfe;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        
+        .back-link {
+            display: inline-block;
+            color: #4facfe;
+            text-decoration: none;
+            margin-top: 20px;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        .password-section {
+            background: rgba(245, 87, 108, 0.1);
+            border: 1px solid rgba(245, 87, 108, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .password-section h3 {
+            color: #f5576c;
+            margin-bottom: 15px;
+        }
+        
+        .auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .auth-box {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .auth-box h2 {
+            color: #f39c12;
+            margin-bottom: 20px;
+        }
+        
+        .auth-box input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 20px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1.1em;
+            text-align: center;
+        }
+        
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🔐 大乐透数据管理后台</h1>
-            <p>添加、查看、编辑历史开奖数据</p>
-        </div>
-
-        <!-- 登录框 -->
-        <div id="login-box" class="login-box">
-            <h2>请输入管理密码</h2>
-            <div class="input-group">
-                <label>密码：</label>
-                <input type="password" id="admin-password" placeholder="输入管理密码">
-            </div>
-            <button class="btn" onclick="login()">登录</button>
-            <div id="login-error"></div>
-        </div>
-
-        <!-- 主内容区 -->
-        <div id="main-content" class="main-content hidden">
-            <h2>添加新的开奖数据</h2>
-            
-            <div class="input-group">
-                <label>期数：</label>
-                <input type="text" id="new-period" placeholder="例如: 25132">
-            </div>
-            
-            <div class="input-group">
-                <label>日期：</label>
-                <input type="date" id="new-date">
-            </div>
-            
-            <div class="input-group">
-                <label>前区（5个号码）：</label>
-                <div class="input-row">
-                    <input type="number" id="front-1" min="1" max="35" placeholder="1">
-                    <input type="number" id="front-2" min="1" max="35" placeholder="2">
-                    <input type="number" id="front-3" min="1" max="35" placeholder="3">
-                    <input type="number" id="front-4" min="1" max="35" placeholder="4">
-                    <input type="number" id="front-5" min="1" max="35" placeholder="5">
-                </div>
-            </div>
-            
-            <div class="input-group">
-                <label>后区（2个号码）：</label>
-                <div class="input-row" style="grid-template-columns: 1fr 1fr;">
-                    <input type="number" id="back-1" min="1" max="12" placeholder="1">
-                    <input type="number" id="back-2" min="1" max="12" placeholder="2">
-                </div>
-            </div>
-            
-            <button class="btn" onclick="addData()">➕ 添加数据</button>
-            <button class="btn" onclick="loadData()">🔄 刷新列表</button>
-            
-            <div id="message"></div>
-            
-            <h2 style="margin-top: 30px;">📋 历史数据列表</h2>
-            <div id="data-list">
-                <p>加载中...</p>
-            </div>
+    <!-- 密码验证遮罩 -->
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-box">
+            <h2>🔐 后台管理登录</h2>
+            <p style="color:#888;margin-bottom:20px;">请输入管理密码</p>
+            <input type="password" id="passwordInput" placeholder="请输入密码" onkeypress="if(event.key==='Enter')verifyPassword()">
+            <button class="btn btn-primary" onclick="verifyPassword()" style="width:100%;">🔓 登录</button>
+            <p id="authError" style="color:#f5576c;margin-top:15px;display:none;">密码错误，请重试</p>
         </div>
     </div>
 
+    <div class="container" id="mainContent" style="display:none;">
+        <div class="header">
+            <h1>⚙️ 后台管理系统</h1>
+            <p>大乐透AI预测系统 - 数据管理中心</p>
+        </div>
+        
+        <!-- 添加新开奖数据 -->
+        <div class="card">
+            <h2 class="card-title">📝 添加新开奖数据</h2>
+            
+            <div class="form-group">
+                <label class="form-label">期号</label>
+                <input type="text" class="form-input" id="periodInput" placeholder="例如: 25138" style="max-width:200px;">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">开奖日期</label>
+                <input type="date" class="form-input" id="dateInput" style="max-width:200px;">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">开奖号码</label>
+                <div class="form-row">
+                    <input type="number" class="form-input number-input front" id="front1" min="1" max="35" placeholder="01">
+                    <input type="number" class="form-input number-input front" id="front2" min="1" max="35" placeholder="02">
+                    <input type="number" class="form-input number-input front" id="front3" min="1" max="35" placeholder="03">
+                    <input type="number" class="form-input number-input front" id="front4" min="1" max="35" placeholder="04">
+                    <input type="number" class="form-input number-input front" id="front5" min="1" max="35" placeholder="05">
+                    <span class="separator">+</span>
+                    <input type="number" class="form-input number-input back" id="back1" min="1" max="12" placeholder="01">
+                    <input type="number" class="form-input number-input back" id="back2" min="1" max="12" placeholder="02">
+                </div>
+            </div>
+            
+            <div class="quick-actions">
+                <button class="btn btn-success" onclick="submitNewData()">
+                    💾 保存数据
+                </button>
+                <button class="btn btn-primary" onclick="clearForm()">
+                    🗑️ 清空表单
+                </button>
+                <button class="btn" style="background:#555;color:#fff;" onclick="autoFillNextPeriod()">
+                    ⚡ 自动填充下期
+                </button>
+            </div>
+            
+            <div class="result-area" id="submitResult" style="display:none;">
+                <div class="loading" id="submitLoading">
+                    <div class="spinner"></div>
+                    <div>正在保存...</div>
+                </div>
+                <div id="submitContent"></div>
+            </div>
+        </div>
+        
+        <!-- 当前数据状态 -->
+        <div class="card">
+            <h2 class="card-title">📊 当前数据状态</h2>
+            
+            <button class="btn btn-primary" onclick="loadCurrentData()">
+                🔄 刷新数据
+            </button>
+            
+            <div class="result-area" id="dataResult">
+                <div class="loading" id="dataLoading">
+                    <div class="spinner"></div>
+                    <div>加载中...</div>
+                </div>
+                <div id="dataContent">
+                    <div class="status-info">点击「刷新数据」查看当前数据状态</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 最近开奖记录 -->
+        <div class="card">
+            <h2 class="card-title">📋 最近开奖记录</h2>
+            
+            <button class="btn btn-primary" onclick="loadRecentResults()">
+                📥 加载记录
+            </button>
+            
+            <div class="result-area" id="recentResult">
+                <div class="loading" id="recentLoading">
+                    <div class="spinner"></div>
+                    <div>加载中...</div>
+                </div>
+                <div id="recentContent">
+                    <div class="status-info">点击「加载记录」查看最近开奖数据</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 系统操作 -->
+        <div class="card">
+            <h2 class="card-title">🛠️ 系统操作</h2>
+            
+            <div class="quick-actions">
+                <button class="btn btn-success" onclick="triggerAutoFetch()">
+                    🤖 触发自动抓取
+                </button>
+                <button class="btn btn-primary" onclick="checkSystemHealth()">
+                    ❤️ 系统健康检查
+                </button>
+                <button class="btn btn-danger" onclick="clearCache()">
+                    🧹 清除缓存
+                </button>
+            </div>
+            
+            <div class="result-area" id="systemResult" style="display:none;">
+                <div id="systemContent"></div>
+            </div>
+        </div>
+        
+        <a href="/" class="back-link">← 返回主页</a>
+    </div>
+
     <script>
-        let adminPassword = '';
-
-        function login() {
-            adminPassword = document.getElementById('admin-password').value;
-            
-            if (!adminPassword) {
-                alert('请输入密码');
-                return;
+        // 管理密码（实际使用时应该更复杂）
+        const ADMIN_PASSWORD = 'lottery2025';
+        
+        // 验证密码
+        function verifyPassword() {
+            const input = document.getElementById('passwordInput').value;
+            if (input === ADMIN_PASSWORD) {
+                document.getElementById('authOverlay').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                // 设置session标记
+                sessionStorage.setItem('adminAuth', 'true');
+            } else {
+                document.getElementById('authError').style.display = 'block';
+                document.getElementById('passwordInput').value = '';
             }
-            
-            // 验证密码（通过加载数据来验证）
-            fetch('/api/admin-data', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    password: adminPassword,
-                    action: 'list'
-                })
-            })
-            .then(r => r.json())
-            .then(d => {
-                if (d.status === 'success') {
-                    document.getElementById('login-box').classList.add('hidden');
-                    document.getElementById('main-content').classList.remove('hidden');
-                    loadData();
-                } else {
-                    document.getElementById('login-error').innerHTML = '<div class="alert alert-error">密码错误！</div>';
-                }
-            })
-            .catch(e => {
-                document.getElementById('login-error').innerHTML = '<div class="alert alert-error">登录失败: ' + e.message + '</div>';
-            });
         }
-
-        function addData() {
-            const period = document.getElementById('new-period').value;
-            const date = document.getElementById('new-date').value;
-            const front = [
-                parseInt(document.getElementById('front-1').value),
-                parseInt(document.getElementById('front-2').value),
-                parseInt(document.getElementById('front-3').value),
-                parseInt(document.getElementById('front-4').value),
-                parseInt(document.getElementById('front-5').value)
-            ];
-            const back = [
-                parseInt(document.getElementById('back-1').value),
-                parseInt(document.getElementById('back-2').value)
-            ];
-            
-            // 验证
-            if (!period || !date) {
-                alert('请填写期数和日期');
-                return;
+        
+        // 检查是否已登录
+        document.addEventListener('DOMContentLoaded', function() {
+            if (sessionStorage.getItem('adminAuth') === 'true') {
+                document.getElementById('authOverlay').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
             }
             
-            if (front.some(isNaN) || back.some(isNaN)) {
-                alert('请填写所有号码');
-                return;
-            }
+            // 设置默认日期为今天
+            document.getElementById('dateInput').valueAsDate = new Date();
+        });
+        
+        // 自动填充下一期
+        function autoFillNextPeriod() {
+            // 假设当前是25137期，下一期是25138
+            const nextPeriod = '25138';
+            document.getElementById('periodInput').value = nextPeriod;
             
-            fetch('/api/admin-data', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    password: adminPassword,
-                    action: 'add',
-                    period: period,
-                    date: date,
-                    front_zone: front,
-                    back_zone: back
-                })
-            })
-            .then(r => r.json())
-            .then(d => {
-                if (d.status === 'success') {
-                    document.getElementById('message').innerHTML = '<div class="alert alert-success">✅ ' + d.result.message + '</div>';
-                    // 清空表单
-                    document.getElementById('new-period').value = '';
-                    document.getElementById('new-date').value = '';
-                    for (let i = 1; i <= 5; i++) {
-                        document.getElementById('front-' + i).value = '';
-                    }
-                    for (let i = 1; i <= 2; i++) {
-                        document.getElementById('back-' + i).value = '';
-                    }
-                    // 刷新列表
-                    loadData();
-                } else {
-                    document.getElementById('message').innerHTML = '<div class="alert alert-error">❌ ' + d.result.message + '</div>';
-                }
-            })
-            .catch(e => {
-                document.getElementById('message').innerHTML = '<div class="alert alert-error">❌ 添加失败: ' + e.message + '</div>';
-            });
+            // 设置日期为下一个开奖日（周一、周三、周六）
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            let daysToAdd = 0;
+            
+            if (dayOfWeek === 0) daysToAdd = 1; // 周日 -> 周一
+            else if (dayOfWeek === 1) daysToAdd = 2; // 周一 -> 周三
+            else if (dayOfWeek === 2) daysToAdd = 1; // 周二 -> 周三
+            else if (dayOfWeek === 3) daysToAdd = 3; // 周三 -> 周六
+            else if (dayOfWeek === 4) daysToAdd = 2; // 周四 -> 周六
+            else if (dayOfWeek === 5) daysToAdd = 1; // 周五 -> 周六
+            else if (dayOfWeek === 6) daysToAdd = 2; // 周六 -> 周一
+            
+            const nextDate = new Date(today);
+            nextDate.setDate(today.getDate() + daysToAdd);
+            document.getElementById('dateInput').valueAsDate = nextDate;
         }
-
-        function loadData() {
-            fetch('/api/admin-data', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    password: adminPassword,
-                    action: 'list'
-                })
-            })
-            .then(r => r.json())
-            .then(d => {
-                if (d.status === 'success') {
-                    displayData(d.result.data);
-                } else {
-                    document.getElementById('data-list').innerHTML = '<div class="alert alert-error">加载失败</div>';
-                }
-            })
-            .catch(e => {
-                document.getElementById('data-list').innerHTML = '<div class="alert alert-error">加载失败: ' + e.message + '</div>';
-            });
+        
+        // 清空表单
+        function clearForm() {
+            document.getElementById('periodInput').value = '';
+            document.getElementById('dateInput').valueAsDate = new Date();
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById('front' + i).value = '';
+            }
+            document.getElementById('back1').value = '';
+            document.getElementById('back2').value = '';
         }
-
-        function displayData(data) {
-            if (!data || data.length === 0) {
-                document.getElementById('data-list').innerHTML = '<p>暂无数据</p>';
+        
+        // 提交新数据
+        async function submitNewData() {
+            const period = document.getElementById('periodInput').value.trim();
+            const date = document.getElementById('dateInput').value;
+            
+            const frontNumbers = [];
+            for (let i = 1; i <= 5; i++) {
+                const val = parseInt(document.getElementById('front' + i).value);
+                if (isNaN(val) || val < 1 || val > 35) {
+                    alert('前区号码必须是1-35之间的数字');
+                    return;
+                }
+                frontNumbers.push(val);
+            }
+            
+            const backNumbers = [];
+            for (let i = 1; i <= 2; i++) {
+                const val = parseInt(document.getElementById('back' + i).value);
+                if (isNaN(val) || val < 1 || val > 12) {
+                    alert('后区号码必须是1-12之间的数字');
+                    return;
+                }
+                backNumbers.push(val);
+            }
+            
+            if (!period) {
+                alert('请输入期号');
                 return;
             }
             
-            let html = `<table class="data-table">
-                <thead>
-                    <tr>
-                        <th>期数</th>
-                        <th>日期</th>
-                        <th>前区</th>
-                        <th>后区</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-            
-            // 倒序显示（最新的在上面）
-            data.reverse().forEach(item => {
-                html += `<tr>
-                    <td>${item.period}</td>
-                    <td>${item.date}</td>
-                    <td>${item.front_zone.map(n => String(n).padStart(2, '0')).join(', ')}</td>
-                    <td>${item.back_zone.map(n => String(n).padStart(2, '0')).join(', ')}</td>
-                    <td>
-                        <button class="btn btn-danger" onclick="deleteData('${item.period}')">删除</button>
-                    </td>
-                </tr>`;
-            });
-            
-            html += '</tbody></table>';
-            html += '<p style="margin-top: 10px; color: #718096;">共 ' + data.length + ' 条数据</p>';
-            
-            document.getElementById('data-list').innerHTML = html;
-        }
-
-        function deleteData(period) {
-            if (!confirm('确定要删除期数 ' + period + ' 的数据吗？')) {
+            if (!date) {
+                alert('请选择日期');
                 return;
             }
             
-            fetch('/api/admin-data', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    password: adminPassword,
-                    action: 'delete',
-                    period: period
-                })
-            })
-            .then(r => r.json())
-            .then(d => {
-                if (d.status === 'success') {
-                    alert('✅ 删除成功');
-                    loadData();
+            // 检查号码是否有重复
+            const allFront = new Set(frontNumbers);
+            if (allFront.size !== 5) {
+                alert('前区号码不能重复');
+                return;
+            }
+            
+            const allBack = new Set(backNumbers);
+            if (allBack.size !== 2) {
+                alert('后区号码不能重复');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('submitResult');
+            const loadingDiv = document.getElementById('submitLoading');
+            const contentDiv = document.getElementById('submitContent');
+            
+            resultDiv.style.display = 'block';
+            loadingDiv.classList.add('show');
+            contentDiv.innerHTML = '';
+            
+            try {
+                const response = await fetch('/api/update-data', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        action: 'add',
+                        period: period,
+                        date: date,
+                        front_zone: frontNumbers.sort((a,b) => a-b),
+                        back_zone: backNumbers.sort((a,b) => a-b)
+                    })
+                });
+                
+                const data = await response.json();
+                loadingDiv.classList.remove('show');
+                
+                if (data.status === 'success') {
+                    contentDiv.innerHTML = `
+                        <div class="status-success">
+                            ✅ 数据保存成功！<br>
+                            期号: ${period}<br>
+                            号码: ${frontNumbers.sort((a,b)=>a-b).join(', ')} + ${backNumbers.sort((a,b)=>a-b).join(', ')}
+                        </div>
+                    `;
+                    clearForm();
                 } else {
-                    alert('❌ 删除失败: ' + d.result.message);
+                    contentDiv.innerHTML = `<div class="status-error">❌ 保存失败: ${data.message}</div>`;
                 }
-            })
-            .catch(e => {
-                alert('❌ 删除失败: ' + e.message);
-            });
+            } catch (error) {
+                loadingDiv.classList.remove('show');
+                contentDiv.innerHTML = `<div class="status-error">❌ 请求失败: ${error.message}</div>`;
+            }
+        }
+        
+        // 加载当前数据状态
+        async function loadCurrentData() {
+            const loadingDiv = document.getElementById('dataLoading');
+            const contentDiv = document.getElementById('dataContent');
+            
+            loadingDiv.classList.add('show');
+            contentDiv.innerHTML = '';
+            
+            try {
+                const response = await fetch('/api/latest-results');
+                const data = await response.json();
+                
+                loadingDiv.classList.remove('show');
+                
+                if (data.status === 'success') {
+                    const latest = data.latest_result;
+                    contentDiv.innerHTML = `
+                        <div class="status-success">
+                            <strong>数据状态正常</strong>
+                        </div>
+                        <table class="data-table">
+                            <tr><th>项目</th><th>值</th></tr>
+                            <tr><td>最新期号</td><td>${latest.period}</td></tr>
+                            <tr><td>开奖日期</td><td>${latest.date}</td></tr>
+                            <tr><td>开奖号码</td><td>
+                                <span class="number-display">
+                                    ${latest.numbers.slice(0,5).map(n => `<span class="mini-ball front">${n}</span>`).join('')}
+                                    <span style="margin:0 5px;">+</span>
+                                    ${latest.numbers.slice(5).map(n => `<span class="mini-ball back">${n}</span>`).join('')}
+                                </span>
+                            </td></tr>
+                            <tr><td>总期数</td><td>${data.total_periods}期</td></tr>
+                            <tr><td>数据范围</td><td>${data.data_range}</td></tr>
+                        </table>
+                    `;
+                } else {
+                    contentDiv.innerHTML = `<div class="status-error">❌ ${data.message}</div>`;
+                }
+            } catch (error) {
+                loadingDiv.classList.remove('show');
+                contentDiv.innerHTML = `<div class="status-error">❌ 请求失败: ${error.message}</div>`;
+            }
+        }
+        
+        // 加载最近记录
+        async function loadRecentResults() {
+            const loadingDiv = document.getElementById('recentLoading');
+            const contentDiv = document.getElementById('recentContent');
+            
+            loadingDiv.classList.add('show');
+            contentDiv.innerHTML = '';
+            
+            try {
+                const response = await fetch('/api/latest-results');
+                const data = await response.json();
+                
+                loadingDiv.classList.remove('show');
+                
+                if (data.status === 'success' && data.recent_results) {
+                    let tableHtml = `
+                        <table class="data-table">
+                            <tr>
+                                <th>期号</th>
+                                <th>日期</th>
+                                <th>开奖号码</th>
+                            </tr>
+                    `;
+                    
+                    data.recent_results.forEach(result => {
+                        const front = result.numbers.slice(0, 5);
+                        const back = result.numbers.slice(5);
+                        tableHtml += `
+                            <tr>
+                                <td>${result.period}</td>
+                                <td>${result.date}</td>
+                                <td>
+                                    <span class="number-display">
+                                        ${front.map(n => `<span class="mini-ball front">${n}</span>`).join('')}
+                                        <span style="margin:0 5px;">+</span>
+                                        ${back.map(n => `<span class="mini-ball back">${n}</span>`).join('')}
+                                    </span>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    tableHtml += '</table>';
+                    contentDiv.innerHTML = tableHtml;
+                } else {
+                    contentDiv.innerHTML = `<div class="status-error">❌ 无法加载数据</div>`;
+                }
+            } catch (error) {
+                loadingDiv.classList.remove('show');
+                contentDiv.innerHTML = `<div class="status-error">❌ 请求失败: ${error.message}</div>`;
+            }
+        }
+        
+        // 触发自动抓取
+        async function triggerAutoFetch() {
+            const resultDiv = document.getElementById('systemResult');
+            const contentDiv = document.getElementById('systemContent');
+            
+            resultDiv.style.display = 'block';
+            contentDiv.innerHTML = '<div class="status-info">⏳ 正在触发自动抓取...</div>';
+            
+            try {
+                const response = await fetch('/api/update-data', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ action: 'auto_fetch' })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    contentDiv.innerHTML = `<div class="status-success">✅ ${data.message}</div>`;
+                } else {
+                    contentDiv.innerHTML = `<div class="status-error">❌ ${data.message}</div>`;
+                }
+            } catch (error) {
+                contentDiv.innerHTML = `<div class="status-error">❌ 请求失败: ${error.message}</div>`;
+            }
+        }
+        
+        // 系统健康检查
+        async function checkSystemHealth() {
+            const resultDiv = document.getElementById('systemResult');
+            const contentDiv = document.getElementById('systemContent');
+            
+            resultDiv.style.display = 'block';
+            contentDiv.innerHTML = '<div class="status-info">⏳ 正在检查系统...</div>';
+            
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                if (data.status === 'healthy') {
+                    contentDiv.innerHTML = `
+                        <div class="status-success">
+                            ✅ 系统运行正常<br>
+                            服务: ${data.service}<br>
+                            版本: ${data.version}<br>
+                            时间: ${data.timestamp}
+                        </div>
+                    `;
+                } else {
+                    contentDiv.innerHTML = `<div class="status-error">❌ 系统异常</div>`;
+                }
+            } catch (error) {
+                contentDiv.innerHTML = `<div class="status-error">❌ 健康检查失败: ${error.message}</div>`;
+            }
+        }
+        
+        // 清除缓存
+        function clearCache() {
+            const resultDiv = document.getElementById('systemResult');
+            const contentDiv = document.getElementById('systemContent');
+            
+            resultDiv.style.display = 'block';
+            
+            // 清除session storage
+            sessionStorage.clear();
+            
+            // 清除local storage（如果有）
+            localStorage.clear();
+            
+            contentDiv.innerHTML = `
+                <div class="status-success">
+                    ✅ 缓存已清除<br>
+                    建议刷新页面以获取最新数据
+                </div>
+            `;
         }
     </script>
 </body>
 </html>
-```
-
----
-
-## 🎯 部署步骤总结
-
-### 第1步：修复ML系统（重命名文件）
-```
-1. lottery_historical_data.py → _lottery_data.py
-2. ml_features.py → _ml_features.py
-3. ml_predictor.py → _ml_predictor.py
-4. 更新_ml_predictor.py的import
-5. 更新predict.py的import
-6. Commit并测试
-```
-
-### 第2步：配置MongoDB
-```
-1. 注册MongoDB Atlas
-2. 获取连接字符串
-3. 在Vercel设置环境变量MONGODB_URI
-4. 更新requirements.txt
-5. 创建_db.py
-6. 创建admin-data.py
-7. 更新predict.py使用数据库
-```
-
-### 第3步：创建管理后台
-```
-1. 创建public/admin.html
-2. Commit所有改动
-3. 访问 https://你的域名/admin.html
-4. 输入密码登录
-5. 开始管理数据！

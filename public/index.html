@@ -543,11 +543,23 @@
             mlPrediction: null,
             spiritualPrediction: null,
             fusionResult: null,
-            latestResult: null
+            latestResult: null,
+            lastPrediction: null  // 上次预测，用于对比分析
         };
         
         // 页面加载
         document.addEventListener('DOMContentLoaded', function() {
+            // 尝试恢复上次预测
+            try {
+                const saved = localStorage.getItem('lastPrediction');
+                if (saved) {
+                    AppState.lastPrediction = JSON.parse(saved);
+                    console.log('已恢复上次预测:', AppState.lastPrediction);
+                }
+            } catch(e) {
+                console.log('无法恢复上次预测');
+            }
+            
             loadLatestResult();
         });
         
@@ -879,17 +891,61 @@
             reportSection.style.display = 'block';
             loadingDiv.classList.add('show');
             
+            // 计算期号
+            const lastPeriod = AppState.latestResult ? AppState.latestResult.period : '';
+            const currentPeriod = lastPeriod ? String(parseInt(lastPeriod) + 1) : '';
+            
+            // 构建完整的报告参数
+            const reportParams = {
+                template_type: 'detailed',
+                // 当前预测期号
+                current_period: currentPeriod,
+                // 上期期号
+                last_period: lastPeriod,
+                // 上期实际开奖号码
+                last_actual: AppState.latestResult ? {
+                    front_zone: AppState.latestResult.front_zone,
+                    back_zone: AppState.latestResult.back_zone
+                } : {},
+                // 上期我们的预测（如果有保存的话，这里暂用占位）
+                last_prediction: AppState.lastPrediction || {},
+                // 本期融合预测结果
+                prediction: {
+                    front: AppState.fusionResult.front,
+                    back: AppState.fusionResult.back
+                },
+                // ML预测详情
+                ml_prediction: AppState.mlPrediction || {},
+                // 灵修预测详情
+                spiritual_prediction: AppState.spiritualPrediction ? 
+                    AppState.spiritualPrediction.spiritual_prediction : {},
+                // 灵修因子
+                spiritual_factors: AppState.spiritualPrediction ? 
+                    AppState.spiritualPrediction.spiritual_factors : {}
+            };
+            
             try {
                 const response = await fetch('/api/generate-tweet', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ template_type: 'detailed', prediction: AppState.fusionResult })
+                    body: JSON.stringify(reportParams)
                 });
                 const data = await response.json();
                 loadingDiv.classList.remove('show');
                 
                 if (data.status === 'success' && data.tweet) {
                     contentDiv.textContent = data.tweet.content;
+                    
+                    // 保存本期预测，供下次对比使用
+                    AppState.lastPrediction = {
+                        front_zone: AppState.fusionResult.front,
+                        back_zone: AppState.fusionResult.back,
+                        period: currentPeriod
+                    };
+                    // 尝试保存到localStorage
+                    try {
+                        localStorage.setItem('lastPrediction', JSON.stringify(AppState.lastPrediction));
+                    } catch(e) {}
                 } else {
                     contentDiv.textContent = '报告生成失败: ' + (data.message || '未知错误');
                 }

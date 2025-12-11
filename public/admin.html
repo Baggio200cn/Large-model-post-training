@@ -509,27 +509,43 @@
         });
         
         // 自动填充下一期
-        function autoFillNextPeriod() {
-            // 假设当前是25137期，下一期是25138
-            const nextPeriod = '25138';
-            document.getElementById('periodInput').value = nextPeriod;
-            
-            // 设置日期为下一个开奖日（周一、周三、周六）
-            const today = new Date();
-            const dayOfWeek = today.getDay();
-            let daysToAdd = 0;
-            
-            if (dayOfWeek === 0) daysToAdd = 1; // 周日 -> 周一
-            else if (dayOfWeek === 1) daysToAdd = 2; // 周一 -> 周三
-            else if (dayOfWeek === 2) daysToAdd = 1; // 周二 -> 周三
-            else if (dayOfWeek === 3) daysToAdd = 3; // 周三 -> 周六
-            else if (dayOfWeek === 4) daysToAdd = 2; // 周四 -> 周六
-            else if (dayOfWeek === 5) daysToAdd = 1; // 周五 -> 周六
-            else if (dayOfWeek === 6) daysToAdd = 2; // 周六 -> 周一
-            
-            const nextDate = new Date(today);
-            nextDate.setDate(today.getDate() + daysToAdd);
-            document.getElementById('dateInput').valueAsDate = nextDate;
+        async function autoFillNextPeriod() {
+            try {
+                // 从API获取最新期号
+                const response = await fetch('/api/latest-results');
+                const data = await response.json();
+                
+                let nextPeriod = '25140';  // 默认值
+                if (data.status === 'success' && data.latest_result) {
+                    const currentPeriod = parseInt(data.latest_result.period);
+                    nextPeriod = String(currentPeriod + 1);
+                }
+                
+                document.getElementById('periodInput').value = nextPeriod;
+                
+                // 设置日期为下一个开奖日（周一、周三、周六）
+                const today = new Date();
+                const dayOfWeek = today.getDay();
+                let daysToAdd = 0;
+                
+                if (dayOfWeek === 0) daysToAdd = 1; // 周日 -> 周一
+                else if (dayOfWeek === 1) daysToAdd = 2; // 周一 -> 周三
+                else if (dayOfWeek === 2) daysToAdd = 1; // 周二 -> 周三
+                else if (dayOfWeek === 3) daysToAdd = 3; // 周三 -> 周六
+                else if (dayOfWeek === 4) daysToAdd = 2; // 周四 -> 周六
+                else if (dayOfWeek === 5) daysToAdd = 1; // 周五 -> 周六
+                else if (dayOfWeek === 6) daysToAdd = 2; // 周六 -> 周一
+                
+                const nextDate = new Date(today);
+                nextDate.setDate(today.getDate() + daysToAdd);
+                document.getElementById('dateInput').valueAsDate = nextDate;
+                
+                alert(`已自动填充：第${nextPeriod}期`);
+            } catch (error) {
+                // 如果API失败，使用默认值
+                document.getElementById('periodInput').value = '25140';
+                alert('无法获取最新期号，已使用默认值');
+            }
         }
         
         // 清空表单
@@ -649,27 +665,37 @@
                 
                 if (data.status === 'success') {
                     const latest = data.latest_result;
+                    // 兼容两种数据格式
+                    const frontNumbers = latest.front_zone || latest.numbers?.slice(0,5) || [];
+                    const backNumbers = latest.back_zone || latest.numbers?.slice(5) || [];
+                    const dateStr = latest.date || latest.draw_date || '';
+                    const totalPeriods = data.total_periods || 'N/A';
+                    const dataRange = data.data_range || 'N/A';
+                    const dataSource = data.data_source || 'unknown';
+                    const isRealtime = data.is_realtime ? '✅ 实时' : '⚠️ 备份';
+                    
                     contentDiv.innerHTML = `
                         <div class="status-success">
-                            <strong>数据状态正常</strong>
+                            <strong>数据状态正常</strong> (${isRealtime})
                         </div>
                         <table class="data-table">
                             <tr><th>项目</th><th>值</th></tr>
-                            <tr><td>最新期号</td><td>${latest.period}</td></tr>
-                            <tr><td>开奖日期</td><td>${latest.date}</td></tr>
+                            <tr><td>最新期号</td><td>${latest.period || 'N/A'}</td></tr>
+                            <tr><td>开奖日期</td><td>${dateStr}</td></tr>
                             <tr><td>开奖号码</td><td>
                                 <span class="number-display">
-                                    ${latest.numbers.slice(0,5).map(n => `<span class="mini-ball front">${n}</span>`).join('')}
+                                    ${frontNumbers.map(n => `<span class="mini-ball front">${String(n).padStart(2, '0')}</span>`).join('')}
                                     <span style="margin:0 5px;">+</span>
-                                    ${latest.numbers.slice(5).map(n => `<span class="mini-ball back">${n}</span>`).join('')}
+                                    ${backNumbers.map(n => `<span class="mini-ball back">${String(n).padStart(2, '0')}</span>`).join('')}
                                 </span>
                             </td></tr>
-                            <tr><td>总期数</td><td>${data.total_periods}期</td></tr>
-                            <tr><td>数据范围</td><td>${data.data_range}</td></tr>
+                            <tr><td>数据来源</td><td>${dataSource}</td></tr>
+                            <tr><td>总期数</td><td>${totalPeriods}期</td></tr>
+                            <tr><td>数据范围</td><td>${dataRange}</td></tr>
                         </table>
                     `;
                 } else {
-                    contentDiv.innerHTML = `<div class="status-error">❌ ${data.message}</div>`;
+                    contentDiv.innerHTML = `<div class="status-error">❌ ${data.message || '获取数据失败'}</div>`;
                 }
             } catch (error) {
                 loadingDiv.classList.remove('show');
@@ -691,38 +717,51 @@
                 
                 loadingDiv.classList.remove('show');
                 
-                if (data.status === 'success' && data.recent_results) {
-                    let tableHtml = `
-                        <table class="data-table">
-                            <tr>
-                                <th>期号</th>
-                                <th>日期</th>
-                                <th>开奖号码</th>
-                            </tr>
-                    `;
+                if (data.status === 'success') {
+                    // 优先使用recent_results，否则用latest_result构建
+                    let results = data.recent_results || [];
+                    if (results.length === 0 && data.latest_result) {
+                        results = [data.latest_result];
+                    }
                     
-                    data.recent_results.forEach(result => {
-                        const front = result.numbers.slice(0, 5);
-                        const back = result.numbers.slice(5);
-                        tableHtml += `
-                            <tr>
-                                <td>${result.period}</td>
-                                <td>${result.date}</td>
-                                <td>
-                                    <span class="number-display">
-                                        ${front.map(n => `<span class="mini-ball front">${n}</span>`).join('')}
-                                        <span style="margin:0 5px;">+</span>
-                                        ${back.map(n => `<span class="mini-ball back">${n}</span>`).join('')}
-                                    </span>
-                                </td>
-                            </tr>
+                    if (results.length > 0) {
+                        let tableHtml = `
+                            <table class="data-table">
+                                <tr>
+                                    <th>期号</th>
+                                    <th>日期</th>
+                                    <th>开奖号码</th>
+                                </tr>
                         `;
-                    });
-                    
-                    tableHtml += '</table>';
-                    contentDiv.innerHTML = tableHtml;
+                        
+                        results.forEach(result => {
+                            // 兼容两种数据格式
+                            const front = result.front_zone || result.numbers?.slice(0, 5) || [];
+                            const back = result.back_zone || result.numbers?.slice(5) || [];
+                            const dateStr = result.date || result.draw_date || '';
+                            
+                            tableHtml += `
+                                <tr>
+                                    <td>${result.period || 'N/A'}</td>
+                                    <td>${dateStr}</td>
+                                    <td>
+                                        <span class="number-display">
+                                            ${front.map(n => `<span class="mini-ball front">${String(n).padStart(2, '0')}</span>`).join('')}
+                                            <span style="margin:0 5px;">+</span>
+                                            ${back.map(n => `<span class="mini-ball back">${String(n).padStart(2, '0')}</span>`).join('')}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        
+                        tableHtml += '</table>';
+                        contentDiv.innerHTML = tableHtml;
+                    } else {
+                        contentDiv.innerHTML = `<div class="status-info">暂无历史记录</div>`;
+                    }
                 } else {
-                    contentDiv.innerHTML = `<div class="status-error">❌ 无法加载数据</div>`;
+                    contentDiv.innerHTML = `<div class="status-error">❌ ${data.message || '加载失败'}</div>`;
                 }
             } catch (error) {
                 loadingDiv.classList.remove('show');

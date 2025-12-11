@@ -626,6 +626,10 @@ class handler(BaseHTTPRequestHandler):
             recent_10 = lottery_data[:10] if len(lottery_data) >= 10 else lottery_data
             stats = ml_engine.get_statistics()
             
+            # 计算数据范围
+            oldest = lottery_data[-1] if lottery_data else None
+            data_range = f"{oldest['period']}期 - {latest['period']}期" if oldest and latest else "无数据"
+            
             response = {
                 'status': 'success',
                 'latest_result': {
@@ -645,6 +649,9 @@ class handler(BaseHTTPRequestHandler):
                 'data_source': data_source,
                 'kv_available': kv_available(),
                 'is_realtime': True,
+                # 添加前端需要的字段
+                'total_periods': len(lottery_data),
+                'data_range': data_range,
                 'message': f'数据来源：{data_source}，共{len(lottery_data)}期历史数据',
                 'timestamp': datetime.now().isoformat()
             }

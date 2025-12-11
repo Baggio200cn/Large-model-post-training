@@ -1,128 +1,134 @@
 from http.server import BaseHTTPRequestHandler
 import json
+import os
 from datetime import datetime
-import re
+import urllib.request
+import urllib.error
 
-# 尝试导入requests，如果失败则使用urllib
-try:
-    import requests
-    HAS_REQUESTS = True
-except ImportError:
-    HAS_REQUESTS = False
-    import urllib.request
-    import urllib.error
+# ============ Upstash Redis 配置 ============
+# 支持多种环境变量名称
+KV_REST_API_URL = os.environ.get('KV_REST_API_URL') or os.environ.get('STORAGE_URL') or os.environ.get('UPSTASH_REDIS_REST_URL', '')
+KV_REST_API_TOKEN = os.environ.get('KV_REST_API_TOKEN') or os.environ.get('STORAGE_TOKEN') or os.environ.get('UPSTASH_REDIS_REST_TOKEN', '')
 
-# 备份静态数据（当实时抓取失败时使用）
-# 最后更新: 2025-12-08 - 请在后台管理页面更新此数据
-BACKUP_DATA = [
+# ============ 默认备份数据 ============
+DEFAULT_BACKUP_DATA = [
+    {"period": "25141", "date": "2025-12-10", "front": [4, 9, 24, 28, 29], "back": [2, 10]},
+    {"period": "25140", "date": "2025-12-08", "front": [4, 5, 13, 18, 34], "back": [2, 8]},
     {"period": "25139", "date": "2025-12-06", "front": [8, 18, 22, 30, 35], "back": [1, 4]},
     {"period": "25138", "date": "2025-12-03", "front": [1, 3, 19, 21, 23], "back": [7, 11]},
     {"period": "25137", "date": "2025-12-01", "front": [7, 8, 9, 11, 22], "back": [5, 11]},
-    {"period": "25136", "date": "2025-11-29", "front": [7, 12, 18, 27, 33], "back": [2, 11]},
+    {"period": "25136", "date": "2025-11-29", "front": [7, 11, 15, 16, 23], "back": [9, 11]},
     {"period": "25135", "date": "2025-11-26", "front": [2, 10, 16, 28, 32], "back": [1, 7]},
+    {"period": "25134", "date": "2025-11-24", "front": [7, 12, 18, 27, 33], "back": [2, 11]},
+    {"period": "25133", "date": "2025-11-22", "front": [3, 14, 22, 29, 35], "back": [4, 9]},
+    {"period": "25132", "date": "2025-11-19", "front": [5, 11, 17, 25, 31], "back": [3, 8]},
 ]
 
-class handler(BaseHTTPRequestHandler):
+def kv_get(key):
+    """从 Vercel KV 获取数据"""
+    if not KV_REST_API_URL or not KV_REST_API_TOKEN:
+        return None
+    try:
+        url = f"{KV_REST_API_URL}/get/{key}"
+        req = urllib.request.Request(url)
+        req.add_header('Authorization', f'Bearer {KV_REST_API_TOKEN}')
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = json.loads(response.read().decode('utf-8'))
+            if data.get('result'):
+                return json.loads(data['result'])
+    except Exception as e:
+        print(f"KV GET error: {e}")
+    return None
+
+def kv_set(key, value):
+    """保存数据到 Vercel KV"""
+    if not KV_REST_API_URL or not KV_REST_API_TOKEN:
+        return False
+    try:
+        url = f"{KV_REST_API_URL}/set/{key}"
+        data = json.dumps(value).encode('utf-8')
+        req = urllib.request.Request(url, data=data, method='POST')
+        req.add_header('Authorization', f'Bearer {KV_REST_API_TOKEN}')
+        req.add_header('Content-Type', 'application/json')
+        with urllib.request.urlopen(req, timeout=5) as response:
+            return response.status == 200
+    except Exception as e:
+        print(f"KV SET error: {e}")
+    return False
+
+def get_lottery_data():
+    """获取彩票数据：优先从KV，否则用默认数据"""
+    # 尝试从 KV 获取
+    kv_data = kv_get('lottery_data')
+    if kv_data and isinstance(kv_data, list) and len(kv_data) > 0:
+        return kv_data, "kv_storage"
     
+    # 使用默认备份数据
+    return DEFAULT_BACKUP_DATA, "default_backup"
+
+def save_lottery_data(data):
+    """保存彩票数据到 KV"""
+    return kv_set('lottery_data', data)
+
+class handler(BaseHTTPRequestHandler):
     def do_GET(self):
-        """GET请求 - 实时抓取最新开奖数据，失败时使用备份数据"""
         try:
-            # 尝试从多个数据源抓取
-            result = None
-            error_msg = ""
-            data_source = "realtime"
+            # 获取数据
+            lottery_data, data_source = get_lottery_data()
             
-            # 数据源1: 500彩票网
-            try:
-                result = self._fetch_from_500()
-                data_source = "500.com"
-            except Exception as e:
-                error_msg += f"500彩票网: {str(e)}; "
+            if not lottery_data:
+                raise Exception("无可用数据")
             
-            # 数据源2: 彩宝网
-            if not result:
-                try:
-                    result = self._fetch_from_caibao()
-                    data_source = "caibao"
-                except Exception as e:
-                    error_msg += f"彩宝网: {str(e)}; "
+            # 获取最新一期
+            latest = lottery_data[0]
             
-            # 数据源3: 开彩网API
-            if not result:
-                try:
-                    result = self._fetch_from_opencai()
-                    data_source = "opencai"
-                except Exception as e:
-                    error_msg += f"开彩网: {str(e)}; "
+            # 构建返回结果
+            result = {
+                'period': latest['period'],
+                'draw_date': latest['date'],
+                'date': latest['date'],
+                'front_zone': latest['front'],
+                'back_zone': latest['back'],
+                'numbers': latest['front'] + latest['back'],
+                'display': f"{' '.join([f'{n:02d}' for n in latest['front']])} + {' '.join([f'{n:02d}' for n in latest['back']])}"
+            }
             
-            # 如果所有实时数据源都失败，使用备份数据
-            if not result and BACKUP_DATA:
-                latest = BACKUP_DATA[0]
-                result = {
-                    'period': latest['period'],
-                    'draw_date': latest['date'],
-                    'date': latest['date'],  # 兼容字段
-                    'front_zone': latest['front'],
-                    'back_zone': latest['back'],
-                    'numbers': latest['front'] + latest['back'],  # 兼容字段：合并号码
-                    'display': f"{' '.join([str(n).zfill(2) for n in latest['front']])} + {' '.join([str(n).zfill(2) for n in latest['back']])}"
-                }
-                data_source = "backup"
-                error_msg = "实时抓取失败，使用备份数据。" + error_msg
+            # 最近开奖记录
+            recent_results = []
+            for item in lottery_data[:10]:
+                recent_results.append({
+                    'period': item['period'],
+                    'date': item['date'],
+                    'front_zone': item['front'],
+                    'back_zone': item['back'],
+                    'numbers': item['front'] + item['back'],
+                    'display': f"{' '.join([f'{n:02d}' for n in item['front']])} + {' '.join([f'{n:02d}' for n in item['back']])}"
+                })
             
-            if result:
-                # 确保result有兼容字段
-                if 'date' not in result:
-                    result['date'] = result.get('draw_date', '')
-                if 'numbers' not in result:
-                    result['numbers'] = result.get('front_zone', []) + result.get('back_zone', [])
-                
-                # 构建最近开奖列表（兼容两种格式）
-                recent_results = []
-                if data_source == "backup":
-                    for item in BACKUP_DATA[:10]:
-                        recent_results.append({
-                            'period': item['period'],
-                            'date': item['date'],
-                            'draw_date': item['date'],
-                            'front_zone': item['front'],
-                            'back_zone': item['back'],
-                            'numbers': item['front'] + item['back']  # 兼容字段
-                        })
-                
-                # 计算数据范围
-                if BACKUP_DATA:
-                    first_period = BACKUP_DATA[-1]['period']
-                    last_period = BACKUP_DATA[0]['period']
-                    data_range = f"第{first_period}期 - 第{last_period}期"
-                else:
-                    data_range = "暂无数据"
-                
-                response = {
-                    'status': 'success',
-                    'latest_result': result,
-                    'recent_results': recent_results if recent_results else [],
-                    'data_source': data_source,
-                    'is_realtime': data_source != "backup",
-                    'fetch_time': datetime.now().isoformat(),
-                    'message': error_msg if data_source == "backup" else "",
-                    # 兼容admin.html的字段
-                    'total_periods': len(BACKUP_DATA),
-                    'data_range': data_range,
-                    'timestamp': datetime.now().isoformat()
-                }
-            else:
-                response = {
-                    'status': 'error',
-                    'message': f'无法从任何数据源获取数据，请检查网络或数据源状态',
-                    'timestamp': datetime.now().isoformat()
-                }
+            # 计算数据范围
+            first_period = lottery_data[-1]['period'] if lottery_data else 'N/A'
+            last_period = lottery_data[0]['period'] if lottery_data else 'N/A'
+            
+            # KV 是否可用
+            kv_available = bool(KV_REST_API_URL and KV_REST_API_TOKEN)
+            
+            response = {
+                'status': 'success',
+                'latest_result': result,
+                'recent_results': recent_results,
+                'total_periods': len(lottery_data),
+                'data_range': f"第{first_period}期 - 第{last_period}期",
+                'data_source': data_source,
+                'is_realtime': data_source == "kv_storage",
+                'kv_available': kv_available,
+                'timestamp': datetime.now().isoformat(),
+                'message': f'数据来源：{"Vercel KV 存储" if data_source == "kv_storage" else "默认备份数据"}'
+            }
             
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            
             self.wfile.write(json.dumps(response, ensure_ascii=False).encode('utf-8'))
             
         except Exception as e:
@@ -130,8 +136,108 @@ class handler(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            error_response = {'status': 'error', 'message': str(e)}
-            self.wfile.write(json.dumps(error_response).encode('utf-8'))
+            error_response = {
+                'status': 'error',
+                'message': str(e),
+                'timestamp': datetime.now().isoformat()
+            }
+            self.wfile.write(json.dumps(error_response, ensure_ascii=False).encode('utf-8'))
+    
+    def do_POST(self):
+        """处理数据更新请求"""
+        try:
+            content_length = int(self.headers.get('Content-Length', 0))
+            if content_length > 0:
+                post_data = self.rfile.read(content_length)
+                request_data = json.loads(post_data.decode('utf-8'))
+            else:
+                request_data = {}
+            
+            action = request_data.get('action', '')
+            
+            if action == 'add':
+                # 添加新数据
+                new_entry = request_data.get('entry', {})
+                if not new_entry.get('period') or not new_entry.get('front') or not new_entry.get('back'):
+                    raise Exception("缺少必要字段: period, front, back")
+                
+                # 获取现有数据
+                lottery_data, _ = get_lottery_data()
+                
+                # 检查是否已存在
+                existing_periods = [item['period'] for item in lottery_data]
+                if new_entry['period'] in existing_periods:
+                    raise Exception(f"期号 {new_entry['period']} 已存在")
+                
+                # 添加到开头
+                lottery_data.insert(0, new_entry)
+                
+                # 只保留最近50期
+                lottery_data = lottery_data[:50]
+                
+                # 保存到 KV
+                if save_lottery_data(lottery_data):
+                    response = {
+                        'status': 'success',
+                        'message': f"成功添加第 {new_entry['period']} 期数据",
+                        'total_periods': len(lottery_data)
+                    }
+                else:
+                    raise Exception("保存到 KV 失败，请检查 KV 配置")
+            
+            elif action == 'delete':
+                # 删除数据
+                period = request_data.get('period', '')
+                if not period:
+                    raise Exception("缺少期号")
+                
+                lottery_data, _ = get_lottery_data()
+                original_count = len(lottery_data)
+                lottery_data = [item for item in lottery_data if item['period'] != period]
+                
+                if len(lottery_data) == original_count:
+                    raise Exception(f"未找到期号 {period}")
+                
+                if save_lottery_data(lottery_data):
+                    response = {
+                        'status': 'success',
+                        'message': f"成功删除第 {period} 期数据",
+                        'total_periods': len(lottery_data)
+                    }
+                else:
+                    raise Exception("保存到 KV 失败")
+            
+            elif action == 'init':
+                # 初始化 KV 数据（用默认数据填充）
+                if save_lottery_data(DEFAULT_BACKUP_DATA):
+                    response = {
+                        'status': 'success',
+                        'message': f"成功初始化 {len(DEFAULT_BACKUP_DATA)} 期数据到 KV",
+                        'total_periods': len(DEFAULT_BACKUP_DATA)
+                    }
+                else:
+                    raise Exception("初始化 KV 失败，请检查 KV 配置")
+            
+            else:
+                raise Exception(f"未知操作: {action}")
+            
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(response, ensure_ascii=False).encode('utf-8'))
+            
+        except Exception as e:
+            self.send_response(400)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            error_response = {
+                'status': 'error',
+                'message': str(e),
+                'timestamp': datetime.now().isoformat()
+            }
+            self.wfile.write(json.dumps(error_response, ensure_ascii=False).encode('utf-8'))
     
     def do_OPTIONS(self):
         self.send_response(200)
@@ -139,121 +245,3 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.end_headers()
-    
-    def _make_request(self, url, timeout=10):
-        """统一的HTTP请求方法"""
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-        }
-        
-        if HAS_REQUESTS:
-            response = requests.get(url, headers=headers, timeout=timeout)
-            return response.text
-        else:
-            req = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(req, timeout=timeout) as response:
-                return response.read().decode('utf-8')
-    
-    def _fetch_from_500(self):
-        """从500彩票网抓取"""
-        url = "https://datachart.500.com/dlt/history/newinc/history.php"
-        html = self._make_request(url)
-        
-        # 解析HTML获取最新一期数据
-        # 500彩票网格式: <tr class="t_tr1"><td>25139</td><td>2025-12-06</td><td>...</td></tr>
-        period_match = re.search(r'<td[^>]*>(\d{5,7})</td>', html)
-        if not period_match:
-            raise Exception("无法解析期号")
-        
-        period = period_match.group(1)
-        
-        # 提取日期
-        date_match = re.search(r'<td[^>]*>(\d{4}-\d{2}-\d{2})</td>', html)
-        date = date_match.group(1) if date_match else datetime.now().strftime('%Y-%m-%d')
-        
-        # 提取前区号码 (红球)
-        front_pattern = r'<td class="t_cfont2">(\d+)</td>'
-        front_matches = re.findall(front_pattern, html)
-        if len(front_matches) < 5:
-            raise Exception("无法解析前区号码")
-        
-        front_zone = [int(n) for n in front_matches[:5]]
-        
-        # 提取后区号码 (蓝球)
-        back_pattern = r'<td class="t_cfont4">(\d+)</td>'
-        back_matches = re.findall(back_pattern, html)
-        if len(back_matches) < 2:
-            raise Exception("无法解析后区号码")
-        
-        back_zone = [int(n) for n in back_matches[:2]]
-        
-        return {
-            'period': period,
-            'draw_date': date,
-            'date': date,  # 兼容字段
-            'front_zone': front_zone,
-            'back_zone': back_zone,
-            'numbers': front_zone + back_zone,  # 兼容字段
-            'display': f"{' '.join([str(n).zfill(2) for n in front_zone])} + {' '.join([str(n).zfill(2) for n in back_zone])}"
-        }
-    
-    def _fetch_from_caibao(self):
-        """从彩宝网抓取"""
-        url = "https://www.zhcw.com/kjxx/dlt/"
-        html = self._make_request(url)
-        
-        # 彩宝网解析逻辑
-        period_match = re.search(r'第\s*(\d{5,7})\s*期', html)
-        if not period_match:
-            raise Exception("无法解析期号")
-        
-        period = period_match.group(1)
-        
-        # 提取号码
-        ball_pattern = r'<em[^>]*class="[^"]*ball[^"]*"[^>]*>(\d+)</em>'
-        balls = re.findall(ball_pattern, html)
-        
-        if len(balls) < 7:
-            raise Exception("无法解析号码")
-        
-        front_zone = [int(n) for n in balls[:5]]
-        back_zone = [int(n) for n in balls[5:7]]
-        
-        return {
-            'period': period,
-            'draw_date': datetime.now().strftime('%Y-%m-%d'),
-            'date': datetime.now().strftime('%Y-%m-%d'),  # 兼容字段
-            'front_zone': front_zone,
-            'back_zone': back_zone,
-            'numbers': front_zone + back_zone,  # 兼容字段
-            'display': f"{' '.join([str(n).zfill(2) for n in front_zone])} + {' '.join([str(n).zfill(2) for n in back_zone])}"
-        }
-    
-    def _fetch_from_opencai(self):
-        """从开彩网API抓取"""
-        url = "https://www.opencai.net/api/dlt/"
-        data = self._make_request(url)
-        
-        try:
-            json_data = json.loads(data)
-            if isinstance(json_data, list) and len(json_data) > 0:
-                latest = json_data[0]
-                numbers = latest.get('opencode', '').split(',')
-                
-                if len(numbers) >= 7:
-                    front_zone = [int(n) for n in numbers[:5]]
-                    back_zone = [int(n) for n in numbers[5:7]]
-                    
-                    return {
-                        'period': latest.get('expect', ''),
-                        'draw_date': latest.get('opentime', '')[:10],
-                        'date': latest.get('opentime', '')[:10],  # 兼容字段
-                        'front_zone': front_zone,
-                        'back_zone': back_zone,
-                        'numbers': front_zone + back_zone,  # 兼容字段
-                        'display': f"{' '.join([str(n).zfill(2) for n in front_zone])} + {' '.join([str(n).zfill(2) for n in back_zone])}"
-                    }
-        except:
-            pass
-        
-        raise Exception("API数据解析失败")

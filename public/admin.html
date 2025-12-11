@@ -5,201 +5,119 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>大乐透AI预测系统 - 后台管理</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Microsoft YaHei', Arial, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             min-height: 100vh;
-            color: #e0e0e0;
+            color: #fff;
             padding: 20px;
         }
-        
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-        
+        .container { max-width: 1200px; margin: 0 auto; }
         .header {
             text-align: center;
             margin-bottom: 30px;
             padding: 20px;
-            background: rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.1);
             border-radius: 15px;
         }
+        .header h1 { font-size: 2em; margin-bottom: 10px; }
+        .header p { color: #aaa; }
         
-        .header h1 {
-            font-size: 1.8em;
-            color: #f39c12;
-            margin-bottom: 10px;
+        .login-box {
+            max-width: 400px;
+            margin: 100px auto;
+            background: rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
         }
+        .login-box input {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            font-size: 1em;
+        }
+        .login-box input::placeholder { color: #aaa; }
         
-        .header p {
-            color: #888;
-        }
+        .admin-panel { display: none; }
+        .admin-panel.active { display: block; }
         
         .card {
-            background: rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.1);
             border-radius: 15px;
             padding: 25px;
             margin-bottom: 20px;
-            border: 1px solid rgba(255,255,255,0.1);
         }
-        
-        .card-title {
-            font-size: 1.3em;
-            color: #4facfe;
+        .card h3 {
             margin-bottom: 20px;
             padding-bottom: 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.2);
         }
         
-        .form-group {
+        .status-bar {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
             margin-bottom: 20px;
         }
-        
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            color: #aaa;
-            font-size: 0.95em;
-        }
-        
-        .form-row {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .form-input {
+        .status-item {
             background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 8px;
-            padding: 12px 15px;
-            color: #fff;
-            font-size: 1em;
-            width: 100%;
-            transition: border-color 0.3s;
-        }
-        
-        .form-input:focus {
-            outline: none;
-            border-color: #4facfe;
-        }
-        
-        .form-input::placeholder {
-            color: #666;
-        }
-        
-        .number-input {
-            width: 70px;
-            text-align: center;
-            font-size: 1.2em;
-            font-weight: bold;
-        }
-        
-        .number-input.front {
-            border-color: #ff6b6b;
-        }
-        
-        .number-input.front:focus {
-            border-color: #ff6b6b;
-            box-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
-        }
-        
-        .number-input.back {
-            border-color: #4834d4;
-        }
-        
-        .number-input.back:focus {
-            border-color: #4834d4;
-            box-shadow: 0 0 10px rgba(72, 52, 212, 0.3);
-        }
-        
-        .separator {
+            padding: 15px 25px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
-            font-size: 1.5em;
-            color: #888;
-            padding: 0 5px;
+            gap: 10px;
         }
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .status-dot.green { background: #4ade80; }
+        .status-dot.yellow { background: #fbbf24; }
+        .status-dot.red { background: #f87171; }
         
         .btn {
-            padding: 12px 30px;
+            padding: 12px 25px;
             border: none;
-            border-radius: 25px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 1em;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
+            transition: all 0.3s;
+            margin: 5px;
         }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
+        .btn-success { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
+        .btn-warning { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
+        .btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        .form-group {
+            margin-bottom: 15px;
         }
-        
-        .btn-success {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            color: white;
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #aaa;
         }
-        
-        .btn-danger {
-            background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
-            color: white;
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 1em;
         }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-        }
-        
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .result-area {
-            background: rgba(0,0,0,0.2);
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 15px;
-            min-height: 60px;
-        }
-        
-        .status-success {
-            background: rgba(56, 239, 125, 0.2);
-            border-left: 3px solid #38ef7d;
-            color: #38ef7d;
-            padding: 12px 15px;
-            border-radius: 0 8px 8px 0;
-            margin: 10px 0;
-        }
-        
-        .status-error {
-            background: rgba(245, 87, 108, 0.2);
-            border-left: 3px solid #f5576c;
-            color: #f5576c;
-            padding: 12px 15px;
-            border-radius: 0 8px 8px 0;
-            margin: 10px 0;
-        }
-        
-        .status-info {
-            background: rgba(79, 172, 254, 0.2);
-            border-left: 3px solid #4facfe;
-            color: #4facfe;
-            padding: 12px 15px;
-            border-radius: 0 8px 8px 0;
-            margin: 10px 0;
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
         }
         
         .data-table {
@@ -207,644 +125,479 @@
             border-collapse: collapse;
             margin-top: 15px;
         }
-        
-        .data-table th,
-        .data-table td {
+        .data-table th, .data-table td {
             padding: 12px;
             text-align: left;
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-        
-        .data-table th {
-            background: rgba(0,0,0,0.2);
-            color: #4facfe;
-            font-weight: bold;
-        }
-        
-        .data-table tr:hover {
-            background: rgba(255,255,255,0.05);
-        }
-        
-        .number-display {
-            display: inline-flex;
-            gap: 5px;
-        }
+        .data-table th { color: #aaa; font-weight: normal; }
         
         .mini-ball {
+            display: inline-block;
             width: 28px;
             height: 28px;
+            line-height: 28px;
+            text-align: center;
             border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.8em;
+            margin: 2px;
+            font-size: 0.85em;
             font-weight: bold;
         }
+        .mini-ball.front { background: #ff6b6b; }
+        .mini-ball.back { background: #4ecdc4; }
         
-        .mini-ball.front {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-            color: white;
-        }
-        
-        .mini-ball.back {
-            background: linear-gradient(135deg, #4834d4, #686de0);
-            color: white;
-        }
-        
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-        
-        .loading.show {
-            display: block;
-        }
-        
-        .spinner {
-            width: 30px;
-            height: 30px;
-            border: 3px solid rgba(255,255,255,0.1);
-            border-top-color: #4facfe;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .quick-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 15px;
-        }
-        
-        .back-link {
-            display: inline-block;
-            color: #4facfe;
-            text-decoration: none;
-            margin-top: 20px;
-        }
-        
-        .back-link:hover {
-            text-decoration: underline;
-        }
-        
-        .password-section {
-            background: rgba(245, 87, 108, 0.1);
-            border: 1px solid rgba(245, 87, 108, 0.3);
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .password-section h3 {
-            color: #f5576c;
-            margin-bottom: 15px;
-        }
-        
-        .auth-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-        
-        .auth-box {
-            background: rgba(255,255,255,0.05);
-            border-radius: 15px;
-            padding: 40px;
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-        }
-        
-        .auth-box h2 {
-            color: #f39c12;
-            margin-bottom: 20px;
-        }
-        
-        .auth-box input {
-            width: 100%;
+        .message {
             padding: 15px;
-            margin-bottom: 20px;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.2);
             border-radius: 8px;
-            color: #fff;
-            font-size: 1.1em;
-            text-align: center;
+            margin: 15px 0;
+            display: none;
+        }
+        .message.success { background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; display: block; }
+        .message.error { background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; display: block; }
+        .message.info { background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6; display: block; }
+        
+        .kv-status {
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .kv-status.connected { background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; }
+        .kv-status.disconnected { background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; }
+        
+        .recent-list {
+            max-height: 400px;
+            overflow-y: auto;
         }
         
-        .hidden {
-            display: none !important;
+        .action-btn {
+            padding: 5px 10px;
+            font-size: 0.8em;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
-    <!-- 密码验证遮罩 -->
-    <div class="auth-overlay" id="authOverlay">
-        <div class="auth-box">
+    <div class="container">
+        <!-- 登录界面 -->
+        <div class="login-box" id="loginBox">
             <h2>🔐 后台管理登录</h2>
-            <p style="color:#888;margin-bottom:20px;">请输入管理密码</p>
-            <input type="password" id="passwordInput" placeholder="请输入密码" onkeypress="if(event.key==='Enter')verifyPassword()">
-            <button class="btn btn-primary" onclick="verifyPassword()" style="width:100%;">🔓 登录</button>
-            <p id="authError" style="color:#f5576c;margin-top:15px;display:none;">密码错误，请重试</p>
+            <input type="password" id="passwordInput" placeholder="请输入管理密码" onkeypress="if(event.keyCode==13) login()">
+            <button class="btn btn-primary" onclick="login()" style="width: 100%; margin-top: 15px;">登 录</button>
+            <p id="loginError" style="color: #f87171; margin-top: 10px; display: none;">密码错误</p>
         </div>
-    </div>
 
-    <div class="container" id="mainContent" style="display:none;">
-        <div class="header">
-            <h1>⚙️ 后台管理系统</h1>
-            <p>大乐透AI预测系统 - 数据管理中心</p>
-        </div>
-        
-        <!-- 添加新开奖数据 -->
-        <div class="card">
-            <h2 class="card-title">📝 添加新开奖数据</h2>
-            
-            <div class="form-group">
-                <label class="form-label">期号</label>
-                <input type="text" class="form-input" id="periodInput" placeholder="例如: 25138" style="max-width:200px;">
+        <!-- 管理面板 -->
+        <div class="admin-panel" id="adminPanel">
+            <div class="header">
+                <h1>🎯 大乐透AI预测系统 - 后台管理</h1>
+                <p>数据管理 | 系统监控 | Vercel KV 存储</p>
             </div>
-            
-            <div class="form-group">
-                <label class="form-label">开奖日期</label>
-                <input type="date" class="form-input" id="dateInput" style="max-width:200px;">
+
+            <!-- KV 状态 -->
+            <div class="kv-status disconnected" id="kvStatus">
+                <strong>📦 Vercel KV 状态：</strong> <span id="kvStatusText">检测中...</span>
             </div>
-            
-            <div class="form-group">
-                <label class="form-label">开奖号码</label>
+
+            <!-- 状态栏 -->
+            <div class="status-bar">
+                <div class="status-item">
+                    <span class="status-dot" id="apiDot"></span>
+                    <span>API状态: <span id="apiStatus">检测中</span></span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot" id="dataDot"></span>
+                    <span>数据源: <span id="dataSource">检测中</span></span>
+                </div>
+                <div class="status-item">
+                    <span>最新期号: <span id="latestPeriod">--</span></span>
+                </div>
+                <div class="status-item">
+                    <span>总期数: <span id="totalPeriods">--</span></span>
+                </div>
+            </div>
+
+            <!-- 添加数据 -->
+            <div class="card">
+                <h3>➕ 添加开奖数据</h3>
                 <div class="form-row">
-                    <input type="number" class="form-input number-input front" id="front1" min="1" max="35" placeholder="01">
-                    <input type="number" class="form-input number-input front" id="front2" min="1" max="35" placeholder="02">
-                    <input type="number" class="form-input number-input front" id="front3" min="1" max="35" placeholder="03">
-                    <input type="number" class="form-input number-input front" id="front4" min="1" max="35" placeholder="04">
-                    <input type="number" class="form-input number-input front" id="front5" min="1" max="35" placeholder="05">
-                    <span class="separator">+</span>
-                    <input type="number" class="form-input number-input back" id="back1" min="1" max="12" placeholder="01">
-                    <input type="number" class="form-input number-input back" id="back2" min="1" max="12" placeholder="02">
+                    <div class="form-group">
+                        <label>期号</label>
+                        <input type="text" id="periodInput" placeholder="如: 25142">
+                    </div>
+                    <div class="form-group">
+                        <label>开奖日期</label>
+                        <input type="date" id="dateInput">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>前区号码（5个，空格分隔）</label>
+                        <input type="text" id="frontInput" placeholder="如: 04 09 24 28 29">
+                    </div>
+                    <div class="form-group">
+                        <label>后区号码（2个，空格分隔）</label>
+                        <input type="text" id="backInput" placeholder="如: 02 10">
+                    </div>
+                </div>
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-primary" onclick="autoFillNextPeriod()">🔄 自动填充下期</button>
+                    <button class="btn btn-success" onclick="addData()">✅ 添加数据</button>
+                </div>
+                <div class="message" id="addMessage"></div>
+            </div>
+
+            <!-- 当前数据 -->
+            <div class="card">
+                <h3>📊 当前数据</h3>
+                <button class="btn btn-primary" onclick="loadCurrentData()">🔄 刷新数据</button>
+                <button class="btn btn-warning" onclick="initKV()">🚀 初始化 KV 数据</button>
+                <div id="currentDataContent" style="margin-top: 15px;">
+                    <p style="color: #aaa;">点击"刷新数据"加载...</p>
                 </div>
             </div>
-            
-            <div class="quick-actions">
-                <button class="btn btn-success" onclick="submitNewData()">
-                    💾 保存数据
-                </button>
-                <button class="btn btn-primary" onclick="clearForm()">
-                    🗑️ 清空表单
-                </button>
-                <button class="btn" style="background:#555;color:#fff;" onclick="autoFillNextPeriod()">
-                    ⚡ 自动填充下期
-                </button>
-            </div>
-            
-            <div class="result-area" id="submitResult" style="display:none;">
-                <div class="loading" id="submitLoading">
-                    <div class="spinner"></div>
-                    <div>正在保存...</div>
+
+            <!-- 最近开奖记录 -->
+            <div class="card">
+                <h3>📋 最近开奖记录</h3>
+                <button class="btn btn-primary" onclick="loadRecentData()">🔄 加载记录</button>
+                <div class="recent-list" id="recentDataContent" style="margin-top: 15px;">
+                    <p style="color: #aaa;">点击"加载记录"查看...</p>
                 </div>
-                <div id="submitContent"></div>
+            </div>
+
+            <!-- 系统操作 -->
+            <div class="card">
+                <h3>🔧 系统操作</h3>
+                <button class="btn btn-primary" onclick="checkHealth()">💓 系统健康检查</button>
+                <button class="btn btn-warning" onclick="clearCache()">🧹 清除缓存</button>
+                <button class="btn btn-danger" onclick="logout()">🚪 退出登录</button>
+                <div class="message" id="systemMessage"></div>
             </div>
         </div>
-        
-        <!-- 当前数据状态 -->
-        <div class="card">
-            <h2 class="card-title">📊 当前数据状态</h2>
-            
-            <button class="btn btn-primary" onclick="loadCurrentData()">
-                🔄 刷新数据
-            </button>
-            
-            <div class="result-area" id="dataResult">
-                <div class="loading" id="dataLoading">
-                    <div class="spinner"></div>
-                    <div>加载中...</div>
-                </div>
-                <div id="dataContent">
-                    <div class="status-info">点击「刷新数据」查看当前数据状态</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 最近开奖记录 -->
-        <div class="card">
-            <h2 class="card-title">📋 最近开奖记录</h2>
-            
-            <button class="btn btn-primary" onclick="loadRecentResults()">
-                📥 加载记录
-            </button>
-            
-            <div class="result-area" id="recentResult">
-                <div class="loading" id="recentLoading">
-                    <div class="spinner"></div>
-                    <div>加载中...</div>
-                </div>
-                <div id="recentContent">
-                    <div class="status-info">点击「加载记录」查看最近开奖数据</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 系统操作 -->
-        <div class="card">
-            <h2 class="card-title">🛠️ 系统操作</h2>
-            
-            <div class="quick-actions">
-                <button class="btn btn-success" onclick="triggerAutoFetch()">
-                    🤖 触发自动抓取
-                </button>
-                <button class="btn btn-primary" onclick="checkSystemHealth()">
-                    ❤️ 系统健康检查
-                </button>
-                <button class="btn btn-danger" onclick="clearCache()">
-                    🧹 清除缓存
-                </button>
-            </div>
-            
-            <div class="result-area" id="systemResult" style="display:none;">
-                <div id="systemContent"></div>
-            </div>
-        </div>
-        
-        <a href="/" class="back-link">← 返回主页</a>
     </div>
 
     <script>
-        // 管理密码（实际使用时应该更复杂）
         const ADMIN_PASSWORD = 'lottery2025';
-        
-        // 验证密码
-        function verifyPassword() {
-            const input = document.getElementById('passwordInput').value;
-            if (input === ADMIN_PASSWORD) {
-                document.getElementById('authOverlay').style.display = 'none';
-                document.getElementById('mainContent').style.display = 'block';
-                // 设置session标记
-                sessionStorage.setItem('adminAuth', 'true');
+        let kvAvailable = false;
+
+        function login() {
+            const password = document.getElementById('passwordInput').value;
+            if (password === ADMIN_PASSWORD) {
+                document.getElementById('loginBox').style.display = 'none';
+                document.getElementById('adminPanel').classList.add('active');
+                checkSystemStatus();
             } else {
-                document.getElementById('authError').style.display = 'block';
-                document.getElementById('passwordInput').value = '';
+                document.getElementById('loginError').style.display = 'block';
             }
         }
-        
-        // 检查是否已登录
-        document.addEventListener('DOMContentLoaded', function() {
-            if (sessionStorage.getItem('adminAuth') === 'true') {
-                document.getElementById('authOverlay').style.display = 'none';
-                document.getElementById('mainContent').style.display = 'block';
-            }
-            
-            // 设置默认日期为今天
-            document.getElementById('dateInput').valueAsDate = new Date();
-        });
-        
-        // 自动填充下一期
-        async function autoFillNextPeriod() {
+
+        function logout() {
+            document.getElementById('loginBox').style.display = 'block';
+            document.getElementById('adminPanel').classList.remove('active');
+            document.getElementById('passwordInput').value = '';
+        }
+
+        async function checkSystemStatus() {
             try {
-                // 从API获取最新期号
                 const response = await fetch('/api/latest-results');
                 const data = await response.json();
                 
-                let nextPeriod = '25140';  // 默认值
-                if (data.status === 'success' && data.latest_result) {
-                    const currentPeriod = parseInt(data.latest_result.period);
-                    nextPeriod = String(currentPeriod + 1);
+                // API 状态
+                document.getElementById('apiDot').className = 'status-dot green';
+                document.getElementById('apiStatus').textContent = '正常';
+                
+                if (data.status === 'success') {
+                    // 数据源
+                    const source = data.data_source;
+                    document.getElementById('dataDot').className = source === 'kv_storage' ? 'status-dot green' : 'status-dot yellow';
+                    document.getElementById('dataSource').textContent = source === 'kv_storage' ? 'KV存储' : '默认备份';
+                    
+                    // KV 状态
+                    kvAvailable = data.kv_available;
+                    const kvStatusEl = document.getElementById('kvStatus');
+                    const kvTextEl = document.getElementById('kvStatusText');
+                    
+                    if (source === 'kv_storage') {
+                        kvStatusEl.className = 'kv-status connected';
+                        kvTextEl.textContent = '✅ 已连接，数据持久化正常';
+                    } else if (kvAvailable) {
+                        kvStatusEl.className = 'kv-status connected';
+                        kvTextEl.textContent = '⚠️ KV可用但无数据，请点击"初始化 KV 数据"';
+                    } else {
+                        kvStatusEl.className = 'kv-status disconnected';
+                        kvTextEl.textContent = '❌ 未配置，请在 Vercel 中启用 KV Storage';
+                    }
+                    
+                    // 期号信息
+                    document.getElementById('latestPeriod').textContent = data.latest_result?.period || '--';
+                    document.getElementById('totalPeriods').textContent = data.total_periods || '--';
                 }
-                
-                document.getElementById('periodInput').value = nextPeriod;
-                
-                // 设置日期为下一个开奖日（周一、周三、周六）
-                const today = new Date();
-                const dayOfWeek = today.getDay();
-                let daysToAdd = 0;
-                
-                if (dayOfWeek === 0) daysToAdd = 1; // 周日 -> 周一
-                else if (dayOfWeek === 1) daysToAdd = 2; // 周一 -> 周三
-                else if (dayOfWeek === 2) daysToAdd = 1; // 周二 -> 周三
-                else if (dayOfWeek === 3) daysToAdd = 3; // 周三 -> 周六
-                else if (dayOfWeek === 4) daysToAdd = 2; // 周四 -> 周六
-                else if (dayOfWeek === 5) daysToAdd = 1; // 周五 -> 周六
-                else if (dayOfWeek === 6) daysToAdd = 2; // 周六 -> 周一
-                
-                const nextDate = new Date(today);
-                nextDate.setDate(today.getDate() + daysToAdd);
-                document.getElementById('dateInput').valueAsDate = nextDate;
-                
-                alert(`已自动填充：第${nextPeriod}期`);
             } catch (error) {
-                // 如果API失败，使用默认值
-                document.getElementById('periodInput').value = '25140';
-                alert('无法获取最新期号，已使用默认值');
+                document.getElementById('apiDot').className = 'status-dot red';
+                document.getElementById('apiStatus').textContent = '异常';
+                document.getElementById('kvStatusText').textContent = '❌ API 连接失败';
             }
         }
-        
-        // 清空表单
-        function clearForm() {
-            document.getElementById('periodInput').value = '';
-            document.getElementById('dateInput').valueAsDate = new Date();
-            for (let i = 1; i <= 5; i++) {
-                document.getElementById('front' + i).value = '';
-            }
-            document.getElementById('back1').value = '';
-            document.getElementById('back2').value = '';
-        }
-        
-        // 提交新数据
-        async function submitNewData() {
-            const period = document.getElementById('periodInput').value.trim();
-            const date = document.getElementById('dateInput').value;
-            
-            const frontNumbers = [];
-            for (let i = 1; i <= 5; i++) {
-                const val = parseInt(document.getElementById('front' + i).value);
-                if (isNaN(val) || val < 1 || val > 35) {
-                    alert('前区号码必须是1-35之间的数字');
-                    return;
-                }
-                frontNumbers.push(val);
-            }
-            
-            const backNumbers = [];
-            for (let i = 1; i <= 2; i++) {
-                const val = parseInt(document.getElementById('back' + i).value);
-                if (isNaN(val) || val < 1 || val > 12) {
-                    alert('后区号码必须是1-12之间的数字');
-                    return;
-                }
-                backNumbers.push(val);
-            }
-            
-            if (!period) {
-                alert('请输入期号');
-                return;
-            }
-            
-            if (!date) {
-                alert('请选择日期');
-                return;
-            }
-            
-            // 检查号码是否有重复
-            const allFront = new Set(frontNumbers);
-            if (allFront.size !== 5) {
-                alert('前区号码不能重复');
-                return;
-            }
-            
-            const allBack = new Set(backNumbers);
-            if (allBack.size !== 2) {
-                alert('后区号码不能重复');
-                return;
-            }
-            
-            const resultDiv = document.getElementById('submitResult');
-            const loadingDiv = document.getElementById('submitLoading');
-            const contentDiv = document.getElementById('submitContent');
-            
-            resultDiv.style.display = 'block';
-            loadingDiv.classList.add('show');
-            contentDiv.innerHTML = '';
+
+        async function loadCurrentData() {
+            const contentDiv = document.getElementById('currentDataContent');
+            contentDiv.innerHTML = '<p style="color: #aaa;">加载中...</p>';
             
             try {
-                const response = await fetch('/api/update-data', {
+                const response = await fetch('/api/latest-results');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    const latest = data.latest_result;
+                    const frontNumbers = latest.front_zone || [];
+                    const backNumbers = latest.back_zone || [];
+                    
+                    contentDiv.innerHTML = `
+                        <table class="data-table">
+                            <tr><td>最新期号</td><td><strong>${latest.period}</strong></td></tr>
+                            <tr><td>开奖日期</td><td>${latest.date || latest.draw_date}</td></tr>
+                            <tr><td>开奖号码</td><td>
+                                ${frontNumbers.map(n => `<span class="mini-ball front">${String(n).padStart(2, '0')}</span>`).join('')}
+                                +
+                                ${backNumbers.map(n => `<span class="mini-ball back">${String(n).padStart(2, '0')}</span>`).join('')}
+                            </td></tr>
+                            <tr><td>数据来源</td><td>${data.data_source === 'kv_storage' ? '🟢 Vercel KV' : '🟡 默认备份'}</td></tr>
+                            <tr><td>数据范围</td><td>${data.data_range}</td></tr>
+                            <tr><td>总期数</td><td>${data.total_periods} 期</td></tr>
+                        </table>
+                    `;
+                    
+                    // 更新状态
+                    checkSystemStatus();
+                } else {
+                    contentDiv.innerHTML = `<p style="color: #f87171;">加载失败: ${data.message}</p>`;
+                }
+            } catch (error) {
+                contentDiv.innerHTML = `<p style="color: #f87171;">请求失败: ${error.message}</p>`;
+            }
+        }
+
+        async function loadRecentData() {
+            const contentDiv = document.getElementById('recentDataContent');
+            contentDiv.innerHTML = '<p style="color: #aaa;">加载中...</p>';
+            
+            try {
+                const response = await fetch('/api/latest-results');
+                const data = await response.json();
+                
+                if (data.status === 'success' && data.recent_results) {
+                    let html = '<table class="data-table"><tr><th>期号</th><th>日期</th><th>开奖号码</th><th>操作</th></tr>';
+                    
+                    data.recent_results.forEach(item => {
+                        const front = item.front_zone || [];
+                        const back = item.back_zone || [];
+                        html += `
+                            <tr>
+                                <td>${item.period}</td>
+                                <td>${item.date}</td>
+                                <td>
+                                    ${front.map(n => `<span class="mini-ball front">${String(n).padStart(2, '0')}</span>`).join('')}
+                                    +
+                                    ${back.map(n => `<span class="mini-ball back">${String(n).padStart(2, '0')}</span>`).join('')}
+                                </td>
+                                <td>
+                                    <button class="btn btn-danger action-btn" onclick="deleteData('${item.period}')">删除</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += '</table>';
+                    contentDiv.innerHTML = html;
+                } else {
+                    contentDiv.innerHTML = '<p style="color: #f87171;">无数据</p>';
+                }
+            } catch (error) {
+                contentDiv.innerHTML = `<p style="color: #f87171;">请求失败: ${error.message}</p>`;
+            }
+        }
+
+        async function autoFillNextPeriod() {
+            try {
+                const response = await fetch('/api/latest-results');
+                const data = await response.json();
+                
+                if (data.status === 'success' && data.latest_result) {
+                    const currentPeriod = parseInt(data.latest_result.period);
+                    const nextPeriod = currentPeriod + 1;
+                    
+                    document.getElementById('periodInput').value = nextPeriod;
+                    
+                    // 计算下一个开奖日
+                    const today = new Date();
+                    const dayOfWeek = today.getDay();
+                    let daysToAdd = 0;
+                    
+                    if (dayOfWeek === 0) daysToAdd = 1;      // 周日 -> 周一
+                    else if (dayOfWeek === 1) daysToAdd = 2; // 周一 -> 周三
+                    else if (dayOfWeek === 2) daysToAdd = 1; // 周二 -> 周三
+                    else if (dayOfWeek === 3) daysToAdd = 3; // 周三 -> 周六
+                    else if (dayOfWeek === 4) daysToAdd = 2; // 周四 -> 周六
+                    else if (dayOfWeek === 5) daysToAdd = 1; // 周五 -> 周六
+                    else if (dayOfWeek === 6) daysToAdd = 2; // 周六 -> 周一
+                    
+                    const nextDate = new Date(today);
+                    nextDate.setDate(today.getDate() + daysToAdd);
+                    document.getElementById('dateInput').value = nextDate.toISOString().split('T')[0];
+                    
+                    alert(`已自动填充：第 ${nextPeriod} 期，日期 ${nextDate.toISOString().split('T')[0]}`);
+                }
+            } catch (error) {
+                alert('获取数据失败: ' + error.message);
+            }
+        }
+
+        async function addData() {
+            const messageEl = document.getElementById('addMessage');
+            
+            const period = document.getElementById('periodInput').value.trim();
+            const date = document.getElementById('dateInput').value;
+            const frontStr = document.getElementById('frontInput').value.trim();
+            const backStr = document.getElementById('backInput').value.trim();
+            
+            if (!period || !date || !frontStr || !backStr) {
+                messageEl.className = 'message error';
+                messageEl.textContent = '请填写所有字段';
+                return;
+            }
+            
+            const front = frontStr.split(/\s+/).map(n => parseInt(n)).filter(n => !isNaN(n));
+            const back = backStr.split(/\s+/).map(n => parseInt(n)).filter(n => !isNaN(n));
+            
+            if (front.length !== 5) {
+                messageEl.className = 'message error';
+                messageEl.textContent = '前区必须是5个号码';
+                return;
+            }
+            
+            if (back.length !== 2) {
+                messageEl.className = 'message error';
+                messageEl.textContent = '后区必须是2个号码';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/latest-results', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         action: 'add',
-                        period: period,
-                        date: date,
-                        front_zone: frontNumbers.sort((a,b) => a-b),
-                        back_zone: backNumbers.sort((a,b) => a-b)
+                        entry: { period, date, front, back }
                     })
                 });
                 
                 const data = await response.json();
-                loadingDiv.classList.remove('show');
                 
                 if (data.status === 'success') {
-                    contentDiv.innerHTML = `
-                        <div class="status-success">
-                            ✅ 数据保存成功！<br>
-                            期号: ${period}<br>
-                            号码: ${frontNumbers.sort((a,b)=>a-b).join(', ')} + ${backNumbers.sort((a,b)=>a-b).join(', ')}
-                        </div>
-                    `;
-                    clearForm();
-                } else {
-                    contentDiv.innerHTML = `<div class="status-error">❌ 保存失败: ${data.message}</div>`;
-                }
-            } catch (error) {
-                loadingDiv.classList.remove('show');
-                contentDiv.innerHTML = `<div class="status-error">❌ 请求失败: ${error.message}</div>`;
-            }
-        }
-        
-        // 加载当前数据状态
-        async function loadCurrentData() {
-            const loadingDiv = document.getElementById('dataLoading');
-            const contentDiv = document.getElementById('dataContent');
-            
-            loadingDiv.classList.add('show');
-            contentDiv.innerHTML = '';
-            
-            try {
-                const response = await fetch('/api/latest-results');
-                const data = await response.json();
-                
-                loadingDiv.classList.remove('show');
-                
-                if (data.status === 'success') {
-                    const latest = data.latest_result;
-                    // 兼容两种数据格式
-                    const frontNumbers = latest.front_zone || latest.numbers?.slice(0,5) || [];
-                    const backNumbers = latest.back_zone || latest.numbers?.slice(5) || [];
-                    const dateStr = latest.date || latest.draw_date || '';
-                    const totalPeriods = data.total_periods || 'N/A';
-                    const dataRange = data.data_range || 'N/A';
-                    const dataSource = data.data_source || 'unknown';
-                    const isRealtime = data.is_realtime ? '✅ 实时' : '⚠️ 备份';
+                    messageEl.className = 'message success';
+                    messageEl.textContent = `✅ ${data.message}`;
                     
-                    contentDiv.innerHTML = `
-                        <div class="status-success">
-                            <strong>数据状态正常</strong> (${isRealtime})
-                        </div>
-                        <table class="data-table">
-                            <tr><th>项目</th><th>值</th></tr>
-                            <tr><td>最新期号</td><td>${latest.period || 'N/A'}</td></tr>
-                            <tr><td>开奖日期</td><td>${dateStr}</td></tr>
-                            <tr><td>开奖号码</td><td>
-                                <span class="number-display">
-                                    ${frontNumbers.map(n => `<span class="mini-ball front">${String(n).padStart(2, '0')}</span>`).join('')}
-                                    <span style="margin:0 5px;">+</span>
-                                    ${backNumbers.map(n => `<span class="mini-ball back">${String(n).padStart(2, '0')}</span>`).join('')}
-                                </span>
-                            </td></tr>
-                            <tr><td>数据来源</td><td>${dataSource}</td></tr>
-                            <tr><td>总期数</td><td>${totalPeriods}期</td></tr>
-                            <tr><td>数据范围</td><td>${dataRange}</td></tr>
-                        </table>
-                    `;
-                } else {
-                    contentDiv.innerHTML = `<div class="status-error">❌ ${data.message || '获取数据失败'}</div>`;
-                }
-            } catch (error) {
-                loadingDiv.classList.remove('show');
-                contentDiv.innerHTML = `<div class="status-error">❌ 请求失败: ${error.message}</div>`;
-            }
-        }
-        
-        // 加载最近记录
-        async function loadRecentResults() {
-            const loadingDiv = document.getElementById('recentLoading');
-            const contentDiv = document.getElementById('recentContent');
-            
-            loadingDiv.classList.add('show');
-            contentDiv.innerHTML = '';
-            
-            try {
-                const response = await fetch('/api/latest-results');
-                const data = await response.json();
-                
-                loadingDiv.classList.remove('show');
-                
-                if (data.status === 'success') {
-                    // 优先使用recent_results，否则用latest_result构建
-                    let results = data.recent_results || [];
-                    if (results.length === 0 && data.latest_result) {
-                        results = [data.latest_result];
-                    }
+                    // 清空表单
+                    document.getElementById('periodInput').value = '';
+                    document.getElementById('frontInput').value = '';
+                    document.getElementById('backInput').value = '';
                     
-                    if (results.length > 0) {
-                        let tableHtml = `
-                            <table class="data-table">
-                                <tr>
-                                    <th>期号</th>
-                                    <th>日期</th>
-                                    <th>开奖号码</th>
-                                </tr>
-                        `;
-                        
-                        results.forEach(result => {
-                            // 兼容两种数据格式
-                            const front = result.front_zone || result.numbers?.slice(0, 5) || [];
-                            const back = result.back_zone || result.numbers?.slice(5) || [];
-                            const dateStr = result.date || result.draw_date || '';
-                            
-                            tableHtml += `
-                                <tr>
-                                    <td>${result.period || 'N/A'}</td>
-                                    <td>${dateStr}</td>
-                                    <td>
-                                        <span class="number-display">
-                                            ${front.map(n => `<span class="mini-ball front">${String(n).padStart(2, '0')}</span>`).join('')}
-                                            <span style="margin:0 5px;">+</span>
-                                            ${back.map(n => `<span class="mini-ball back">${String(n).padStart(2, '0')}</span>`).join('')}
-                                        </span>
-                                    </td>
-                                </tr>
-                            `;
-                        });
-                        
-                        tableHtml += '</table>';
-                        contentDiv.innerHTML = tableHtml;
-                    } else {
-                        contentDiv.innerHTML = `<div class="status-info">暂无历史记录</div>`;
-                    }
+                    // 刷新数据
+                    loadCurrentData();
+                    loadRecentData();
+                    checkSystemStatus();
                 } else {
-                    contentDiv.innerHTML = `<div class="status-error">❌ ${data.message || '加载失败'}</div>`;
+                    messageEl.className = 'message error';
+                    messageEl.textContent = `❌ ${data.message}`;
                 }
             } catch (error) {
-                loadingDiv.classList.remove('show');
-                contentDiv.innerHTML = `<div class="status-error">❌ 请求失败: ${error.message}</div>`;
+                messageEl.className = 'message error';
+                messageEl.textContent = `❌ 请求失败: ${error.message}`;
             }
         }
-        
-        // 触发自动抓取
-        async function triggerAutoFetch() {
-            const resultDiv = document.getElementById('systemResult');
-            const contentDiv = document.getElementById('systemContent');
-            
-            resultDiv.style.display = 'block';
-            contentDiv.innerHTML = '<div class="status-info">⏳ 正在触发自动抓取...</div>';
+
+        async function deleteData(period) {
+            if (!confirm(`确定要删除第 ${period} 期数据吗？`)) return;
             
             try {
-                const response = await fetch('/api/update-data', {
+                const response = await fetch('/api/latest-results', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ action: 'auto_fetch' })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete', period })
                 });
                 
                 const data = await response.json();
                 
                 if (data.status === 'success') {
-                    contentDiv.innerHTML = `<div class="status-success">✅ ${data.message}</div>`;
+                    alert(`✅ ${data.message}`);
+                    loadRecentData();
+                    loadCurrentData();
+                    checkSystemStatus();
                 } else {
-                    contentDiv.innerHTML = `<div class="status-error">❌ ${data.message}</div>`;
+                    alert(`❌ ${data.message}`);
                 }
             } catch (error) {
-                contentDiv.innerHTML = `<div class="status-error">❌ 请求失败: ${error.message}</div>`;
+                alert(`❌ 请求失败: ${error.message}`);
             }
         }
-        
-        // 系统健康检查
-        async function checkSystemHealth() {
-            const resultDiv = document.getElementById('systemResult');
-            const contentDiv = document.getElementById('systemContent');
+
+        async function initKV() {
+            if (!confirm('确定要初始化 KV 数据吗？这将用默认数据覆盖现有 KV 数据。')) return;
             
-            resultDiv.style.display = 'block';
-            contentDiv.innerHTML = '<div class="status-info">⏳ 正在检查系统...</div>';
+            try {
+                const response = await fetch('/api/latest-results', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'init' })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    alert(`✅ ${data.message}`);
+                    loadCurrentData();
+                    loadRecentData();
+                    checkSystemStatus();
+                } else {
+                    alert(`❌ ${data.message}`);
+                }
+            } catch (error) {
+                alert(`❌ 请求失败: ${error.message}`);
+            }
+        }
+
+        async function checkHealth() {
+            const messageEl = document.getElementById('systemMessage');
             
             try {
                 const response = await fetch('/api/health');
                 const data = await response.json();
                 
                 if (data.status === 'healthy') {
-                    contentDiv.innerHTML = `
-                        <div class="status-success">
-                            ✅ 系统运行正常<br>
-                            服务: ${data.service}<br>
-                            版本: ${data.version}<br>
-                            时间: ${data.timestamp}
-                        </div>
-                    `;
+                    messageEl.className = 'message success';
+                    messageEl.textContent = `✅ 系统健康 | 版本: ${data.version} | 时间: ${data.timestamp}`;
                 } else {
-                    contentDiv.innerHTML = `<div class="status-error">❌ 系统异常</div>`;
+                    messageEl.className = 'message error';
+                    messageEl.textContent = '❌ 系统异常';
                 }
             } catch (error) {
-                contentDiv.innerHTML = `<div class="status-error">❌ 健康检查失败: ${error.message}</div>`;
+                messageEl.className = 'message error';
+                messageEl.textContent = `❌ 健康检查失败: ${error.message}`;
             }
         }
-        
-        // 清除缓存
+
         function clearCache() {
-            const resultDiv = document.getElementById('systemResult');
-            const contentDiv = document.getElementById('systemContent');
-            
-            resultDiv.style.display = 'block';
-            
-            // 清除session storage
-            sessionStorage.clear();
-            
-            // 清除local storage（如果有）
-            localStorage.clear();
-            
-            contentDiv.innerHTML = `
-                <div class="status-success">
-                    ✅ 缓存已清除<br>
-                    建议刷新页面以获取最新数据
-                </div>
-            `;
+            if (confirm('确定要清除浏览器缓存吗？')) {
+                localStorage.clear();
+                sessionStorage.clear();
+                alert('✅ 缓存已清除，建议刷新页面');
+            }
         }
+
+        // 回车登录
+        document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') login();
+        });
     </script>
 </body>
 </html>

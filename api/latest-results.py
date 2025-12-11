@@ -61,24 +61,42 @@ class handler(BaseHTTPRequestHandler):
                 result = {
                     'period': latest['period'],
                     'draw_date': latest['date'],
+                    'date': latest['date'],  # 兼容字段
                     'front_zone': latest['front'],
                     'back_zone': latest['back'],
+                    'numbers': latest['front'] + latest['back'],  # 兼容字段：合并号码
                     'display': f"{' '.join([str(n).zfill(2) for n in latest['front']])} + {' '.join([str(n).zfill(2) for n in latest['back']])}"
                 }
                 data_source = "backup"
                 error_msg = "实时抓取失败，使用备份数据。" + error_msg
             
             if result:
-                # 构建最近开奖列表
+                # 确保result有兼容字段
+                if 'date' not in result:
+                    result['date'] = result.get('draw_date', '')
+                if 'numbers' not in result:
+                    result['numbers'] = result.get('front_zone', []) + result.get('back_zone', [])
+                
+                # 构建最近开奖列表（兼容两种格式）
                 recent_results = []
                 if data_source == "backup":
                     for item in BACKUP_DATA[:10]:
                         recent_results.append({
                             'period': item['period'],
                             'date': item['date'],
+                            'draw_date': item['date'],
                             'front_zone': item['front'],
-                            'back_zone': item['back']
+                            'back_zone': item['back'],
+                            'numbers': item['front'] + item['back']  # 兼容字段
                         })
+                
+                # 计算数据范围
+                if BACKUP_DATA:
+                    first_period = BACKUP_DATA[-1]['period']
+                    last_period = BACKUP_DATA[0]['period']
+                    data_range = f"第{first_period}期 - 第{last_period}期"
+                else:
+                    data_range = "暂无数据"
                 
                 response = {
                     'status': 'success',
@@ -88,12 +106,15 @@ class handler(BaseHTTPRequestHandler):
                     'is_realtime': data_source != "backup",
                     'fetch_time': datetime.now().isoformat(),
                     'message': error_msg if data_source == "backup" else "",
+                    # 兼容admin.html的字段
+                    'total_periods': len(BACKUP_DATA),
+                    'data_range': data_range,
                     'timestamp': datetime.now().isoformat()
                 }
             else:
                 response = {
                     'status': 'error',
-                    'message': f'数据获取失败: {error_msg}',
+                    'message': f'无法从任何数据源获取数据，请检查网络或数据源状态',
                     'timestamp': datetime.now().isoformat()
                 }
             
@@ -105,132 +126,12 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(response, ensure_ascii=False).encode('utf-8'))
             
         except Exception as e:
-            self._send_error(str(e))
-    
-    def _fetch_url(self, url, timeout=10):
-        """统一的URL请求方法"""
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8'
-        }
-        
-        if HAS_REQUESTS:
-            response = requests.get(url, headers=headers, timeout=timeout)
-            response.encoding = 'utf-8'
-            return response.text
-        else:
-            req = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(req, timeout=timeout) as response:
-                return response.read().decode('utf-8')
-    
-    def _fetch_from_500(self):
-        """从500彩票网抓取数据"""
-        url = 'https://kaijiang.500.com/dlt.shtml'
-        html = self._fetch_url(url)
-        
-        # 解析HTML提取数据
-        # 查找期号
-        period_match = re.search(r'<span class="expect">.*?(\d{5,7}).*?</span>', html, re.DOTALL)
-        if not period_match:
-            period_match = re.search(r'第(\d{5,7})期', html)
-        
-        if not period_match:
-            raise Exception("无法解析期号")
-        
-        period = period_match.group(1)
-        
-        # 查找开奖号码 - 500彩票网格式
-        # 前区号码
-        front_pattern = r'<li class="ball_red">(\d+)</li>'
-        front_matches = re.findall(front_pattern, html)
-        
-        # 后区号码
-        back_pattern = r'<li class="ball_blue">(\d+)</li>'
-        back_matches = re.findall(back_pattern, html)
-        
-        if len(front_matches) >= 5 and len(back_matches) >= 2:
-            front_zone = [int(n) for n in front_matches[:5]]
-            back_zone = [int(n) for n in back_matches[:2]]
-        else:
-            # 备用解析方式
-            numbers_match = re.search(r'开奖号码[：:]\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+\+?\s*(\d+)\s+(\d+)', html)
-            if numbers_match:
-                front_zone = [int(numbers_match.group(i)) for i in range(1, 6)]
-                back_zone = [int(numbers_match.group(i)) for i in range(6, 8)]
-            else:
-                raise Exception("无法解析开奖号码")
-        
-        # 查找开奖日期
-        date_match = re.search(r'(\d{4}-\d{2}-\d{2})', html)
-        draw_date = date_match.group(1) if date_match else datetime.now().strftime('%Y-%m-%d')
-        
-        return {
-            'period': period,
-            'draw_date': draw_date,
-            'front_zone': front_zone,
-            'back_zone': back_zone,
-            'display': f"{' '.join([str(n).zfill(2) for n in front_zone])} + {' '.join([str(n).zfill(2) for n in back_zone])}"
-        }
-    
-    def _fetch_from_caibao(self):
-        """从彩宝网抓取数据"""
-        url = 'https://www.78500.cn/kaijiang/dlt/'
-        html = self._fetch_url(url)
-        
-        # 解析期号
-        period_match = re.search(r'第(\d{5,7})期', html)
-        if not period_match:
-            raise Exception("无法解析期号")
-        period = period_match.group(1)
-        
-        # 解析号码 - 查找数字序列
-        numbers_match = re.search(r'(\d{2})\s+(\d{2})\s+(\d{2})\s+(\d{2})\s+(\d{2})\s+(\d{2})\s+(\d{2})', html)
-        if not numbers_match:
-            raise Exception("无法解析开奖号码")
-        
-        front_zone = [int(numbers_match.group(i)) for i in range(1, 6)]
-        back_zone = [int(numbers_match.group(i)) for i in range(6, 8)]
-        
-        date_match = re.search(r'(\d{4}-\d{2}-\d{2})', html)
-        draw_date = date_match.group(1) if date_match else datetime.now().strftime('%Y-%m-%d')
-        
-        return {
-            'period': period,
-            'draw_date': draw_date,
-            'front_zone': front_zone,
-            'back_zone': back_zone,
-            'display': f"{' '.join([str(n).zfill(2) for n in front_zone])} + {' '.join([str(n).zfill(2) for n in back_zone])}"
-        }
-    
-    def _fetch_from_opencai(self):
-        """从开彩网API抓取数据"""
-        # 开彩网提供JSON API
-        url = 'https://www.opencai.net/api/dlt/'
-        
-        try:
-            data = self._fetch_url(url)
-            json_data = json.loads(data)
-            
-            if json_data and len(json_data) > 0:
-                latest = json_data[0]
-                numbers = latest.get('opencode', '').replace('+', ',').split(',')
-                
-                if len(numbers) >= 7:
-                    front_zone = [int(n.strip()) for n in numbers[:5]]
-                    back_zone = [int(n.strip()) for n in numbers[5:7]]
-                    
-                    return {
-                        'period': latest.get('expect', ''),
-                        'draw_date': latest.get('opentime', '')[:10],
-                        'front_zone': front_zone,
-                        'back_zone': back_zone,
-                        'display': f"{' '.join([str(n).zfill(2) for n in front_zone])} + {' '.join([str(n).zfill(2) for n in back_zone])}"
-                    }
-        except:
-            pass
-        
-        raise Exception("开彩网API请求失败")
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            error_response = {'status': 'error', 'message': str(e)}
+            self.wfile.write(json.dumps(error_response).encode('utf-8'))
     
     def do_OPTIONS(self):
         self.send_response(200)
@@ -239,10 +140,120 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.end_headers()
     
-    def _send_error(self, message):
-        self.send_response(500)
-        self.send_header('Content-type', 'application/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.end_headers()
-        error_response = {'status': 'error', 'message': message}
-        self.wfile.write(json.dumps(error_response).encode('utf-8'))
+    def _make_request(self, url, timeout=10):
+        """统一的HTTP请求方法"""
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+        
+        if HAS_REQUESTS:
+            response = requests.get(url, headers=headers, timeout=timeout)
+            return response.text
+        else:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=timeout) as response:
+                return response.read().decode('utf-8')
+    
+    def _fetch_from_500(self):
+        """从500彩票网抓取"""
+        url = "https://datachart.500.com/dlt/history/newinc/history.php"
+        html = self._make_request(url)
+        
+        # 解析HTML获取最新一期数据
+        # 500彩票网格式: <tr class="t_tr1"><td>25139</td><td>2025-12-06</td><td>...</td></tr>
+        period_match = re.search(r'<td[^>]*>(\d{5,7})</td>', html)
+        if not period_match:
+            raise Exception("无法解析期号")
+        
+        period = period_match.group(1)
+        
+        # 提取日期
+        date_match = re.search(r'<td[^>]*>(\d{4}-\d{2}-\d{2})</td>', html)
+        date = date_match.group(1) if date_match else datetime.now().strftime('%Y-%m-%d')
+        
+        # 提取前区号码 (红球)
+        front_pattern = r'<td class="t_cfont2">(\d+)</td>'
+        front_matches = re.findall(front_pattern, html)
+        if len(front_matches) < 5:
+            raise Exception("无法解析前区号码")
+        
+        front_zone = [int(n) for n in front_matches[:5]]
+        
+        # 提取后区号码 (蓝球)
+        back_pattern = r'<td class="t_cfont4">(\d+)</td>'
+        back_matches = re.findall(back_pattern, html)
+        if len(back_matches) < 2:
+            raise Exception("无法解析后区号码")
+        
+        back_zone = [int(n) for n in back_matches[:2]]
+        
+        return {
+            'period': period,
+            'draw_date': date,
+            'date': date,  # 兼容字段
+            'front_zone': front_zone,
+            'back_zone': back_zone,
+            'numbers': front_zone + back_zone,  # 兼容字段
+            'display': f"{' '.join([str(n).zfill(2) for n in front_zone])} + {' '.join([str(n).zfill(2) for n in back_zone])}"
+        }
+    
+    def _fetch_from_caibao(self):
+        """从彩宝网抓取"""
+        url = "https://www.zhcw.com/kjxx/dlt/"
+        html = self._make_request(url)
+        
+        # 彩宝网解析逻辑
+        period_match = re.search(r'第\s*(\d{5,7})\s*期', html)
+        if not period_match:
+            raise Exception("无法解析期号")
+        
+        period = period_match.group(1)
+        
+        # 提取号码
+        ball_pattern = r'<em[^>]*class="[^"]*ball[^"]*"[^>]*>(\d+)</em>'
+        balls = re.findall(ball_pattern, html)
+        
+        if len(balls) < 7:
+            raise Exception("无法解析号码")
+        
+        front_zone = [int(n) for n in balls[:5]]
+        back_zone = [int(n) for n in balls[5:7]]
+        
+        return {
+            'period': period,
+            'draw_date': datetime.now().strftime('%Y-%m-%d'),
+            'date': datetime.now().strftime('%Y-%m-%d'),  # 兼容字段
+            'front_zone': front_zone,
+            'back_zone': back_zone,
+            'numbers': front_zone + back_zone,  # 兼容字段
+            'display': f"{' '.join([str(n).zfill(2) for n in front_zone])} + {' '.join([str(n).zfill(2) for n in back_zone])}"
+        }
+    
+    def _fetch_from_opencai(self):
+        """从开彩网API抓取"""
+        url = "https://www.opencai.net/api/dlt/"
+        data = self._make_request(url)
+        
+        try:
+            json_data = json.loads(data)
+            if isinstance(json_data, list) and len(json_data) > 0:
+                latest = json_data[0]
+                numbers = latest.get('opencode', '').split(',')
+                
+                if len(numbers) >= 7:
+                    front_zone = [int(n) for n in numbers[:5]]
+                    back_zone = [int(n) for n in numbers[5:7]]
+                    
+                    return {
+                        'period': latest.get('expect', ''),
+                        'draw_date': latest.get('opentime', '')[:10],
+                        'date': latest.get('opentime', '')[:10],  # 兼容字段
+                        'front_zone': front_zone,
+                        'back_zone': back_zone,
+                        'numbers': front_zone + back_zone,  # 兼容字段
+                        'display': f"{' '.join([str(n).zfill(2) for n in front_zone])} + {' '.join([str(n).zfill(2) for n in back_zone])}"
+                    }
+        except:
+            pass
+        
+        raise Exception("API数据解析失败")

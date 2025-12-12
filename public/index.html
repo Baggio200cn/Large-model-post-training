@@ -655,61 +655,98 @@
             content.innerHTML = '';
             
             try {
-                // 尝试调用API，如果失败则使用本地生成
-                let sp = null;
-                try {
-                    const response = await fetch('/api/spiritual');
-                    const data = await response.json();
-                    
-                    // 适配不同的API响应结构
-                    if (data.spiritual_perturbation) {
-                        sp = data.spiritual_perturbation;
-                    } else if (data.perturbation_factors) {
-                        sp = data;
-                    } else if (data.prediction) {
-                        sp = data.prediction;
-                    }
-                } catch (apiError) {
-                    console.log('API调用失败，使用本地生成:', apiError);
-                }
-                
-                // 如果API没有返回有效数据，本地生成灵修因子
-                if (!sp || !sp.perturbation_factors) {
-                    sp = generateLocalSpiritualFactors(spiritualText);
-                }
+                const response = await fetch('/api/spiritual');
+                const data = await response.json();
                 
                 loading.classList.remove('show');
+                console.log('灵修API响应:', data);
                 
-                // 确保perturbation_factors存在
-                const factors = sp.perturbation_factors || {
-                    energy_level: 7,
-                    cosmic_alignment: 0.75,
-                    harmony_factor: 0.70,
-                    chaos_factor: 0.25
-                };
+                if (data.status === 'success') {
+                    // 适配实际API返回的结构
+                    // API返回: spiritual_factors, spiritual_prediction, energy_analysis
+                    const factors = data.spiritual_factors || data.perturbation_factors || {
+                        energy_level: 7,
+                        cosmic_alignment: 0.75,
+                        harmony_factor: 0.70,
+                        chaos_factor: 0.25
+                    };
+                    
+                    const prediction = data.spiritual_prediction || {};
+                    const energyAnalysis = data.energy_analysis || {};
+                    
+                    // 获取预测号码（如果API已生成）或本地生成
+                    let perturbedFront, perturbedBack;
+                    if (prediction.front_zone && prediction.back_zone) {
+                        perturbedFront = prediction.front_zone;
+                        perturbedBack = prediction.back_zone;
+                    } else {
+                        perturbedFront = generateSpiritualNumbers(5, 35, factors, spiritualText);
+                        perturbedBack = generateSpiritualNumbers(2, 12, factors, spiritualText);
+                    }
+                    
+                    // 获取显示信息
+                    const imageDesc = energyAnalysis.image_interpretation || 
+                                      energyAnalysis.description ||
+                                      data.spiritual_image?.description || 
+                                      getRandomSpiritualImage();
+                    const energyLevel = factors.energy_level || energyAnalysis.energy_level || 7;
+                    const cosmicAlign = factors.cosmic_alignment || factors.cosmic_resonance || 0.75;
+                    const harmonyFactor = factors.harmony_factor || factors.balance_index || 0.70;
+                    const mantra = data.guidance?.mantra || 
+                                   data.spiritual_guidance?.recommended_mantra || 
+                                   getRandomMantra();
+                    const intensity = factors.overall_intensity || 
+                                      energyAnalysis.overall_score ||
+                                      (cosmicAlign + harmonyFactor) / 2;
+                    
+                    spiritualPrediction = {
+                        front: perturbedFront,
+                        back: perturbedBack,
+                        factors: factors,
+                        intensity: intensity
+                    };
+                    
+                    content.innerHTML = `
+                        <div style="text-align: center;">
+                            <p style="color: #ffd700; margin-bottom: 10px;">🧘 灵修感应号码</p>
+                            <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 15px;">
+                                ${perturbedFront.map(n => `<span class="ball front">${n.toString().padStart(2, '0')}</span>`).join('')}
+                                <span class="plus-sign">+</span>
+                                ${perturbedBack.map(n => `<span class="ball back">${n.toString().padStart(2, '0')}</span>`).join('')}
+                            </div>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px;">
+                            <p>🌟 <strong>灵修图像:</strong> ${imageDesc}</p>
+                            <p>⚡ <strong>能量等级:</strong> ${energyLevel}</p>
+                            <p>🔮 <strong>宇宙共振:</strong> ${(cosmicAlign * 100).toFixed(1)}%</p>
+                            <p>☯️ <strong>和谐因子:</strong> ${(harmonyFactor * 100).toFixed(1)}%</p>
+                            <p>🧘 <strong>冥想建议:</strong> ${mantra}</p>
+                            ${spiritualText ? `<p>📝 <strong>您的感悟:</strong> ${spiritualText}</p>` : ''}
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.message || '获取灵修预测失败');
+                }
+            } catch (error) {
+                loading.classList.remove('show');
+                console.error('灵修预测错误:', error);
                 
-                // 基于灵修因子生成扰动后的号码
+                // 如果API失败，使用本地生成
+                const localFactors = generateLocalSpiritualFactors(spiritualText);
+                const factors = localFactors.perturbation_factors;
                 const perturbedFront = generateSpiritualNumbers(5, 35, factors, spiritualText);
                 const perturbedBack = generateSpiritualNumbers(2, 12, factors, spiritualText);
-                
-                // 获取显示信息
-                const imageDesc = sp.spiritual_image?.description || sp.image_description || getRandomSpiritualImage();
-                const energyLevel = factors.energy_level || 7;
-                const cosmicAlign = factors.cosmic_alignment || 0.75;
-                const harmonyFactor = factors.harmony_factor || 0.70;
-                const mantra = sp.spiritual_guidance?.recommended_mantra || sp.mantra || getRandomMantra();
-                const intensity = sp.overall_intensity || (cosmicAlign + harmonyFactor) / 2;
                 
                 spiritualPrediction = {
                     front: perturbedFront,
                     back: perturbedBack,
                     factors: factors,
-                    intensity: intensity
+                    intensity: localFactors.overall_intensity
                 };
                 
                 content.innerHTML = `
                     <div style="text-align: center;">
-                        <p style="color: #ffd700; margin-bottom: 10px;">🧘 灵修感应号码</p>
+                        <p style="color: #ffd700; margin-bottom: 10px;">🧘 灵修感应号码 (本地生成)</p>
                         <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 15px;">
                             ${perturbedFront.map(n => `<span class="ball front">${n.toString().padStart(2, '0')}</span>`).join('')}
                             <span class="plus-sign">+</span>
@@ -717,17 +754,14 @@
                         </div>
                     </div>
                     <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px;">
-                        <p>🌟 <strong>灵修图像:</strong> ${imageDesc}</p>
-                        <p>⚡ <strong>能量等级:</strong> ${energyLevel}</p>
-                        <p>🔮 <strong>宇宙共振:</strong> ${(cosmicAlign * 100).toFixed(1)}%</p>
-                        <p>☯️ <strong>和谐因子:</strong> ${(harmonyFactor * 100).toFixed(1)}%</p>
-                        <p>🧘 <strong>冥想建议:</strong> ${mantra}</p>
+                        <p>🌟 <strong>灵修图像:</strong> ${localFactors.spiritual_image.description}</p>
+                        <p>⚡ <strong>能量等级:</strong> ${factors.energy_level}</p>
+                        <p>🔮 <strong>宇宙共振:</strong> ${(factors.cosmic_alignment * 100).toFixed(1)}%</p>
+                        <p>☯️ <strong>和谐因子:</strong> ${(factors.harmony_factor * 100).toFixed(1)}%</p>
+                        <p>🧘 <strong>冥想建议:</strong> ${localFactors.spiritual_guidance.recommended_mantra}</p>
                         ${spiritualText ? `<p>📝 <strong>您的感悟:</strong> ${spiritualText}</p>` : ''}
                     </div>
                 `;
-            } catch (error) {
-                loading.classList.remove('show');
-                content.innerHTML = `<p style="color: #e74c3c;">❌ 获取失败: ${error.message}</p>`;
             }
         }
         
@@ -999,9 +1033,16 @@
         }
         
         // ============ 公众号推文生成 ============
+        let lastPredictedNumbers = null; // 存储上次预测号码
+        let cachedStatistics = null;     // 缓存统计数据
+        
         async function generateTweet(type) {
             const resultDiv = document.getElementById('tweetResult');
             const contentDiv = document.getElementById('tweetContent');
+            
+            // 显示加载状态
+            resultDiv.style.display = 'block';
+            contentDiv.innerHTML = '<div style="text-align:center;padding:30px;"><div class="spinner"></div><p>🤖 AI正在生成推文...</p></div>';
             
             // 确保有融合预测数据
             if (!fusionPrediction) {
@@ -1009,176 +1050,241 @@
             }
             
             if (!fusionPrediction) {
-                alert('请先生成融合预测！');
+                contentDiv.textContent = '❌ 请先生成融合预测！';
                 return;
             }
             
-            resultDiv.style.display = 'block';
+            // 获取统计数据
+            if (!cachedStatistics) {
+                try {
+                    const statsResponse = await fetch('/api/latest-results', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ action: 'statistics' })
+                    });
+                    const statsData = await statsResponse.json();
+                    if (statsData.status === 'success') {
+                        cachedStatistics = statsData.statistics;
+                    }
+                } catch (e) {
+                    console.log('获取统计数据失败:', e);
+                }
+            }
             
+            try {
+                // 调用推文生成API
+                const response = await fetch('/api/generate-tweet', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        type: type,
+                        target_period: fusionPrediction.target_period,
+                        prediction: {
+                            front: fusionPrediction.front,
+                            back: fusionPrediction.back,
+                            confidence: fusionPrediction.confidence
+                        },
+                        last_actual: latestData?.latest_result ? {
+                            front: latestData.latest_result.front_zone,
+                            back: latestData.latest_result.back_zone
+                        } : null,
+                        last_predicted: lastPredictedNumbers,
+                        statistics: cachedStatistics ? {
+                            front_hot: cachedStatistics.front_hot,
+                            back_hot: cachedStatistics.back_hot,
+                            front_cold: cachedStatistics.front_cold
+                        } : null,
+                        ml_models: mlPrediction?.individual_models || null
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    contentDiv.textContent = data.article;
+                    
+                    // 显示插图提示词
+                    if (data.image_prompt) {
+                        const promptDiv = document.createElement('div');
+                        promptDiv.style.cssText = 'margin-top:20px;padding:15px;background:rgba(243,156,18,0.2);border-radius:10px;border-left:3px solid #f39c12;';
+                        promptDiv.innerHTML = `
+                            <p style="color:#f39c12;font-weight:bold;margin-bottom:8px;">🎨 本期插图AI提示词：</p>
+                            <p style="color:#e0e0e0;font-style:italic;">${data.image_prompt}</p>
+                            <button onclick="copyImagePrompt('${data.image_prompt.replace(/'/g, "\\'")}')" 
+                                    style="margin-top:10px;background:#f39c12;color:#000;border:none;padding:8px 15px;border-radius:5px;cursor:pointer;">
+                                📋 复制提示词
+                            </button>
+                        `;
+                        contentDiv.appendChild(promptDiv);
+                    }
+                    
+                    // 显示ML小知识
+                    if (data.ml_knowledge) {
+                        const knowledgeDiv = document.createElement('div');
+                        knowledgeDiv.style.cssText = 'margin-top:15px;padding:15px;background:rgba(0,212,255,0.1);border-radius:10px;border-left:3px solid #00d4ff;';
+                        knowledgeDiv.innerHTML = `
+                            <p style="color:#00d4ff;font-weight:bold;margin-bottom:8px;">🧠 本期ML小知识：${data.ml_knowledge.title}</p>
+                            <p style="color:#a0a0a0;font-size:0.9em;">${data.ml_knowledge.content}</p>
+                        `;
+                        contentDiv.appendChild(knowledgeDiv);
+                    }
+                    
+                    // 保存当前预测作为下次的"上期预测"
+                    lastPredictedNumbers = {
+                        front: fusionPrediction.front,
+                        back: fusionPrediction.back
+                    };
+                    
+                } else {
+                    // API失败时使用本地生成
+                    contentDiv.textContent = generateLocalTweet(type);
+                }
+                
+            } catch (error) {
+                console.error('推文生成API失败:', error);
+                // 回退到本地生成
+                contentDiv.textContent = generateLocalTweet(type);
+            }
+        }
+        
+        function generateLocalTweet(type) {
             const dateStr = new Date().toLocaleDateString('zh-CN', {
                 year: 'numeric', month: 'long', day: 'numeric'
             });
             const timeStr = new Date().toLocaleTimeString('zh-CN');
             
-            let content = '';
+            // 动态标题
+            const titles = [
+                `🎯 AI预测第${fusionPrediction.target_period}期：数据驱动，智能分析`,
+                `🤖 第${fusionPrediction.target_period}期深度预测：四大模型联合出击`,
+                `📊 大乐透第${fusionPrediction.target_period}期：ML+灵修双重加持`
+            ];
+            const title = titles[Math.floor(Math.random() * titles.length)];
             
-            if (type === 'simple') {
-                content = `🎯 大乐透AI预测 | ${dateStr}
+            // ML小知识
+            const mlKnowledge = [
+                {title: "LSTM的记忆能力", content: "LSTM通过门控机制选择性地记忆或遗忘信息，特别适合分析彩票号码的时序规律。"},
+                {title: "Transformer的注意力", content: "注意力机制让模型能够发现不同号码之间的隐藏关联，比如某些号码经常一起出现。"},
+                {title: "集成学习的智慧", content: "就像三个臭皮匠顶个诸葛亮，多个模型的组合往往比单个模型更可靠。"}
+            ];
+            const knowledge = mlKnowledge[Math.floor(Math.random() * mlKnowledge.length)];
+            
+            // 插图提示词
+            const imagePrompts = [
+                `数字${fusionPrediction.target_period.slice(-2)}在宇宙星空中闪耀，周围环绕着数据流和AI神经网络，紫蓝色调，科幻艺术风格`,
+                `一个未来感的水晶球显示着预测数字，周围是全息投影的统计图表，赛博朋克风格`,
+                `四个AI模型化身为四种元素融合成预测能量，奇幻科技风格`
+            ];
+            const imagePrompt = imagePrompts[Math.floor(Math.random() * imagePrompts.length)];
+            
+            let content = `# ${title}
 
-📌 第 ${fusionPrediction.target_period} 期预测
+📅 ${dateStr}
 
-🔴 前区推荐：${fusionPrediction.front.map(n => n.toString().padStart(2, '0')).join(' ')}
-🔵 后区推荐：${fusionPrediction.back.map(n => n.toString().padStart(2, '0')).join(' ')}
+---
 
-📊 AI综合置信度：${(fusionPrediction.confidence * 100).toFixed(1)}%
+## 📊 上期开奖回顾
 
-⚠️ 温馨提示：预测仅供参考，理性购彩！
+**开奖号码：** ${latestData?.latest_result?.front_zone?.map(n => String(n).padStart(2, '0')).join(' ') || '--'} + ${latestData?.latest_result?.back_zone?.map(n => String(n).padStart(2, '0')).join(' ') || '--'}
 
-#大乐透 #AI预测 #彩票分析`;
+`;
+            
+            if (lastPredictedNumbers) {
+                const actualFront = new Set(latestData?.latest_result?.front_zone || []);
+                const actualBack = new Set(latestData?.latest_result?.back_zone || []);
+                const predFront = new Set(lastPredictedNumbers.front);
+                const predBack = new Set(lastPredictedNumbers.back);
                 
-            } else if (type === 'detailed') {
-                const stats = latestData?.statistics || {};
-                content = `# 🎯 大乐透AI智能预测分析报告
+                const frontHit = [...actualFront].filter(n => predFront.has(n));
+                const backHit = [...actualBack].filter(n => predBack.has(n));
+                const hitCount = frontHit.length + backHit.length;
+                
+                content += `**上期AI预测：** ${lastPredictedNumbers.front.map(n => String(n).padStart(2, '0')).join(' ')} + ${lastPredictedNumbers.back.map(n => String(n).padStart(2, '0')).join(' ')}
 
-## 📅 预测日期：${dateStr}
-## 🎲 目标期号：第 ${fusionPrediction.target_period} 期
+**命中情况：** 前区${frontHit.length}个${frontHit.length > 0 ? '('+frontHit.join(',')+')' : ''}，后区${backHit.length}个${backHit.length > 0 ? '('+backHit.join(',')+')' : ''}
 
----
+`;
+                
+                if (hitCount >= 3) {
+                    content += `🎉 **表现不错！** 模型状态良好，继续保持！\n\n`;
+                } else {
+                    content += `🔧 **模型调优中：** 本期将增加Transformer权重，加强号码关联性分析。\n\n`;
+                }
+            }
+            
+            content += `---
 
-## 🔮 最终融合预测号码
+## 🎯 第${fusionPrediction.target_period}期预测号码
 
-**前区推荐：** ${fusionPrediction.front.map(n => n.toString().padStart(2, '0')).join(' ')}
-**后区推荐：** ${fusionPrediction.back.map(n => n.toString().padStart(2, '0')).join(' ')}
+**🔴 前区推荐：** ${fusionPrediction.front.map(n => String(n).padStart(2, '0')).join(' ')}
 
-**综合置信度：** ${(fusionPrediction.confidence * 100).toFixed(1)}%
+**🔵 后区推荐：** ${fusionPrediction.back.map(n => String(n).padStart(2, '0')).join(' ')}
 
----
+**📊 综合置信度：** ${(fusionPrediction.confidence * 100).toFixed(1)}%
 
-## 🤖 ML机器学习预测
+`;
+            
+            if (type !== 'simple' && mlPrediction) {
+                content += `---
 
-${mlPrediction ? `
+## 🤖 各模型预测详情
+
 | 模型 | 前区预测 | 后区预测 | 置信度 |
-|------|----------|----------|--------|
+|:---:|:---:|:---:|:---:|
 | LSTM | ${mlPrediction.individual_models.lstm.front.join(', ')} | ${mlPrediction.individual_models.lstm.back.join(', ')} | ${(mlPrediction.individual_models.lstm.confidence * 100).toFixed(1)}% |
 | Transformer | ${mlPrediction.individual_models.transformer.front.join(', ')} | ${mlPrediction.individual_models.transformer.back.join(', ')} | ${(mlPrediction.individual_models.transformer.confidence * 100).toFixed(1)}% |
 | XGBoost | ${mlPrediction.individual_models.xgboost.front.join(', ')} | ${mlPrediction.individual_models.xgboost.back.join(', ')} | ${(mlPrediction.individual_models.xgboost.confidence * 100).toFixed(1)}% |
 | RandomForest | ${mlPrediction.individual_models.random_forest.front.join(', ')} | ${mlPrediction.individual_models.random_forest.back.join(', ')} | ${(mlPrediction.individual_models.random_forest.confidence * 100).toFixed(1)}% |
-` : '暂无数据'}
+
+`;
+            }
+            
+            content += `---
+
+## 🧠 机器学习小课堂
+
+### ${knowledge.title}
+
+${knowledge.content}
 
 ---
 
-## 🧘 灵修直觉预测
+## 🖼️ 本期专属插图
 
-${spiritualPrediction ? `
-**灵修感应号码：** ${spiritualPrediction.front.join(', ')} + ${spiritualPrediction.back.join(', ')}
-**能量强度：** ${(spiritualPrediction.intensity * 100).toFixed(1)}%
-` : '暂无数据'}
+**AI绘图提示词：**
 
----
-
-## 📊 融合策略
-
-- ML机器学习权重：70%
-- 灵修直觉权重：30%
-- 训练数据：${latestData?.total_periods || 297}期历史数据
+> ${imagePrompt}
 
 ---
 
 ## ⚠️ 免责声明
 
-本预测基于历史数据分析和AI算法，仅供参考娱乐。
-彩票具有随机性，请理性购彩，量力而行。
+本预测基于历史数据分析和机器学习算法，仅供参考娱乐。彩票具有完全随机性，任何预测都不能保证准确。请理性购彩，量力而行。
 
 ---
 
-*生成时间：${dateStr} ${timeStr}*
-*Powered by 大乐透AI预测系统*`;
-
-            } else if (type === 'analysis') {
-                content = `# 📊 大乐透第${fusionPrediction.target_period}期专业分析报告
-
-## 一、数据概况
-
-- 分析样本：${latestData?.total_periods || 297}期历史开奖数据
-- 分析时间：${dateStr} ${timeStr}
-- 数据来源：${latestData?.data_source === 'kv_storage' ? '实时数据库' : '历史数据库'}
-
-## 二、号码频率分析
-
-### 前区热门号码（出现频率最高）
-${latestData?.statistics?.front_hot_numbers?.slice(0, 5).map((n, i) => `${i + 1}. ${n.number}号 - 出现${n.count}次`).join('\n') || '数据加载中...'}
-
-### 后区热门号码
-${latestData?.statistics?.back_hot_numbers?.slice(0, 3).map((n, i) => `${i + 1}. ${n.number}号 - 出现${n.count}次`).join('\n') || '数据加载中...'}
-
-## 三、AI模型预测详情
-
-### 1. LSTM时序预测模型
-- 核心逻辑：基于时间序列模式识别
-- 预测号码：${mlPrediction?.individual_models?.lstm?.front?.join(', ') || '--'} + ${mlPrediction?.individual_models?.lstm?.back?.join(', ') || '--'}
-- 模型置信度：${mlPrediction ? (mlPrediction.individual_models.lstm.confidence * 100).toFixed(1) : '--'}%
-
-### 2. Transformer注意力模型
-- 核心逻辑：号码关联性分析
-- 预测号码：${mlPrediction?.individual_models?.transformer?.front?.join(', ') || '--'} + ${mlPrediction?.individual_models?.transformer?.back?.join(', ') || '--'}
-- 模型置信度：${mlPrediction ? (mlPrediction.individual_models.transformer.confidence * 100).toFixed(1) : '--'}%
-
-### 3. XGBoost梯度提升模型
-- 核心逻辑：统计特征学习
-- 预测号码：${mlPrediction?.individual_models?.xgboost?.front?.join(', ') || '--'} + ${mlPrediction?.individual_models?.xgboost?.back?.join(', ') || '--'}
-- 模型置信度：${mlPrediction ? (mlPrediction.individual_models.xgboost.confidence * 100).toFixed(1) : '--'}%
-
-### 4. RandomForest随机森林模型
-- 核心逻辑：多决策树投票
-- 预测号码：${mlPrediction?.individual_models?.random_forest?.front?.join(', ') || '--'} + ${mlPrediction?.individual_models?.random_forest?.back?.join(', ') || '--'}
-- 模型置信度：${mlPrediction ? (mlPrediction.individual_models.random_forest.confidence * 100).toFixed(1) : '--'}%
-
-## 四、灵修直觉分析
-
-${spiritualPrediction ? `
-- 宇宙能量共振：${(spiritualPrediction.factors?.cosmic_alignment * 100 || 75).toFixed(1)}%
-- 和谐因子：${(spiritualPrediction.factors?.harmony_factor * 100 || 70).toFixed(1)}%
-- 灵修感应号码：${spiritualPrediction.front.join(', ')} + ${spiritualPrediction.back.join(', ')}
-` : '暂无灵修数据'}
-
-## 五、最终融合预测
-
-### 🎯 推荐号码组合
-
-**前区：${fusionPrediction.front.map(n => n.toString().padStart(2, '0')).join(' ')}**
-**后区：${fusionPrediction.back.map(n => n.toString().padStart(2, '0')).join(' ')}**
-
-### 融合权重配置
-- ML机器学习：70%（科学分析）
-- 灵修直觉：30%（能量感应）
-
-### 综合置信度：${(fusionPrediction.confidence * 100).toFixed(1)}%
-
----
-
-## ⚠️ 风险提示
-
-1. 本报告基于历史数据统计分析，不构成购彩建议
-2. 彩票开奖具有完全随机性，任何预测仅供参考
-3. 请理性购彩，切勿沉迷
-
----
-
-*大乐透AI预测系统 - ${dateStr}*`;
-            }
+*大乐透AI预测系统 | ${dateStr} ${timeStr}*
+*Powered by LSTM + Transformer + XGBoost + RandomForest*
+`;
             
-            contentDiv.textContent = content;
+            return content;
+        }
+        
+        function copyImagePrompt(prompt) {
+            navigator.clipboard.writeText(prompt).then(() => {
+                alert('插图提示词已复制！');
+            });
         }
         
         function copyTweet() {
-            const content = document.getElementById('tweetContent').textContent;
+            const content = document.getElementById('tweetContent').innerText || document.getElementById('tweetContent').textContent;
             navigator.clipboard.writeText(content).then(() => {
                 alert('推文内容已复制到剪贴板！');
             });
         }
         
         function downloadTweet() {
-            const content = document.getElementById('tweetContent').textContent;
+            const content = document.getElementById('tweetContent').innerText || document.getElementById('tweetContent').textContent;
             const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');

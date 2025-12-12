@@ -9,12 +9,9 @@ import json
 from datetime import datetime
 import random
 import os
-import urllib.request
-import urllib.error
 
 # DeepSeek API配置
 DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY', '')
-DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions'
 
 # ML小知识库
 ML_KNOWLEDGE = [
@@ -30,15 +27,18 @@ ML_KNOWLEDGE = [
     {"title": "概率与随机性", "content": "彩票本质上是一个概率游戏，AI预测并不能改变这个事实，但可以帮助分析历史数据中的统计特征。"}
 ]
 
-def call_deepseek(prompt, max_tokens=2500):
+
+def call_deepseek(prompt):
     """调用DeepSeek API生成内容"""
     if not DEEPSEEK_API_KEY:
         return None
     
     try:
+        import urllib.request
+        
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': f'Bearer {DEEPSEEK_API_KEY}'
+            'Authorization': 'Bearer ' + DEEPSEEK_API_KEY
         }
         
         data = {
@@ -46,327 +46,249 @@ def call_deepseek(prompt, max_tokens=2500):
             'messages': [
                 {
                     'role': 'system',
-                    'content': '你是一位专业的科普作家，擅长将复杂的机器学习和数据分析概念用通俗易懂、生动有趣的语言解释给普通读者。你的文章风格轻松活泼，善于使用比喻和类比，同时保持专业性。请用中文Markdown格式输出。'
+                    'content': '你是一位专业的科普作家，擅长用通俗易懂、生动有趣的语言解释机器学习概念。请用中文Markdown格式输出。'
                 },
                 {
                     'role': 'user',
                     'content': prompt
                 }
             ],
-            'max_tokens': max_tokens,
+            'max_tokens': 2000,
             'temperature': 0.7
         }
         
         req = urllib.request.Request(
-            DEEPSEEK_API_URL,
+            'https://api.deepseek.com/v1/chat/completions',
             data=json.dumps(data).encode('utf-8'),
             headers=headers,
             method='POST'
         )
         
-        with urllib.request.urlopen(req, timeout=30) as response:
+        with urllib.request.urlopen(req, timeout=25) as response:
             result = json.loads(response.read().decode('utf-8'))
-            return result['choices'][0]['message']['content']
+            content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
+            if content and len(content) > 200:
+                return content
+        return None
     except Exception as e:
-        print(f"DeepSeek API error: {e}")
+        print('DeepSeek error: ' + str(e))
         return None
 
-def get_image_prompt(period):
-    """生成当期插图提示词"""
-    seed = int(period) % 10
-    prompts = [
-        f"数字{period[-2:]}在宇宙星空中闪耀，周围环绕着数据流和AI神经网络，紫蓝色调，科幻艺术风格，4K高清",
-        f"未来感水晶球显示第{period}期预测数字，全息投影统计图表环绕，赛博朋克风格，霓虹灯光",
-        f"AI机器人正在分析彩票数据，多屏幕显示期号{period}，流动数据矩阵背景，科技蓝主调",
-        f"量子计算机核心运算，光粒子组成数字{period[-2:]}形状，梦幻紫色和金色，抽象科技艺术",
-        f"神经网络三维可视化，发光节点闪烁第{period}期关键数字，深邃黑色背景，霓虹色彩",
-        f"四个AI模型化身为四种元素：火(LSTM)、水(Transformer)、土(XGBoost)、风(RF)融合成预测能量球",
-        f"深度学习层次抽象表达，层层神经元如同未来城市夜景，第{period}期数字在最顶层闪耀",
-        f"数据科学家的控制室，巨大全息屏幕显示第{period}期分析，周围漂浮着图表和代码",
-        f"时间线上的数据节点，高亮显示第{period}期，过去和未来的数据流在此交汇，时空概念艺术",
-        f"一本发光的魔法书打开，页面上浮现第{period}期预测数字和公式，魔法粒子飘散，奇幻科技结合"
-    ]
-    return prompts[seed]
 
-def get_dynamic_title(hit_count, period):
-    """生成动态标题"""
-    if hit_count >= 4:
-        titles = [
-            f"🎯 第{period}期预测：上期命中{hit_count}个，AI状态火热！",
-            f"🔥 连续发力！第{period}期深度分析震撼来袭",
-            f"💪 命中{hit_count}个！第{period}期乘胜追击"
-        ]
-    elif hit_count >= 2:
-        titles = [
-            f"📊 第{period}期预测：数据揭示新趋势",
-            f"🔮 第{period}期深度解析：模型持续进化中",
-            f"🎲 第{period}期分析：稳扎稳打，步步为营"
-        ]
-    else:
-        titles = [
-            f"🤖 第{period}期预测：模型调优重新出发",
-            f"📈 第{period}期分析：从数据中寻找新规律",
-            f"🔬 第{period}期：AI学习永不止步"
-        ]
-    return random.choice(titles)
+def safe_get(d, key, default=None):
+    """安全获取字典值"""
+    if d is None:
+        return default
+    return d.get(key, default) if isinstance(d, dict) else default
+
+
+def format_nums(nums):
+    """格式化号码列表"""
+    if not nums:
+        return '--'
+    return ' '.join([str(n).zfill(2) for n in nums])
+
 
 class handler(BaseHTTPRequestHandler):
     
     def do_POST(self):
+        response_data = {'status': 'error', 'message': 'Unknown error'}
+        
         try:
+            # 读取请求数据
             content_length = int(self.headers.get('Content-Length', 0))
             request_data = {}
             if content_length > 0:
                 post_data = self.rfile.read(content_length)
                 request_data = json.loads(post_data.decode('utf-8'))
             
-            tweet_type = request_data.get('type', 'detailed')
-            prediction = request_data.get('prediction', {}) or {}
-            last_actual = request_data.get('last_actual', {}) or {}
-            last_predicted = request_data.get('last_predicted', {}) or {}
-            statistics = request_data.get('statistics', {}) or {}
-            ml_models = request_data.get('ml_models', {}) or {}
-            target_period = str(request_data.get('target_period', '25142'))
+            # 安全获取参数
+            tweet_type = safe_get(request_data, 'type', 'detailed')
+            prediction = safe_get(request_data, 'prediction', {}) or {}
+            last_actual = safe_get(request_data, 'last_actual', {}) or {}
+            last_predicted = safe_get(request_data, 'last_predicted', {}) or {}
+            ml_models = safe_get(request_data, 'ml_models', {}) or {}
+            target_period = str(safe_get(request_data, 'target_period', '25142'))
+            
+            # 获取预测号码
+            front = safe_get(prediction, 'front', []) or []
+            back = safe_get(prediction, 'back', []) or []
+            confidence = safe_get(prediction, 'confidence', 0.75) or 0.75
             
             # 计算命中数
             hit_count = 0
             front_hits = []
             back_hits = []
+            
             if last_actual and last_predicted:
-                actual_front = set(last_actual.get('front', []) or [])
-                actual_back = set(last_actual.get('back', []) or [])
-                pred_front = set(last_predicted.get('front', []) or [])
-                pred_back = set(last_predicted.get('back', []) or [])
-                front_hits = sorted(actual_front & pred_front)
-                back_hits = sorted(actual_back & pred_back)
+                actual_front = set(safe_get(last_actual, 'front', []) or [])
+                actual_back = set(safe_get(last_actual, 'back', []) or [])
+                pred_front = set(safe_get(last_predicted, 'front', []) or [])
+                pred_back = set(safe_get(last_predicted, 'back', []) or [])
+                front_hits = sorted(list(actual_front & pred_front))
+                back_hits = sorted(list(actual_back & pred_back))
                 hit_count = len(front_hits) + len(back_hits)
             
+            # 随机选择ML知识
             ml_knowledge = random.choice(ML_KNOWLEDGE)
-            title = get_dynamic_title(hit_count, target_period)
-            image_prompt = get_image_prompt(target_period)
+            
+            # 生成动态标题
+            if hit_count >= 4:
+                title = '🎯 第' + target_period + '期预测：上期命中' + str(hit_count) + '个，AI状态火热！'
+            elif hit_count >= 2:
+                title = '📊 第' + target_period + '期预测：数据揭示新趋势'
+            else:
+                title = '🤖 第' + target_period + '期预测：模型优化后重新出发'
+            
+            # 生成插图提示词
+            seed = int(target_period) % 7
+            prompts = [
+                '数字' + target_period[-2:] + '在宇宙星空中闪耀，周围环绕着数据流和AI神经网络，紫蓝色调，科幻艺术风格',
+                '未来感水晶球显示第' + target_period + '期预测，全息投影统计图表，赛博朋克风格',
+                'AI机器人分析彩票数据，屏幕显示期号' + target_period + '，流动数据矩阵背景',
+                '量子计算机运算，粒子组成数字' + target_period[-2:] + '形状，梦幻紫色和金色',
+                '神经网络三维可视化，节点闪烁第' + target_period + '期关键数字，霓虹色彩',
+                '四个AI模型化身为四种元素融合成预测能量，奇幻科技风格',
+                '深度学习抽象表达，层层神经元如城市夜景，第' + target_period + '期数字在顶层闪耀'
+            ]
+            image_prompt = prompts[seed]
+            
+            # 日期
             date_str = datetime.now().strftime('%Y年%m月%d日')
             
-            # 获取预测号码
-            front = prediction.get('front', []) or []
-            back = prediction.get('back', []) or []
-            confidence = prediction.get('confidence', 0.75)
+            # 构建文章
+            article = '# ' + title + '\n\n'
+            article += '📅 ' + date_str + ' | 大乐透AI预测系统\n\n---\n\n'
             
-            front_str = ' '.join([str(n).zfill(2) for n in front]) if front else '--'
-            back_str = ' '.join([str(n).zfill(2) for n in back]) if back else '--'
+            # 上期回顾
+            if last_actual:
+                last_front = safe_get(last_actual, 'front', []) or []
+                last_back = safe_get(last_actual, 'back', []) or []
+                
+                article += '## 📊 上期开奖回顾\n\n'
+                article += '**开奖号码：** ' + format_nums(last_front) + ' + ' + format_nums(last_back) + '\n\n'
+                
+                if last_predicted:
+                    pred_front_list = safe_get(last_predicted, 'front', []) or []
+                    pred_back_list = safe_get(last_predicted, 'back', []) or []
+                    
+                    article += '**上期AI预测：** ' + format_nums(pred_front_list) + ' + ' + format_nums(pred_back_list) + '\n\n'
+                    article += '**命中情况：** \n'
+                    article += '- 前区命中 ' + str(len(front_hits)) + ' 个'
+                    if front_hits:
+                        article += '：' + ', '.join([str(n) for n in front_hits])
+                    article += '\n'
+                    article += '- 后区命中 ' + str(len(back_hits)) + ' 个'
+                    if back_hits:
+                        article += '：' + ', '.join([str(n) for n in back_hits])
+                    article += '\n\n'
+                    
+                    if hit_count >= 3:
+                        article += '🎉 **表现不错！** 模型状态良好，继续保持！\n\n'
+                    else:
+                        article += '🔧 **模型调优：** 本期将调整Transformer权重，加强号码关联性分析。\n\n'
             
-            # 先生成基础文章框架
-            base_article = self._build_base_article(
-                title, date_str, target_period, front_str, back_str, confidence,
-                last_actual, last_predicted, front_hits, back_hits, hit_count,
-                ml_models, statistics, ml_knowledge, image_prompt, tweet_type
-            )
+            # 本期预测
+            article += '---\n\n'
+            article += '## 🎯 第' + target_period + '期预测号码\n\n'
+            article += '**🔴 前区推荐：** ' + format_nums(front) + '\n\n'
+            article += '**🔵 后区推荐：** ' + format_nums(back) + '\n\n'
+            article += '**📊 综合置信度：** ' + str(round(confidence * 100, 1)) + '%\n\n'
             
-            # 尝试用DeepSeek优化（如果API可用且不是简洁版）
+            # 模型详情
+            if tweet_type != 'simple' and ml_models:
+                article += '---\n\n'
+                article += '## 🤖 各模型预测详情\n\n'
+                article += '| 模型 | 前区预测 | 后区预测 | 置信度 |\n'
+                article += '|:---:|:---:|:---:|:---:|\n'
+                
+                model_names = [('lstm', 'LSTM'), ('transformer', 'Transformer'), 
+                              ('xgboost', 'XGBoost'), ('random_forest', 'RandomForest')]
+                
+                for key, name in model_names:
+                    if key in ml_models:
+                        m = ml_models[key]
+                        m_front = ', '.join([str(x) for x in safe_get(m, 'front', []) or []])
+                        m_back = ', '.join([str(x) for x in safe_get(m, 'back', []) or []])
+                        m_conf = safe_get(m, 'confidence', 0.75) or 0.75
+                        article += '| ' + name + ' | ' + (m_front or '--') + ' | ' + (m_back or '--') + ' | ' + str(round(m_conf * 100, 1)) + '% |\n'
+                
+                article += '\n'
+            
+            # ML小知识
+            article += '---\n\n'
+            article += '## 🧠 机器学习小课堂\n\n'
+            article += '### ' + ml_knowledge['title'] + '\n\n'
+            article += ml_knowledge['content'] + '\n\n'
+            
+            # 插图提示词
+            article += '---\n\n'
+            article += '## 🖼️ 本期专属插图提示词\n\n'
+            article += '> ' + image_prompt + '\n\n'
+            
+            # 免责声明
+            article += '---\n\n'
+            article += '## ⚠️ 免责声明\n\n'
+            article += '本预测基于历史数据分析和机器学习算法，仅供参考娱乐。彩票具有完全随机性，任何预测都不能保证准确。请理性购彩，量力而行。\n\n'
+            article += '---\n\n'
+            article += '*大乐透AI预测系统 | ' + date_str + '*\n'
+            
+            # DeepSeek优化
             deepseek_used = False
-            final_article = base_article
-            
             if DEEPSEEK_API_KEY and tweet_type != 'simple':
-                enhanced = self._enhance_with_deepseek(
-                    base_article, ml_knowledge, target_period, hit_count
-                )
-                if enhanced:
-                    final_article = enhanced
-                    deepseek_used = True
+                try:
+                    prompt = '请优化以下大乐透预测文章，要求：\n'
+                    prompt += '1. 保持所有号码和数据不变\n'
+                    prompt += '2. 使用更生动有趣的语言\n'
+                    prompt += '3. 扩展ML小课堂部分，用通俗比喻解释"' + ml_knowledge['title'] + '"\n'
+                    prompt += '4. 保持Markdown格式\n'
+                    prompt += '5. 字数控制在1500字以内\n\n'
+                    prompt += '原文：\n' + article
+                    
+                    enhanced = call_deepseek(prompt)
+                    if enhanced:
+                        article = enhanced
+                        deepseek_used = True
+                except Exception as e:
+                    print('DeepSeek enhancement failed: ' + str(e))
             
-            response = {
+            response_data = {
                 'status': 'success',
-                'article': final_article,
+                'article': article,
                 'title': title,
                 'image_prompt': image_prompt,
                 'ml_knowledge': ml_knowledge,
                 'hit_count': hit_count,
                 'deepseek_enhanced': deepseek_used,
+                'deepseek_configured': bool(DEEPSEEK_API_KEY),
                 'timestamp': datetime.now().isoformat()
             }
             
-            self._send_json(200, response)
-            
         except Exception as e:
-            import traceback
-            self._send_json(500, {
+            response_data = {
                 'status': 'error',
-                'message': str(e),
-                'trace': traceback.format_exc()
-            })
-    
-    def _build_base_article(self, title, date_str, target_period, front_str, back_str, 
-                            confidence, last_actual, last_predicted, front_hits, back_hits,
-                            hit_count, ml_models, statistics, ml_knowledge, image_prompt, tweet_type):
-        """构建基础文章"""
+                'message': str(e)
+            }
         
-        article = f"""# {title}
-
-📅 {date_str} | 大乐透AI预测系统
-
----
-
-"""
-        # 上期回顾
-        if last_actual:
-            last_front = last_actual.get('front', []) or []
-            last_back = last_actual.get('back', []) or []
-            last_front_str = ' '.join([str(n).zfill(2) for n in last_front]) if last_front else '--'
-            last_back_str = ' '.join([str(n).zfill(2) for n in last_back]) if last_back else '--'
-            
-            article += f"""## 📊 上期开奖回顾
-
-**开奖号码：** {last_front_str} + {last_back_str}
-
-"""
-            if last_predicted:
-                pred_front_list = last_predicted.get('front', []) or []
-                pred_back_list = last_predicted.get('back', []) or []
-                pred_front_str = ' '.join([str(n).zfill(2) for n in pred_front_list]) if pred_front_list else '--'
-                pred_back_str = ' '.join([str(n).zfill(2) for n in pred_back_list]) if pred_back_list else '--'
-                
-                article += f"""**上期AI预测：** {pred_front_str} + {pred_back_str}
-
-**命中情况：** 
-- 前区命中 {len(front_hits)} 个{('：' + ', '.join(map(str, front_hits))) if front_hits else ''}
-- 后区命中 {len(back_hits)} 个{('：' + ', '.join(map(str, back_hits))) if back_hits else ''}
-
-"""
-                # 模型调整建议
-                if hit_count >= 4:
-                    article += """🎉 **表现优秀！** 模型捕捉到了较强的数据规律，本期继续保持当前配置。
-
-"""
-                elif hit_count >= 2:
-                    article += """👍 **表现良好！** 部分预测与实际吻合，本期微调LSTM时序权重。
-
-"""
-                else:
-                    article += """🔧 **模型优化中：** 
-- 提高Transformer权重，加强号码关联性分析
-- 增加历史数据回溯窗口至最近50期
-- 平衡热冷号码比例
-
-"""
-        
-        article += f"""---
-
-## 🎯 第{target_period}期预测号码
-
-**🔴 前区推荐：** {front_str}
-
-**🔵 后区推荐：** {back_str}
-
-**📊 综合置信度：** {confidence*100:.1f}%
-
-"""
-        
-        # 详细版和分析版添加模型详情
-        if tweet_type != 'simple' and ml_models:
-            article += """---
-
-## 🤖 各模型预测详情
-
-| 模型 | 前区预测 | 后区预测 | 置信度 |
-|:---:|:---:|:---:|:---:|
-"""
-            model_names = {'lstm': 'LSTM', 'transformer': 'Transformer', 'xgboost': 'XGBoost', 'random_forest': 'RandomForest'}
-            for key, name in model_names.items():
-                if key in ml_models:
-                    m = ml_models[key]
-                    m_front = ', '.join(map(str, m.get('front', []))) if m.get('front') else '--'
-                    m_back = ', '.join(map(str, m.get('back', []))) if m.get('back') else '--'
-                    m_conf = m.get('confidence', 0.75) * 100
-                    article += f"| {name} | {m_front} | {m_back} | {m_conf:.1f}% |\n"
-            
-            article += "\n"
-        
-        # 统计分析（分析版）
-        if tweet_type == 'analysis' and statistics:
-            article += """---
-
-## 📈 号码统计分析
-
-"""
-            if statistics.get('front_hot'):
-                hot_nums = statistics['front_hot'][:5]
-                hot_str = ', '.join([f"{n.get('number', n)}({n.get('count', '?')}次)" if isinstance(n, dict) else str(n) for n in hot_nums])
-                article += f"**前区热门号码：** {hot_str}\n\n"
-            
-            if statistics.get('back_hot'):
-                back_hot = statistics['back_hot'][:3]
-                back_str = ', '.join([f"{n.get('number', n)}({n.get('count', '?')}次)" if isinstance(n, dict) else str(n) for n in back_hot])
-                article += f"**后区热门号码：** {back_str}\n\n"
-            
-            if statistics.get('front_cold'):
-                cold_nums = statistics['front_cold'][:5]
-                cold_str = ', '.join([str(n.get('number', n)) if isinstance(n, dict) else str(n) for n in cold_nums])
-                article += f"**前区冷门号码：** {cold_str}\n\n"
-        
-        # ML小知识
-        article += f"""---
-
-## 🧠 机器学习小课堂
-
-### {ml_knowledge['title']}
-
-{ml_knowledge['content']}
-
----
-
-## 🖼️ 本期专属插图提示词
-
-> {image_prompt}
-
----
-
-## ⚠️ 免责声明
-
-本预测基于历史数据分析和机器学习算法，仅供参考娱乐。彩票具有完全随机性，任何预测都不能保证准确。请理性购彩，量力而行。
-
----
-
-*大乐透AI预测系统 | {date_str}*
-*Powered by LSTM + Transformer + XGBoost + RandomForest*
-"""
-        
-        return article
-    
-    def _enhance_with_deepseek(self, base_article, ml_knowledge, period, hit_count):
-        """使用DeepSeek优化文章"""
-        try:
-            prompt = f"""请帮我优化以下大乐透预测公众号文章，要求：
-
-1. **保持所有数据不变**：预测号码、置信度、统计数据等必须原样保留
-2. **优化语言表达**：使用更生动有趣的科普风格语言
-3. **增加过渡语句**：让文章更流畅自然
-4. **扩展ML小课堂**：用更通俗易懂的比喻解释"{ml_knowledge['title']}"这个概念
-5. **保持Markdown格式**：标题、表格、列表格式不变
-6. **增加一些emoji**：适当使用表情符号增加趣味性
-7. **字数控制**：总字数控制在1500字以内
-
-上期命中情况：{hit_count}个号码
-
-原文：
-{base_article}
-
-请直接输出优化后的完整Markdown文章，不要添加任何解释说明："""
-            
-            enhanced = call_deepseek(prompt, max_tokens=2500)
-            if enhanced and len(enhanced) > 500:  # 确保返回内容足够
-                return enhanced
-            return None
-        except Exception as e:
-            print(f"DeepSeek enhancement error: {e}")
-            return None
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json; charset=utf-8')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(json.dumps(response_data, ensure_ascii=False).encode('utf-8'))
     
     def do_GET(self):
-        """GET请求返回API信息"""
-        self._send_json(200, {
+        response_data = {
             'status': 'success',
             'message': '公众号推文生成API',
             'deepseek_configured': bool(DEEPSEEK_API_KEY),
-            'usage': 'POST请求，传入prediction、last_actual、type等参数'
-        })
+            'usage': 'POST请求生成推文'
+        }
+        
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json; charset=utf-8')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(json.dumps(response_data, ensure_ascii=False).encode('utf-8'))
     
     def do_OPTIONS(self):
         self.send_response(200)
@@ -374,10 +296,3 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.end_headers()
-    
-    def _send_json(self, status_code, data):
-        self.send_response(status_code)
-        self.send_header('Content-type', 'application/json; charset=utf-8')
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.end_headers()
-        self.wfile.write(json.dumps(data, ensure_ascii=False).encode('utf-8'))

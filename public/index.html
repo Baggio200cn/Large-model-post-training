@@ -3,1295 +3,551 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎯 大乐透AI预测系统</title>
+    <title>大乐透AI预测系统</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
         body {
-            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             min-height: 100vh;
-            color: #e0e0e0;
+            color: #fff;
             padding: 20px;
         }
-        
-        .container { max-width: 1400px; margin: 0 auto; }
-        
-        /* 头部标题 */
         .header {
             text-align: center;
-            margin-bottom: 25px;
-            padding: 20px;
-        }
-        
-        .header h1 {
-            font-size: 2.5em;
-            background: linear-gradient(90deg, #00d4ff, #7b68ee, #ff6b9d);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-        }
-        
-        .header p { color: #a0a0a0; font-size: 1.1em; }
-        
-        /* 最新开奖栏 */
-        .latest-bar {
-            background: linear-gradient(90deg, #2d2d44, #3d3d5c);
+            padding: 20px 0;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
             border-radius: 15px;
-            padding: 15px 25px;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-        
-        .latest-label {
-            color: #ffd700;
-            font-weight: bold;
-            font-size: 1.1em;
-        }
-        
-        .number-balls { display: flex; gap: 8px; align-items: center; }
-        
-        .ball {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1em;
-            color: white;
-        }
-        
-        .ball.front { background: linear-gradient(135deg, #ff6b6b, #ee5a24); }
-        .ball.back { background: linear-gradient(135deg, #4834d4, #686de0); }
-        .ball.predicted { background: linear-gradient(135deg, #00b894, #00cec9); }
-        .ball.fusion { background: linear-gradient(135deg, #f39c12, #e74c3c); box-shadow: 0 0 15px rgba(243,156,18,0.5); }
-        
-        .plus-sign { color: #888; font-size: 1.2em; margin: 0 5px; }
-        
-        .data-badge {
-            background: #00b894;
-            color: white;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.85em;
-        }
-        
-        .period-info { color: #a0a0a0; font-size: 0.95em; }
-        
-        /* ========== 最终融合预测区域（新增核心功能） ========== */
-        .fusion-section {
-            background: linear-gradient(135deg, #2d1f3d 0%, #1a1a2e 100%);
-            border: 2px solid #f39c12;
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 25px;
-            text-align: center;
-            box-shadow: 0 0 30px rgba(243,156,18,0.2);
-        }
-        
-        .fusion-section h2 {
-            color: #f39c12;
-            font-size: 1.8em;
-            margin-bottom: 15px;
-        }
-        
-        .fusion-section .subtitle {
-            color: #a0a0a0;
             margin-bottom: 20px;
         }
-        
-        .fusion-result {
-            background: rgba(0,0,0,0.3);
-            border-radius: 15px;
-            padding: 25px;
-            margin: 20px 0;
-        }
-        
-        .fusion-numbers {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 12px;
-            margin: 20px 0;
-            flex-wrap: wrap;
-        }
-        
-        .fusion-numbers .ball {
-            width: 50px;
-            height: 50px;
-            font-size: 1.3em;
-        }
-        
-        .fusion-confidence {
-            margin-top: 15px;
-            color: #00b894;
-            font-size: 1.1em;
-        }
-        
-        .fusion-actions {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .btn-fusion {
-            background: linear-gradient(135deg, #f39c12, #e74c3c);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 30px;
-            font-size: 1.1em;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: bold;
-        }
-        
-        .btn-fusion:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(243,156,18,0.4);
-        }
-        
-        /* 功能卡片网格 */
-        .dashboard {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-        
+        .header h1 { font-size: 1.5em; }
+        .container { max-width: 1200px; margin: 0 auto; }
         .card {
-            background: linear-gradient(135deg, #2d2d44, #252540);
+            background: rgba(255,255,255,0.1);
             border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-            transition: transform 0.3s ease;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
         }
-        
-        .card:hover { transform: translateY(-5px); }
-        
-        .card h3 {
-            color: #00d4ff;
-            margin-bottom: 15px;
+        .card-title {
             font-size: 1.2em;
+            margin-bottom: 15px;
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        
-        .card p { color: #888; margin-bottom: 15px; font-size: 0.95em; }
-        
+        .lottery-bar {
+            background: linear-gradient(90deg, #e74c3c, #c0392b);
+            border-radius: 50px;
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .ball {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .ball-red { background: linear-gradient(145deg, #ff6b6b, #ee5a5a); }
+        .ball-blue { background: linear-gradient(145deg, #4facfe, #00f2fe); }
         .btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
             padding: 12px 24px;
+            border: none;
             border-radius: 25px;
             cursor: pointer;
-            font-size: 1em;
-            transition: all 0.3s ease;
-            margin: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102,126,234,0.4);
-        }
-        
-        .btn-orange { background: linear-gradient(135deg, #f39c12, #e67e22); }
-        .btn-green { background: linear-gradient(135deg, #00b894, #00cec9); }
-        .btn-pink { background: linear-gradient(135deg, #fd79a8, #e84393); }
-        
-        .result-area {
+        .btn-primary { background: linear-gradient(90deg, #667eea, #764ba2); color: #fff; }
+        .btn-success { background: linear-gradient(90deg, #00b894, #00cec9); color: #fff; }
+        .btn-warning { background: linear-gradient(90deg, #fdcb6e, #f39c12); color: #000; }
+        .btn-danger { background: linear-gradient(90deg, #e74c3c, #c0392b); color: #fff; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .result-box {
             background: rgba(0,0,0,0.3);
             border-radius: 10px;
             padding: 15px;
             margin-top: 15px;
-            min-height: 80px;
-            border-left: 3px solid #667eea;
+            min-height: 100px;
         }
-        
-        .loading {
-            display: none;
-            text-align: center;
-            color: #00d4ff;
-            padding: 20px;
-        }
-        
-        .loading.show { display: block; }
-        
         .spinner {
-            border: 3px solid rgba(255,255,255,0.1);
-            border-top: 3px solid #00d4ff;
+            width: 30px; height: 30px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
+            margin: 20px auto;
         }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading { display: none; text-align: center; padding: 20px; }
+        .loading.show { display: block; }
+        .fusion-card {
+            background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,165,0,0.1));
+            border: 2px solid #ffd700;
         }
-        
-        /* ========== 公众号推文生成区域（新增） ========== */
-        .tweet-section {
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 25px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-        }
-        
-        .tweet-section h2 {
-            color: #ffd700;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-        
-        .tweet-options {
+        .fusion-numbers {
             display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin: 20px 0;
+            gap: 10px;
             flex-wrap: wrap;
+            margin: 15px 0;
         }
-        
-        .tweet-content {
+        .fusion-ball {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .fusion-red { background: linear-gradient(145deg, #ff4757, #ff6b81); color: #fff; }
+        .fusion-blue { background: linear-gradient(145deg, #3742fa, #5352ed); color: #fff; }
+        .tweet-section { margin-top: 20px; }
+        .tweet-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 15px; }
+        .tweet-result {
             background: rgba(0,0,0,0.4);
-            border-radius: 15px;
+            border-radius: 10px;
             padding: 20px;
-            margin-top: 20px;
             white-space: pre-wrap;
-            font-family: 'Microsoft YaHei', monospace;
-            font-size: 0.95em;
+            font-family: monospace;
+            font-size: 13px;
             max-height: 500px;
             overflow-y: auto;
-            line-height: 1.8;
+            display: none;
         }
-        
-        .tweet-actions {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 15px;
+        .tweet-actions { margin-top: 15px; display: flex; gap: 10px; }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            background: #00b894;
         }
-        
-        /* 灵修输入区 */
-        .spiritual-input {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .upload-zone {
-            flex: 1;
-            min-width: 200px;
-            border: 2px dashed #666;
-            border-radius: 15px;
-            padding: 30px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .upload-zone:hover { border-color: #00d4ff; background: rgba(0,212,255,0.1); }
-        
-        .upload-zone input { display: none; }
-        
-        .text-input-area {
-            flex: 1;
-            min-width: 200px;
-        }
-        
-        .text-input-area textarea {
-            width: 100%;
-            height: 100px;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid #444;
-            border-radius: 10px;
-            padding: 15px;
-            color: #e0e0e0;
-            font-size: 0.95em;
-            resize: none;
-        }
-        
-        .text-input-area label {
-            display: block;
-            margin-bottom: 8px;
-            color: #ffd700;
-        }
-        
-        /* 模型详情展示 */
-        .model-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-        
-        .model-item {
-            background: rgba(0,0,0,0.2);
-            border-radius: 10px;
-            padding: 15px;
-            border-left: 3px solid #667eea;
-        }
-        
-        .model-item.lstm { border-color: #e74c3c; }
-        .model-item.transformer { border-color: #3498db; }
-        .model-item.xgboost { border-color: #2ecc71; }
-        .model-item.rf { border-color: #9b59b6; }
-        
-        .model-item h4 { color: #fff; margin-bottom: 10px; font-size: 0.95em; }
-        .model-item .numbers { color: #00d4ff; font-weight: bold; }
-        .model-item .confidence { color: #888; font-size: 0.85em; margin-top: 5px; }
-        
-        /* 底部管理入口 */
-        .admin-entry {
+        .admin-btn {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: linear-gradient(135deg, #2d2d44, #3d3d5c);
+            background: rgba(255,255,255,0.2);
             padding: 10px 20px;
             border-radius: 25px;
-            color: #888;
             text-decoration: none;
-            font-size: 0.9em;
-            transition: all 0.3s ease;
+            color: #fff;
+            font-size: 14px;
         }
-        
-        .admin-entry:hover { background: #3d3d5c; color: #fff; }
-        
-        /* 响应式 */
-        @media (max-width: 768px) {
-            .header h1 { font-size: 1.8em; }
-            .dashboard { grid-template-columns: 1fr; }
-            .latest-bar { flex-direction: column; text-align: center; }
-            .fusion-numbers .ball { width: 42px; height: 42px; font-size: 1.1em; }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            resize: vertical;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .info-item {
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 8px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- 头部 -->
         <div class="header">
-            <h1>🎯 大乐透AI预测系统</h1>
-            <p>深度学习 + 灵修直觉 = 多维度融合预测</p>
+            <h1>深度学习 + 灵修直觉 = 多维度融合预测</h1>
         </div>
-        
-        <!-- 最新开奖栏 -->
-        <div class="latest-bar">
-            <span class="latest-label">🏆 最新开奖</span>
-            <div class="number-balls" id="latestNumbers">
-                <span class="ball front">--</span>
-                <span class="ball front">--</span>
-                <span class="ball front">--</span>
-                <span class="ball front">--</span>
-                <span class="ball front">--</span>
-                <span class="plus-sign">+</span>
-                <span class="ball back">--</span>
-                <span class="ball back">--</span>
+
+        <div class="lottery-bar">
+            <span>🏆 最新开奖</span>
+            <div id="latestNumbers" style="display:flex;gap:8px;align-items:center;">
+                <span>加载中...</span>
             </div>
-            <span class="data-badge" id="dataBadge">加载中...</span>
-            <span class="period-info" id="periodInfo">第 -- 期</span>
+            <span class="status-badge" id="dataStatus">加载中</span>
+            <span id="latestPeriod" style="margin-left:auto;"></span>
         </div>
-        
-        <!-- ========== 最终融合预测（核心功能） ========== -->
-        <div class="fusion-section">
-            <h2>🔮 最终融合预测</h2>
-            <p class="subtitle">ML机器学习(70%) + 灵修直觉(30%) 智能融合</p>
-            
-            <div class="fusion-result" id="fusionResult">
-                <p style="color: #888;">点击下方按钮生成融合预测号码</p>
-            </div>
-            
-            <div class="fusion-actions">
-                <button class="btn-fusion" onclick="generateFusionPrediction()">
-                    🚀 生成融合预测
-                </button>
-                <button class="btn btn-green" onclick="copyFusionNumbers()">
-                    📋 复制号码
-                </button>
+
+        <div class="card fusion-card">
+            <div class="card-title">🔮 最终融合预测</div>
+            <p style="color:#ccc;margin-bottom:15px;">ML机器学习(70%) + 灵修直觉(30%) = 智能融合预测</p>
+            <button class="btn btn-warning" onclick="generateFusionPrediction()">⚡ 生成融合预测</button>
+            <div id="fusionLoading" class="loading"><div class="spinner"></div><p>正在融合计算...</p></div>
+            <div id="fusionResult" style="display:none;margin-top:20px;">
+                <p style="color:#ffd700;margin-bottom:10px;">🎯 <strong>第<span id="fusionPeriod"></span>期 推荐号码</strong></p>
+                <div class="fusion-numbers">
+                    <span style="color:#ff6b6b;">前区：</span>
+                    <div id="fusionFront" style="display:flex;gap:8px;"></div>
+                    <span style="margin-left:20px;color:#5dade2;">后区：</span>
+                    <div id="fusionBack" style="display:flex;gap:8px;"></div>
+                </div>
+                <p style="margin-top:15px;">📊 综合置信度：<strong id="fusionConfidence"></strong></p>
+                <button class="btn btn-success" onclick="copyFusion()" style="margin-top:10px;">📋 复制号码</button>
             </div>
         </div>
-        
-        <!-- 功能卡片 -->
-        <div class="dashboard">
-            <!-- ML机器学习预测 -->
+
+        <div class="grid">
             <div class="card">
-                <h3>🤖 ML机器学习预测</h3>
-                <p>基于LSTM、Transformer、XGBoost、RandomForest四模型融合</p>
-                <button class="btn" onclick="getMLPrediction()">🔮 获取ML预测</button>
-                <div class="result-area" id="mlResult">
-                    <div class="loading" id="mlLoading">
-                        <div class="spinner"></div>
-                        AI模型计算中...
-                    </div>
-                    <div id="mlContent"></div>
-                </div>
+                <div class="card-title">🤖 ML机器学习预测</div>
+                <p style="color:#aaa;margin-bottom:15px;">基于LSTM、Transformer、XGBoost、RandomForest四模型融合</p>
+                <button class="btn btn-primary" onclick="getMLPrediction()">🔮 获取ML预测</button>
+                <div id="mlLoading" class="loading"><div class="spinner"></div></div>
+                <div id="mlResult" class="result-box"></div>
             </div>
-            
-            <!-- 灵修直觉预测 -->
+
             <div class="card">
-                <h3>🧘 灵修直觉预测</h3>
-                <p>上传图片或输入灵修文字，系统将感应能量场生成预测</p>
-                <div class="spiritual-input">
-                    <div class="upload-zone" onclick="document.getElementById('spiritualImage').click()">
-                        <input type="file" id="spiritualImage" accept="image/*" onchange="handleImageUpload(this)">
-                        <p>📷 点击上传灵修图片</p>
-                        <p id="uploadedFileName" style="color: #00b894; margin-top: 10px;"></p>
-                    </div>
-                    <div class="text-input-area">
-                        <label>🔮 输入灵修文字（可选）</label>
-                        <textarea id="spiritualText" placeholder="例如：今日心情平静，感悟数字8、15、23..."></textarea>
-                    </div>
+                <div class="card-title">🧘 灵修直觉预测</div>
+                <p style="color:#aaa;margin-bottom:15px;">上传图片或输入灵修文字，系统将感应能量场生成预测</p>
+                <textarea id="spiritualText" rows="3" placeholder="例如：今日心情平静，感悟数字8、15、23..."></textarea>
+                <div style="margin-top:10px;display:flex;gap:10px;">
+                    <button class="btn btn-success" onclick="getSpiritualPrediction()">🔮 获取灵修预测</button>
+                    <button class="btn" style="background:#666;" onclick="clearSpiritual()">🗑️ 清空</button>
                 </div>
-                <div style="margin-top: 15px;">
-                    <button class="btn btn-orange" onclick="getSpiritualPrediction()">🌟 获取灵修预测</button>
-                    <button class="btn" onclick="clearSpiritual()">🗑️ 清空</button>
-                </div>
-                <div class="result-area" id="spiritualResult">
-                    <div class="loading" id="spiritualLoading">
-                        <div class="spinner"></div>
-                        感应宇宙能量中...
-                    </div>
-                    <div id="spiritualContent"></div>
-                </div>
+                <div id="spiritualLoading" class="loading"><div class="spinner"></div></div>
+                <div id="spiritualResult" class="result-box"></div>
             </div>
-            
-            <!-- 数据统计分析 -->
+
             <div class="card">
-                <h3>📊 数据统计分析</h3>
-                <p>分析历史数据，识别号码频率规律</p>
-                <button class="btn btn-green" onclick="getStatistics()">📈 开始分析</button>
-                <div class="result-area" id="statsResult">
-                    <div class="loading" id="statsLoading">
-                        <div class="spinner"></div>
-                        分析历史数据中...
-                    </div>
-                    <div id="statsContent"></div>
-                </div>
+                <div class="card-title">📊 数据统计分析</div>
+                <p style="color:#aaa;margin-bottom:15px;">分析历史数据，识别号码频率规律</p>
+                <button class="btn btn-primary" onclick="getStatistics()">📈 开始分析</button>
+                <div id="statsLoading" class="loading"><div class="spinner"></div></div>
+                <div id="statsResult" class="result-box"></div>
             </div>
-            
-            <!-- 系统状态检测 -->
+
             <div class="card">
-                <h3>⚙️ 系统状态检测</h3>
-                <p>检测API运行状态和数据源</p>
-                <button class="btn btn-pink" onclick="checkSystem()">🔍 检测系统</button>
-                <div class="result-area" id="systemResult">
-                    <div class="loading" id="systemLoading">
-                        <div class="spinner"></div>
-                        检测系统状态中...
-                    </div>
-                    <div id="systemContent"></div>
-                </div>
+                <div class="card-title">⚙️ 系统状态检测</div>
+                <p style="color:#aaa;margin-bottom:15px;">检测API运行状态和数据源</p>
+                <button class="btn btn-primary" onclick="checkSystem()">🔍 检测系统</button>
+                <div id="systemLoading" class="loading"><div class="spinner"></div></div>
+                <div id="systemResult" class="result-box"></div>
             </div>
         </div>
-        
-        <!-- ========== 公众号推文生成（新增功能） ========== -->
-        <div class="tweet-section">
-            <h2>📝 公众号推文生成</h2>
-            <p style="text-align: center; color: #a0a0a0; margin-bottom: 20px;">一键生成专业的预测分析报告，可直接发布到公众号</p>
-            
-            <div class="tweet-options">
-                <button class="btn" onclick="generateTweet('simple')">📱 简洁版推文</button>
-                <button class="btn btn-orange" onclick="generateTweet('detailed')">📄 详细版报告</button>
-                <button class="btn btn-green" onclick="generateTweet('analysis')">📊 专业分析版</button>
+
+        <div class="card tweet-section">
+            <div class="card-title">📝 公众号推文生成</div>
+            <p style="color:#aaa;margin-bottom:15px;">一键生成专业的预测分析报告，可直接发布到公众号</p>
+            <div class="tweet-buttons">
+                <button class="btn btn-primary" onclick="generateTweet('simple')">📋 简洁版推文</button>
+                <button class="btn btn-warning" onclick="generateTweet('detailed')">📄 详细版报告</button>
+                <button class="btn btn-danger" onclick="generateTweet('analysis')">📊 专业分析版</button>
             </div>
-            
-            <div id="tweetResult" style="display: none;">
-                <div class="tweet-content" id="tweetContent"></div>
-                <div class="tweet-actions">
-                    <button class="btn btn-green" onclick="copyTweet()">📋 复制全文</button>
-                    <button class="btn" onclick="downloadTweet()">💾 下载Markdown</button>
-                </div>
+            <div id="tweetResult" class="tweet-result"></div>
+            <div id="tweetActions" class="tweet-actions" style="display:none;">
+                <button class="btn btn-success" onclick="copyTweet()">📋 复制全文</button>
+                <button class="btn btn-primary" onclick="downloadTweet()">💾 下载MD</button>
             </div>
+            <div id="tweetExtra" style="display:none;margin-top:15px;"></div>
         </div>
     </div>
-    
-    <!-- 后台管理入口 -->
-    <a href="admin.html" class="admin-entry">⚙️ 后台管理</a>
-    
+
+    <a href="admin.html" class="admin-btn">⚙️ 后台管理</a>
+
     <script>
-        // ============ 全局变量 ============
         let latestData = null;
         let mlPrediction = null;
         let spiritualPrediction = null;
         let fusionPrediction = null;
-        let uploadedImageBase64 = null;
-        
-        // ============ 页面初始化 ============
-        document.addEventListener('DOMContentLoaded', function() {
-            loadLatestData();
-        });
-        
-        // ============ 加载最新数据 ============
+
+        window.onload = function() { loadLatestData(); };
+
         async function loadLatestData() {
             try {
-                const response = await fetch('/api/latest-results');
-                const data = await response.json();
-                
-                if (data.status === 'success') {
-                    latestData = data;
-                    
-                    // 更新最新开奖号码
-                    const latest = data.latest_result;
-                    const numbersHtml = latest.front_zone.map(n => 
-                        `<span class="ball front">${n.toString().padStart(2, '0')}</span>`
-                    ).join('') + 
-                    '<span class="plus-sign">+</span>' +
-                    latest.back_zone.map(n => 
-                        `<span class="ball back">${n.toString().padStart(2, '0')}</span>`
-                    ).join('');
-                    
-                    document.getElementById('latestNumbers').innerHTML = numbersHtml;
-                    document.getElementById('periodInfo').textContent = `第 ${latest.period} 期 | ${data.total_periods || '--'}期数据`;
-                    document.getElementById('dataBadge').textContent = data.data_source === 'kv_storage' ? '✓ 实时数据' : '✓ 默认数据';
+                const resp = await fetch('/api/latest-results');
+                const data = await resp.json();
+                latestData = data;
+                if (data.status === 'success' && data.latest_result) {
+                    const r = data.latest_result;
+                    let html = '';
+                    (r.front_zone || []).forEach(n => { html += '<div class="ball ball-red">' + String(n).padStart(2, '0') + '</div>'; });
+                    html += '<span style="font-size:20px;">+</span>';
+                    (r.back_zone || []).forEach(n => { html += '<div class="ball ball-blue">' + String(n).padStart(2, '0') + '</div>'; });
+                    document.getElementById('latestNumbers').innerHTML = html;
+                    document.getElementById('latestPeriod').textContent = '第 ' + r.period + ' 期 | ' + (r.date || '--');
+                    document.getElementById('dataStatus').textContent = '✓ ' + (data.data_source || 'OK');
                 }
-            } catch (error) {
-                console.error('加载数据失败:', error);
-                document.getElementById('dataBadge').textContent = '❌ 连接失败';
+            } catch (e) {
+                document.getElementById('latestNumbers').innerHTML = '<span style="color:#e74c3c;">加载失败</span>';
             }
         }
-        
-        // ============ ML机器学习预测 ============
+
         async function getMLPrediction() {
             const loading = document.getElementById('mlLoading');
-            const content = document.getElementById('mlContent');
-            
+            const result = document.getElementById('mlResult');
             loading.classList.add('show');
-            content.innerHTML = '';
-            
+            result.innerHTML = '';
             try {
-                const response = await fetch('/api/latest-results', {
+                const resp = await fetch('/api/latest-results', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ action: 'predict' })
+                    body: JSON.stringify({action: 'ml_predict'})
                 });
-                const data = await response.json();
-                
+                const data = await resp.json();
                 loading.classList.remove('show');
-                
-                if (data.status === 'success') {
-                    mlPrediction = data.prediction;
-                    
-                    const pred = data.prediction;
-                    const models = pred.individual_models;
-                    
-                    content.innerHTML = `
-                        <div style="text-align: center; margin-bottom: 15px;">
-                            <p style="color: #ffd700; margin-bottom: 10px;">🎯 目标期号：第 ${pred.target_period} 期</p>
-                            <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
-                                ${pred.front_zone.map(n => `<span class="ball predicted">${n.toString().padStart(2, '0')}</span>`).join('')}
-                                <span class="plus-sign">+</span>
-                                ${pred.back_zone.map(n => `<span class="ball back">${n.toString().padStart(2, '0')}</span>`).join('')}
-                            </div>
-                            <p style="color: #00b894; margin-top: 10px;">置信度：${(pred.confidence * 100).toFixed(1)}%</p>
-                        </div>
-                        <div class="model-details">
-                            <div class="model-item lstm">
-                                <h4>🧠 LSTM</h4>
-                                <div class="numbers">${models.lstm.front.join(', ')} + ${models.lstm.back.join(', ')}</div>
-                                <div class="confidence">置信度: ${(models.lstm.confidence * 100).toFixed(1)}%</div>
-                            </div>
-                            <div class="model-item transformer">
-                                <h4>🔗 Transformer</h4>
-                                <div class="numbers">${models.transformer.front.join(', ')} + ${models.transformer.back.join(', ')}</div>
-                                <div class="confidence">置信度: ${(models.transformer.confidence * 100).toFixed(1)}%</div>
-                            </div>
-                            <div class="model-item xgboost">
-                                <h4>📊 XGBoost</h4>
-                                <div class="numbers">${models.xgboost.front.join(', ')} + ${models.xgboost.back.join(', ')}</div>
-                                <div class="confidence">置信度: ${(models.xgboost.confidence * 100).toFixed(1)}%</div>
-                            </div>
-                            <div class="model-item rf">
-                                <h4>🌲 RandomForest</h4>
-                                <div class="numbers">${models.random_forest.front.join(', ')} + ${models.random_forest.back.join(', ')}</div>
-                                <div class="confidence">置信度: ${(models.random_forest.confidence * 100).toFixed(1)}%</div>
-                            </div>
-                        </div>
-                        <p style="color: #888; font-size: 0.85em; margin-top: 15px; text-align: center;">
-                            训练数据：${data.training_data.periods_used}期 | 数据源：${data.training_data.data_source}
-                        </p>
-                    `;
+                if (data.status === 'success' && data.ml_prediction) {
+                    mlPrediction = data.ml_prediction;
+                    const p = data.ml_prediction;
+                    result.innerHTML = '<p style="color:#ffd700;margin-bottom:10px;">🎯 ML集成预测 (第' + data.target_period + '期)</p>' +
+                        '<p><strong>前区：</strong> ' + p.front.join(', ') + '</p>' +
+                        '<p><strong>后区：</strong> ' + p.back.join(', ') + '</p>' +
+                        '<p><strong>置信度：</strong> ' + (p.confidence * 100).toFixed(1) + '%</p>' +
+                        '<hr style="border-color:rgba(255,255,255,0.2);margin:10px 0;">' +
+                        '<p style="font-size:12px;color:#aaa;">各模型：</p>' +
+                        Object.entries(p.individual_models || {}).map(function(e) {
+                            return '<p style="font-size:12px;">' + e[0] + ': ' + e[1].front.join(',') + ' + ' + e[1].back.join(',') + '</p>';
+                        }).join('');
                 } else {
-                    throw new Error(data.message);
+                    result.innerHTML = '<p style="color:#e74c3c;">预测失败</p>';
                 }
-            } catch (error) {
+            } catch (e) {
                 loading.classList.remove('show');
-                content.innerHTML = `<p style="color: #e74c3c;">❌ 预测失败: ${error.message}</p>`;
+                result.innerHTML = '<p style="color:#e74c3c;">请求失败</p>';
             }
         }
-        
-        // ============ 灵修预测 ============
-        function handleImageUpload(input) {
-            if (input.files && input.files[0]) {
-                const file = input.files[0];
-                document.getElementById('uploadedFileName').textContent = `已选择: ${file.name}`;
-                
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    uploadedImageBase64 = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-        
+
         async function getSpiritualPrediction() {
             const loading = document.getElementById('spiritualLoading');
-            const content = document.getElementById('spiritualContent');
-            const spiritualText = document.getElementById('spiritualText').value;
-            
+            const result = document.getElementById('spiritualResult');
+            const text = document.getElementById('spiritualText').value;
             loading.classList.add('show');
-            content.innerHTML = '';
-            
+            result.innerHTML = '';
             try {
-                const response = await fetch('/api/spiritual');
-                const data = await response.json();
-                
-                loading.classList.remove('show');
-                console.log('灵修API响应:', data);
-                
-                if (data.status === 'success') {
-                    // 适配实际API返回的结构
-                    // API返回: spiritual_factors, spiritual_prediction, energy_analysis
-                    const factors = data.spiritual_factors || data.perturbation_factors || {
-                        energy_level: 7,
-                        cosmic_alignment: 0.75,
-                        harmony_factor: 0.70,
-                        chaos_factor: 0.25
-                    };
-                    
-                    const prediction = data.spiritual_prediction || {};
-                    const energyAnalysis = data.energy_analysis || {};
-                    
-                    // 获取预测号码（如果API已生成）或本地生成
-                    let perturbedFront, perturbedBack;
-                    if (prediction.front_zone && prediction.back_zone) {
-                        perturbedFront = prediction.front_zone;
-                        perturbedBack = prediction.back_zone;
-                    } else {
-                        perturbedFront = generateSpiritualNumbers(5, 35, factors, spiritualText);
-                        perturbedBack = generateSpiritualNumbers(2, 12, factors, spiritualText);
-                    }
-                    
-                    // 获取显示信息
-                    const imageDesc = energyAnalysis.image_interpretation || 
-                                      energyAnalysis.description ||
-                                      data.spiritual_image?.description || 
-                                      getRandomSpiritualImage();
-                    const energyLevel = factors.energy_level || energyAnalysis.energy_level || 7;
-                    const cosmicAlign = factors.cosmic_alignment || factors.cosmic_resonance || 0.75;
-                    const harmonyFactor = factors.harmony_factor || factors.balance_index || 0.70;
-                    const mantra = data.guidance?.mantra || 
-                                   data.spiritual_guidance?.recommended_mantra || 
-                                   getRandomMantra();
-                    const intensity = factors.overall_intensity || 
-                                      energyAnalysis.overall_score ||
-                                      (cosmicAlign + harmonyFactor) / 2;
-                    
-                    spiritualPrediction = {
-                        front: perturbedFront,
-                        back: perturbedBack,
-                        factors: factors,
-                        intensity: intensity
-                    };
-                    
-                    content.innerHTML = `
-                        <div style="text-align: center;">
-                            <p style="color: #ffd700; margin-bottom: 10px;">🧘 灵修感应号码</p>
-                            <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 15px;">
-                                ${perturbedFront.map(n => `<span class="ball front">${n.toString().padStart(2, '0')}</span>`).join('')}
-                                <span class="plus-sign">+</span>
-                                ${perturbedBack.map(n => `<span class="ball back">${n.toString().padStart(2, '0')}</span>`).join('')}
-                            </div>
-                        </div>
-                        <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px;">
-                            <p>🌟 <strong>灵修图像:</strong> ${imageDesc}</p>
-                            <p>⚡ <strong>能量等级:</strong> ${energyLevel}</p>
-                            <p>🔮 <strong>宇宙共振:</strong> ${(cosmicAlign * 100).toFixed(1)}%</p>
-                            <p>☯️ <strong>和谐因子:</strong> ${(harmonyFactor * 100).toFixed(1)}%</p>
-                            <p>🧘 <strong>冥想建议:</strong> ${mantra}</p>
-                            ${spiritualText ? `<p>📝 <strong>您的感悟:</strong> ${spiritualText}</p>` : ''}
-                        </div>
-                    `;
-                } else {
-                    throw new Error(data.message || '获取灵修预测失败');
-                }
-            } catch (error) {
-                loading.classList.remove('show');
-                console.error('灵修预测错误:', error);
-                
-                // 如果API失败，使用本地生成
-                const localFactors = generateLocalSpiritualFactors(spiritualText);
-                const factors = localFactors.perturbation_factors;
-                const perturbedFront = generateSpiritualNumbers(5, 35, factors, spiritualText);
-                const perturbedBack = generateSpiritualNumbers(2, 12, factors, spiritualText);
-                
-                spiritualPrediction = {
-                    front: perturbedFront,
-                    back: perturbedBack,
-                    factors: factors,
-                    intensity: localFactors.overall_intensity
-                };
-                
-                content.innerHTML = `
-                    <div style="text-align: center;">
-                        <p style="color: #ffd700; margin-bottom: 10px;">🧘 灵修感应号码 (本地生成)</p>
-                        <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 15px;">
-                            ${perturbedFront.map(n => `<span class="ball front">${n.toString().padStart(2, '0')}</span>`).join('')}
-                            <span class="plus-sign">+</span>
-                            ${perturbedBack.map(n => `<span class="ball back">${n.toString().padStart(2, '0')}</span>`).join('')}
-                        </div>
-                    </div>
-                    <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px;">
-                        <p>🌟 <strong>灵修图像:</strong> ${localFactors.spiritual_image.description}</p>
-                        <p>⚡ <strong>能量等级:</strong> ${factors.energy_level}</p>
-                        <p>🔮 <strong>宇宙共振:</strong> ${(factors.cosmic_alignment * 100).toFixed(1)}%</p>
-                        <p>☯️ <strong>和谐因子:</strong> ${(factors.harmony_factor * 100).toFixed(1)}%</p>
-                        <p>🧘 <strong>冥想建议:</strong> ${localFactors.spiritual_guidance.recommended_mantra}</p>
-                        ${spiritualText ? `<p>📝 <strong>您的感悟:</strong> ${spiritualText}</p>` : ''}
-                    </div>
-                `;
-            }
-        }
-        
-        // 本地生成灵修因子（当API不可用时）
-        function generateLocalSpiritualFactors(text) {
-            const now = new Date();
-            const seed = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds() + (text ? text.length * 7 : 0);
-            
-            return {
-                perturbation_factors: {
-                    energy_level: 5 + Math.floor(Math.random() * 5),
-                    cosmic_alignment: 0.6 + Math.random() * 0.35,
-                    harmony_factor: 0.55 + Math.random() * 0.37,
-                    chaos_factor: 0.1 + Math.random() * 0.3
-                },
-                spiritual_image: {
-                    description: getRandomSpiritualImage()
-                },
-                overall_intensity: 0.6 + Math.random() * 0.3,
-                spiritual_guidance: {
-                    recommended_mantra: getRandomMantra()
-                }
-            };
-        }
-        
-        function getRandomSpiritualImage() {
-            const images = [
-                "紫色能量漩涡中浮现数字光芒",
-                "金色莲花绽放于宁静湖面",
-                "星空下银河流动的神秘图案",
-                "晨曦中凤凰涅槃重生的景象",
-                "深邃宇宙中旋转的曼陀罗",
-                "翡翠绿光环绕的生命之树",
-                "白色光柱连接天地的能量通道"
-            ];
-            return images[Math.floor(Math.random() * images.length)];
-        }
-        
-        function getRandomMantra() {
-            const mantras = [
-                "心静自然明，数藏天地间",
-                "顺应宇宙流，好运自然来",
-                "放下执念，感受数字的呼唤",
-                "静心冥想，让直觉引导选择",
-                "与宇宙能量共振，接收幸运信号"
-            ];
-            return mantras[Math.floor(Math.random() * mantras.length)];
-        }
-        
-        function generateSpiritualNumbers(count, max, factors, text) {
-            const numbers = new Set();
-            const seed = (factors.cosmic_alignment + factors.harmony_factor) * 1000 + (text ? text.length : 0);
-            
-            // 基于灵修因子和用户输入生成号码
-            while (numbers.size < count) {
-                const base = Math.floor(Math.random() * max) + 1;
-                const adjusted = Math.floor(base * (0.8 + factors.chaos_factor * 0.4));
-                const final = Math.max(1, Math.min(max, adjusted));
-                numbers.add(final);
-            }
-            
-            return Array.from(numbers).sort((a, b) => a - b);
-        }
-        
-        function clearSpiritual() {
-            document.getElementById('spiritualText').value = '';
-            document.getElementById('uploadedFileName').textContent = '';
-            document.getElementById('spiritualImage').value = '';
-            document.getElementById('spiritualContent').innerHTML = '';
-            uploadedImageBase64 = null;
-            spiritualPrediction = null;
-        }
-        
-        // ============ 最终融合预测 ============
-        async function generateFusionPrediction() {
-            const resultDiv = document.getElementById('fusionResult');
-            
-            // 如果没有ML预测，先获取
-            if (!mlPrediction) {
-                resultDiv.innerHTML = '<p style="color: #ffd700;">⏳ 正在获取ML预测...</p>';
-                await getMLPrediction();
-            }
-            
-            // 如果没有灵修预测，先获取
-            if (!spiritualPrediction) {
-                resultDiv.innerHTML = '<p style="color: #ffd700;">⏳ 正在感应灵修能量...</p>';
-                await getSpiritualPrediction();
-            }
-            
-            // 融合预测 (ML 70% + 灵修 30%)
-            if (mlPrediction && spiritualPrediction) {
-                const fusedFront = fusionNumbers(
-                    mlPrediction.front_zone, 
-                    spiritualPrediction.front, 
-                    0.7, 0.3, 5, 35
-                );
-                const fusedBack = fusionNumbers(
-                    mlPrediction.back_zone, 
-                    spiritualPrediction.back, 
-                    0.7, 0.3, 2, 12
-                );
-                
-                const fusedConfidence = mlPrediction.confidence * 0.7 + 0.75 * 0.3;
-                
-                fusionPrediction = {
-                    front: fusedFront,
-                    back: fusedBack,
-                    confidence: fusedConfidence,
-                    target_period: mlPrediction.target_period
-                };
-                
-                resultDiv.innerHTML = `
-                    <p style="color: #ffd700; font-size: 1.2em; margin-bottom: 15px;">🎯 目标期号：第 ${fusionPrediction.target_period} 期</p>
-                    <div class="fusion-numbers">
-                        ${fusedFront.map(n => `<span class="ball fusion">${n.toString().padStart(2, '0')}</span>`).join('')}
-                        <span class="plus-sign" style="font-size: 1.5em;">+</span>
-                        ${fusedBack.map(n => `<span class="ball back" style="width:50px;height:50px;font-size:1.3em;">${n.toString().padStart(2, '0')}</span>`).join('')}
-                    </div>
-                    <div class="fusion-confidence">
-                        综合置信度：${(fusedConfidence * 100).toFixed(1)}%
-                    </div>
-                    <div style="display: flex; justify-content: center; gap: 30px; margin-top: 20px; flex-wrap: wrap;">
-                        <div style="text-align: center;">
-                            <p style="color: #888;">🤖 ML贡献 (70%)</p>
-                            <p style="color: #00d4ff;">${mlPrediction.front_zone.join(', ')} + ${mlPrediction.back_zone.join(', ')}</p>
-                        </div>
-                        <div style="text-align: center;">
-                            <p style="color: #888;">🧘 灵修贡献 (30%)</p>
-                            <p style="color: #f39c12;">${spiritualPrediction.front.join(', ')} + ${spiritualPrediction.back.join(', ')}</p>
-                        </div>
-                    </div>
-                `;
-            } else {
-                resultDiv.innerHTML = '<p style="color: #e74c3c;">❌ 无法生成融合预测，请先获取ML和灵修预测</p>';
-            }
-        }
-        
-        function fusionNumbers(mlNums, spiritNums, mlWeight, spiritWeight, count, max) {
-            const scores = {};
-            
-            // ML权重
-            mlNums.forEach((n, i) => {
-                scores[n] = (scores[n] || 0) + mlWeight * (count - i);
-            });
-            
-            // 灵修权重
-            spiritNums.forEach((n, i) => {
-                scores[n] = (scores[n] || 0) + spiritWeight * (count - i);
-            });
-            
-            // 按分数排序
-            const sorted = Object.entries(scores)
-                .sort((a, b) => b[1] - a[1])
-                .map(([n]) => parseInt(n));
-            
-            // 补足数量
-            const result = sorted.slice(0, count);
-            while (result.length < count) {
-                const newNum = Math.floor(Math.random() * max) + 1;
-                if (!result.includes(newNum)) {
-                    result.push(newNum);
-                }
-            }
-            
-            return result.sort((a, b) => a - b);
-        }
-        
-        function copyFusionNumbers() {
-            if (fusionPrediction) {
-                const text = `前区：${fusionPrediction.front.join(' ')} 后区：${fusionPrediction.back.join(' ')}`;
-                navigator.clipboard.writeText(text).then(() => {
-                    alert('号码已复制到剪贴板！');
-                });
-            } else {
-                alert('请先生成融合预测！');
-            }
-        }
-        
-        // ============ 数据统计分析 ============
-        async function getStatistics() {
-            const loading = document.getElementById('statsLoading');
-            const content = document.getElementById('statsContent');
-            
-            loading.classList.add('show');
-            content.innerHTML = '';
-            
-            try {
-                const response = await fetch('/api/latest-results', {
+                const resp = await fetch('/api/spiritual', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ action: 'statistics' })
+                    body: JSON.stringify({text: text})
                 });
-                const data = await response.json();
-                
+                const data = await resp.json();
                 loading.classList.remove('show');
-                
-                if (data.status === 'success') {
-                    const stats = data.statistics;
-                    content.innerHTML = `
-                        <p style="color: #ffd700; margin-bottom: 15px;">📊 基于 ${stats.total_periods} 期历史数据分析</p>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <div>
-                                <p style="color: #00b894;">🔥 前区热门号码</p>
-                                <p>${stats.front_hot.map(n => n.number).join(', ')}</p>
-                            </div>
-                            <div>
-                                <p style="color: #3498db;">❄️ 前区冷门号码</p>
-                                <p>${stats.front_cold.map(n => n.number).join(', ')}</p>
-                            </div>
-                            <div>
-                                <p style="color: #00b894;">🔥 后区热门号码</p>
-                                <p>${stats.back_hot.map(n => n.number).join(', ')}</p>
-                            </div>
-                            <div>
-                                <p style="color: #3498db;">❄️ 后区冷门号码</p>
-                                <p>${stats.back_cold.map(n => n.number).join(', ')}</p>
-                            </div>
-                            <div>
-                                <p style="color: #e74c3c;">⏰ 前区遗漏号码</p>
-                                <p>${stats.front_overdue.map(n => n.number + '(' + n.periods + '期)').join(', ')}</p>
-                            </div>
-                            <div>
-                                <p style="color: #e74c3c;">⏰ 后区遗漏号码</p>
-                                <p>${stats.back_overdue.map(n => n.number + '(' + n.periods + '期)').join(', ')}</p>
-                            </div>
-                        </div>
-                    `;
+                let front = [], back = [], intensity = 0.7;
+                if (data.spiritual_prediction) {
+                    front = data.spiritual_prediction.front_zone || [];
+                    back = data.spiritual_prediction.back_zone || [];
                 }
-            } catch (error) {
+                if (data.energy_analysis) { intensity = data.energy_analysis.intensity || 0.7; }
+                if (front.length === 0) {
+                    front = genNums(5, 35);
+                    back = genNums(2, 12);
+                    intensity = 0.6 + Math.random() * 0.3;
+                }
+                spiritualPrediction = {front: front, back: back, intensity: intensity};
+                result.innerHTML = '<p style="color:#9b59b6;">🧘 灵修感应结果</p>' +
+                    '<p><strong>前区：</strong> ' + front.join(', ') + '</p>' +
+                    '<p><strong>后区：</strong> ' + back.join(', ') + '</p>' +
+                    '<p><strong>能量强度：</strong> ' + (intensity * 100).toFixed(1) + '%</p>';
+            } catch (e) {
                 loading.classList.remove('show');
-                content.innerHTML = `<p style="color: #e74c3c;">❌ 分析失败: ${error.message}</p>`;
+                var front = genNums(5, 35), back = genNums(2, 12);
+                spiritualPrediction = {front: front, back: back, intensity: 0.65};
+                result.innerHTML = '<p style="color:#9b59b6;">🧘 本地灵修感应</p>' +
+                    '<p><strong>前区：</strong> ' + front.join(', ') + '</p>' +
+                    '<p><strong>后区：</strong> ' + back.join(', ') + '</p>';
             }
         }
-        
-        // ============ 系统检测 ============
-        async function checkSystem() {
-            const loading = document.getElementById('systemLoading');
-            const content = document.getElementById('systemContent');
-            
+
+        function genNums(count, max) {
+            var nums = new Set();
+            while (nums.size < count) { nums.add(Math.floor(Math.random() * max) + 1); }
+            return Array.from(nums).sort(function(a, b) { return a - b; });
+        }
+
+        function clearSpiritual() {
+            document.getElementById('spiritualText').value = '';
+            document.getElementById('spiritualResult').innerHTML = '';
+            spiritualPrediction = null;
+        }
+
+        async function generateFusionPrediction() {
+            var loading = document.getElementById('fusionLoading');
+            var result = document.getElementById('fusionResult');
             loading.classList.add('show');
-            content.innerHTML = '';
-            
-            try {
-                const [healthRes, dataRes] = await Promise.all([
-                    fetch('/api/health'),
-                    fetch('/api/latest-results')
-                ]);
-                
-                const health = await healthRes.json();
-                const data = await dataRes.json();
-                
-                loading.classList.remove('show');
-                
-                content.innerHTML = `
-                    <p style="color: #00b894; margin-bottom: 10px;">✅ 系统状态正常</p>
-                    <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px;">
-                        <p>🔧 <strong>服务版本:</strong> ${health.version || 'N/A'}</p>
-                        <p>📡 <strong>API状态:</strong> ${health.status}</p>
-                        <p>💾 <strong>数据源:</strong> ${data.data_source}</p>
-                        <p>📊 <strong>KV可用:</strong> ${data.kv_available ? '是' : '否'}</p>
-                        <p>📈 <strong>历史数据:</strong> ${data.total_periods || '--'} 期</p>
-                        <p>🕐 <strong>检测时间:</strong> ${new Date().toLocaleString()}</p>
-                    </div>
-                `;
-            } catch (error) {
-                loading.classList.remove('show');
-                content.innerHTML = `<p style="color: #e74c3c;">❌ 系统检测失败: ${error.message}</p>`;
+            result.style.display = 'none';
+            if (!mlPrediction) { await getMLPrediction(); }
+            if (!spiritualPrediction) { await getSpiritualPrediction(); }
+            loading.classList.remove('show');
+            if (!mlPrediction || !spiritualPrediction) { alert('请先获取预测！'); return; }
+            var frontF = fusion(mlPrediction.front, spiritualPrediction.front, 0.7, 0.3, 5, 35);
+            var backF = fusion(mlPrediction.back, spiritualPrediction.back, 0.7, 0.3, 2, 12);
+            var conf = mlPrediction.confidence * 0.7 + (spiritualPrediction.intensity || 0.7) * 0.3;
+            var period = latestData && latestData.latest_result ? String(parseInt(latestData.latest_result.period) + 1) : '25142';
+            fusionPrediction = {front: frontF, back: backF, confidence: conf, target_period: period};
+            document.getElementById('fusionPeriod').textContent = period;
+            document.getElementById('fusionFront').innerHTML = frontF.map(function(n) {
+                return '<div class="fusion-ball fusion-red">' + String(n).padStart(2, '0') + '</div>';
+            }).join('');
+            document.getElementById('fusionBack').innerHTML = backF.map(function(n) {
+                return '<div class="fusion-ball fusion-blue">' + String(n).padStart(2, '0') + '</div>';
+            }).join('');
+            document.getElementById('fusionConfidence').textContent = (conf * 100).toFixed(1) + '%';
+            result.style.display = 'block';
+        }
+
+        function fusion(ml, sp, mlW, spW, count, max) {
+            var scores = {};
+            ml.forEach(function(n, i) { scores[n] = (scores[n] || 0) + mlW * (count - i); });
+            sp.forEach(function(n, i) { scores[n] = (scores[n] || 0) + spW * (count - i); });
+            var sorted = Object.entries(scores).sort(function(a, b) { return b[1] - a[1]; }).map(function(x) { return parseInt(x[0]); });
+            var result = sorted.slice(0, count);
+            while (result.length < count) {
+                var n = Math.floor(Math.random() * max) + 1;
+                if (result.indexOf(n) === -1) result.push(n);
+            }
+            return result.sort(function(a, b) { return a - b; });
+        }
+
+        function copyFusion() {
+            if (fusionPrediction) {
+                var text = '前区：' + fusionPrediction.front.join(' ') + ' 后区：' + fusionPrediction.back.join(' ');
+                navigator.clipboard.writeText(text).then(function() { alert('已复制！'); });
             }
         }
-        
-        // ============ 公众号推文生成 ============
-        let lastPredictedNumbers = null; // 存储上次预测号码
-        let cachedStatistics = null;     // 缓存统计数据
-        
-        async function generateTweet(type) {
-            const resultDiv = document.getElementById('tweetResult');
-            const contentDiv = document.getElementById('tweetContent');
-            
-            // 显示加载状态
-            resultDiv.style.display = 'block';
-            contentDiv.innerHTML = '<div style="text-align:center;padding:30px;"><div class="spinner"></div><p>🤖 AI正在生成推文...</p></div>';
-            
-            // 确保有融合预测数据
-            if (!fusionPrediction) {
-                await generateFusionPrediction();
-            }
-            
-            if (!fusionPrediction) {
-                contentDiv.textContent = '❌ 请先生成融合预测！';
-                return;
-            }
-            
-            // 获取统计数据
-            if (!cachedStatistics) {
-                try {
-                    const statsResponse = await fetch('/api/latest-results', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ action: 'statistics' })
-                    });
-                    const statsData = await statsResponse.json();
-                    if (statsData.status === 'success') {
-                        cachedStatistics = statsData.statistics;
-                    }
-                } catch (e) {
-                    console.log('获取统计数据失败:', e);
-                }
-            }
-            
+
+        async function getStatistics() {
+            var loading = document.getElementById('statsLoading');
+            var result = document.getElementById('statsResult');
+            loading.classList.add('show');
+            result.innerHTML = '';
             try {
-                // 调用推文生成API
-                const response = await fetch('/api/generate-tweet', {
+                var resp = await fetch('/api/latest-results', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({action: 'statistics'})
+                });
+                var data = await resp.json();
+                loading.classList.remove('show');
+                if (data.status === 'success' && data.statistics) {
+                    var s = data.statistics;
+                    result.innerHTML = '<p style="color:#ffd700;">📊 基于 ' + s.total_periods + ' 期数据分析</p>' +
+                        '<div class="info-grid">' +
+                        '<div class="info-item"><p style="color:#00b894;">🔥 前区热门</p><p>' + (s.front_hot || []).map(function(n) { return n.number; }).join(', ') + '</p></div>' +
+                        '<div class="info-item"><p style="color:#3498db;">❄️ 前区冷门</p><p>' + (s.front_cold || []).map(function(n) { return n.number; }).join(', ') + '</p></div>' +
+                        '<div class="info-item"><p style="color:#00b894;">🔥 后区热门</p><p>' + (s.back_hot || []).map(function(n) { return n.number; }).join(', ') + '</p></div>' +
+                        '<div class="info-item"><p style="color:#e74c3c;">⏰ 前区遗漏</p><p>' + (s.front_overdue || []).slice(0,5).map(function(n) { return n.number + '(' + n.periods + '期)'; }).join(', ') + '</p></div>' +
+                        '</div>';
+                }
+            } catch (e) {
+                loading.classList.remove('show');
+                result.innerHTML = '<p style="color:#e74c3c;">分析失败</p>';
+            }
+        }
+
+        async function checkSystem() {
+            var loading = document.getElementById('systemLoading');
+            var result = document.getElementById('systemResult');
+            loading.classList.add('show');
+            result.innerHTML = '';
+            try {
+                var resp = await fetch('/api/health');
+                var data = await resp.json();
+                loading.classList.remove('show');
+                result.innerHTML = '<p>🔹 服务版本: ' + (data.version || '--') + '</p>' +
+                    '<p>🔹 API状态: ' + (data.status || '--') + '</p>' +
+                    '<p>🔹 数据源: ' + (data.data_source || '--') + '</p>' +
+                    '<p>🔹 KV可用: ' + (data.kv_available ? '是' : '否') + '</p>' +
+                    '<p>🔹 历史数据: ' + (data.total_periods || '--') + ' 期</p>' +
+                    '<p>🔹 检测时间: ' + new Date().toLocaleString() + '</p>';
+            } catch (e) {
+                loading.classList.remove('show');
+                result.innerHTML = '<p style="color:#e74c3c;">检测失败</p>';
+            }
+        }
+
+        async function generateTweet(type) {
+            var resultDiv = document.getElementById('tweetResult');
+            var actionsDiv = document.getElementById('tweetActions');
+            var extraDiv = document.getElementById('tweetExtra');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = '🤖 正在生成推文...';
+            actionsDiv.style.display = 'none';
+            extraDiv.style.display = 'none';
+            if (!fusionPrediction) { await generateFusionPrediction(); }
+            if (!fusionPrediction) { resultDiv.textContent = '请先生成融合预测！'; return; }
+            try {
+                var resp = await fetch('/api/generate-tweet', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
                         type: type,
                         target_period: fusionPrediction.target_period,
-                        prediction: {
-                            front: fusionPrediction.front,
-                            back: fusionPrediction.back,
-                            confidence: fusionPrediction.confidence
-                        },
-                        last_actual: latestData?.latest_result ? {
-                            front: latestData.latest_result.front_zone,
-                            back: latestData.latest_result.back_zone
-                        } : null,
-                        last_predicted: lastPredictedNumbers,
-                        statistics: cachedStatistics ? {
-                            front_hot: cachedStatistics.front_hot,
-                            back_hot: cachedStatistics.back_hot,
-                            front_cold: cachedStatistics.front_cold
-                        } : null,
-                        ml_models: mlPrediction?.individual_models || null
+                        prediction: {front: fusionPrediction.front, back: fusionPrediction.back, confidence: fusionPrediction.confidence},
+                        last_actual: latestData && latestData.latest_result ? {front: latestData.latest_result.front_zone, back: latestData.latest_result.back_zone} : null,
+                        ml_models: mlPrediction ? mlPrediction.individual_models : null
                     })
                 });
-                
-                const data = await response.json();
-                
+                var data = await resp.json();
                 if (data.status === 'success') {
-                    contentDiv.textContent = data.article;
-                    
-                    // 显示插图提示词
+                    resultDiv.textContent = data.article;
+                    actionsDiv.style.display = 'flex';
+                    var extra = '';
+                    if (data.deepseek_enhanced) { extra += '<p style="color:#00b894;">✅ 已由DeepSeek AI优化</p>'; }
                     if (data.image_prompt) {
-                        const promptDiv = document.createElement('div');
-                        promptDiv.style.cssText = 'margin-top:20px;padding:15px;background:rgba(243,156,18,0.2);border-radius:10px;border-left:3px solid #f39c12;';
-                        promptDiv.innerHTML = `
-                            <p style="color:#f39c12;font-weight:bold;margin-bottom:8px;">🎨 本期插图AI提示词：</p>
-                            <p style="color:#e0e0e0;font-style:italic;">${data.image_prompt}</p>
-                            <button onclick="copyImagePrompt('${data.image_prompt.replace(/'/g, "\\'")}')" 
-                                    style="margin-top:10px;background:#f39c12;color:#000;border:none;padding:8px 15px;border-radius:5px;cursor:pointer;">
-                                📋 复制提示词
-                            </button>
-                        `;
-                        contentDiv.appendChild(promptDiv);
+                        extra += '<div style="background:rgba(243,156,18,0.2);padding:10px;border-radius:8px;margin-top:10px;">' +
+                            '<p style="color:#f39c12;">🎨 插图提示词：</p>' +
+                            '<p style="font-size:12px;color:#ccc;">' + data.image_prompt + '</p>' +
+                            '<button class="btn" style="background:#f39c12;color:#000;margin-top:8px;padding:5px 10px;font-size:12px;" onclick="copyText(\'' + data.image_prompt.replace(/'/g, "\\'") + '\')">复制</button></div>';
                     }
-                    
-                    // 显示ML小知识
                     if (data.ml_knowledge) {
-                        const knowledgeDiv = document.createElement('div');
-                        knowledgeDiv.style.cssText = 'margin-top:15px;padding:15px;background:rgba(0,212,255,0.1);border-radius:10px;border-left:3px solid #00d4ff;';
-                        knowledgeDiv.innerHTML = `
-                            <p style="color:#00d4ff;font-weight:bold;margin-bottom:8px;">🧠 本期ML小知识：${data.ml_knowledge.title}</p>
-                            <p style="color:#a0a0a0;font-size:0.9em;">${data.ml_knowledge.content}</p>
-                        `;
-                        contentDiv.appendChild(knowledgeDiv);
+                        extra += '<div style="background:rgba(0,212,255,0.1);padding:10px;border-radius:8px;margin-top:10px;">' +
+                            '<p style="color:#00d4ff;">🧠 ' + data.ml_knowledge.title + '</p>' +
+                            '<p style="font-size:12px;color:#aaa;">' + data.ml_knowledge.content + '</p></div>';
                     }
-                    
-                    // 保存当前预测作为下次的"上期预测"
-                    lastPredictedNumbers = {
-                        front: fusionPrediction.front,
-                        back: fusionPrediction.back
-                    };
-                    
+                    if (extra) { extraDiv.innerHTML = extra; extraDiv.style.display = 'block'; }
                 } else {
-                    // API失败时使用本地生成
-                    contentDiv.textContent = generateLocalTweet(type);
+                    resultDiv.textContent = localTweet(type);
+                    actionsDiv.style.display = 'flex';
                 }
-                
-            } catch (error) {
-                console.error('推文生成API失败:', error);
-                // 回退到本地生成
-                contentDiv.textContent = generateLocalTweet(type);
+            } catch (e) {
+                resultDiv.textContent = localTweet(type);
+                actionsDiv.style.display = 'flex';
             }
         }
-        
-        function generateLocalTweet(type) {
-            const dateStr = new Date().toLocaleDateString('zh-CN', {
-                year: 'numeric', month: 'long', day: 'numeric'
-            });
-            const timeStr = new Date().toLocaleTimeString('zh-CN');
-            
-            // 动态标题
-            const titles = [
-                `🎯 AI预测第${fusionPrediction.target_period}期：数据驱动，智能分析`,
-                `🤖 第${fusionPrediction.target_period}期深度预测：四大模型联合出击`,
-                `📊 大乐透第${fusionPrediction.target_period}期：ML+灵修双重加持`
-            ];
-            const title = titles[Math.floor(Math.random() * titles.length)];
-            
-            // ML小知识
-            const mlKnowledge = [
-                {title: "LSTM的记忆能力", content: "LSTM通过门控机制选择性地记忆或遗忘信息，特别适合分析彩票号码的时序规律。"},
-                {title: "Transformer的注意力", content: "注意力机制让模型能够发现不同号码之间的隐藏关联，比如某些号码经常一起出现。"},
-                {title: "集成学习的智慧", content: "就像三个臭皮匠顶个诸葛亮，多个模型的组合往往比单个模型更可靠。"}
-            ];
-            const knowledge = mlKnowledge[Math.floor(Math.random() * mlKnowledge.length)];
-            
-            // 插图提示词
-            const imagePrompts = [
-                `数字${fusionPrediction.target_period.slice(-2)}在宇宙星空中闪耀，周围环绕着数据流和AI神经网络，紫蓝色调，科幻艺术风格`,
-                `一个未来感的水晶球显示着预测数字，周围是全息投影的统计图表，赛博朋克风格`,
-                `四个AI模型化身为四种元素融合成预测能量，奇幻科技风格`
-            ];
-            const imagePrompt = imagePrompts[Math.floor(Math.random() * imagePrompts.length)];
-            
-            let content = `# ${title}
 
-📅 ${dateStr}
-
----
-
-## 📊 上期开奖回顾
-
-**开奖号码：** ${latestData?.latest_result?.front_zone?.map(n => String(n).padStart(2, '0')).join(' ') || '--'} + ${latestData?.latest_result?.back_zone?.map(n => String(n).padStart(2, '0')).join(' ') || '--'}
-
-`;
-            
-            if (lastPredictedNumbers) {
-                const actualFront = new Set(latestData?.latest_result?.front_zone || []);
-                const actualBack = new Set(latestData?.latest_result?.back_zone || []);
-                const predFront = new Set(lastPredictedNumbers.front);
-                const predBack = new Set(lastPredictedNumbers.back);
-                
-                const frontHit = [...actualFront].filter(n => predFront.has(n));
-                const backHit = [...actualBack].filter(n => predBack.has(n));
-                const hitCount = frontHit.length + backHit.length;
-                
-                content += `**上期AI预测：** ${lastPredictedNumbers.front.map(n => String(n).padStart(2, '0')).join(' ')} + ${lastPredictedNumbers.back.map(n => String(n).padStart(2, '0')).join(' ')}
-
-**命中情况：** 前区${frontHit.length}个${frontHit.length > 0 ? '('+frontHit.join(',')+')' : ''}，后区${backHit.length}个${backHit.length > 0 ? '('+backHit.join(',')+')' : ''}
-
-`;
-                
-                if (hitCount >= 3) {
-                    content += `🎉 **表现不错！** 模型状态良好，继续保持！\n\n`;
-                } else {
-                    content += `🔧 **模型调优中：** 本期将增加Transformer权重，加强号码关联性分析。\n\n`;
-                }
-            }
-            
-            content += `---
-
-## 🎯 第${fusionPrediction.target_period}期预测号码
-
-**🔴 前区推荐：** ${fusionPrediction.front.map(n => String(n).padStart(2, '0')).join(' ')}
-
-**🔵 后区推荐：** ${fusionPrediction.back.map(n => String(n).padStart(2, '0')).join(' ')}
-
-**📊 综合置信度：** ${(fusionPrediction.confidence * 100).toFixed(1)}%
-
-`;
-            
+        function localTweet(type) {
+            var date = new Date().toLocaleDateString('zh-CN');
+            var period = fusionPrediction.target_period;
+            var front = fusionPrediction.front.map(function(n) { return String(n).padStart(2, '0'); }).join(' ');
+            var back = fusionPrediction.back.map(function(n) { return String(n).padStart(2, '0'); }).join(' ');
+            var conf = (fusionPrediction.confidence * 100).toFixed(1);
+            var text = '# 🎯 大乐透第' + period + '期AI预测\n\n📅 ' + date + '\n\n---\n\n';
+            text += '## 🎯 预测号码\n\n**🔴 前区：** ' + front + '\n\n**🔵 后区：** ' + back + '\n\n**📊 置信度：** ' + conf + '%\n\n';
             if (type !== 'simple' && mlPrediction) {
-                content += `---
-
-## 🤖 各模型预测详情
-
-| 模型 | 前区预测 | 后区预测 | 置信度 |
-|:---:|:---:|:---:|:---:|
-| LSTM | ${mlPrediction.individual_models.lstm.front.join(', ')} | ${mlPrediction.individual_models.lstm.back.join(', ')} | ${(mlPrediction.individual_models.lstm.confidence * 100).toFixed(1)}% |
-| Transformer | ${mlPrediction.individual_models.transformer.front.join(', ')} | ${mlPrediction.individual_models.transformer.back.join(', ')} | ${(mlPrediction.individual_models.transformer.confidence * 100).toFixed(1)}% |
-| XGBoost | ${mlPrediction.individual_models.xgboost.front.join(', ')} | ${mlPrediction.individual_models.xgboost.back.join(', ')} | ${(mlPrediction.individual_models.xgboost.confidence * 100).toFixed(1)}% |
-| RandomForest | ${mlPrediction.individual_models.random_forest.front.join(', ')} | ${mlPrediction.individual_models.random_forest.back.join(', ')} | ${(mlPrediction.individual_models.random_forest.confidence * 100).toFixed(1)}% |
-
-`;
+                text += '---\n\n## 🤖 模型详情\n\n| 模型 | 前区 | 后区 | 置信度 |\n|:---:|:---:|:---:|:---:|\n';
+                Object.entries(mlPrediction.individual_models || {}).forEach(function(e) {
+                    text += '| ' + e[0] + ' | ' + e[1].front.join(',') + ' | ' + e[1].back.join(',') + ' | ' + (e[1].confidence*100).toFixed(0) + '% |\n';
+                });
             }
-            
-            content += `---
-
-## 🧠 机器学习小课堂
-
-### ${knowledge.title}
-
-${knowledge.content}
-
----
-
-## 🖼️ 本期专属插图
-
-**AI绘图提示词：**
-
-> ${imagePrompt}
-
----
-
-## ⚠️ 免责声明
-
-本预测基于历史数据分析和机器学习算法，仅供参考娱乐。彩票具有完全随机性，任何预测都不能保证准确。请理性购彩，量力而行。
-
----
-
-*大乐透AI预测系统 | ${dateStr} ${timeStr}*
-*Powered by LSTM + Transformer + XGBoost + RandomForest*
-`;
-            
-            return content;
+            text += '\n---\n\n⚠️ 仅供参考，理性购彩\n\n*AI预测系统*\n';
+            return text;
         }
-        
-        function copyImagePrompt(prompt) {
-            navigator.clipboard.writeText(prompt).then(() => {
-                alert('插图提示词已复制！');
-            });
-        }
-        
-        function copyTweet() {
-            const content = document.getElementById('tweetContent').innerText || document.getElementById('tweetContent').textContent;
-            navigator.clipboard.writeText(content).then(() => {
-                alert('推文内容已复制到剪贴板！');
-            });
-        }
-        
+
+        function copyText(text) { navigator.clipboard.writeText(text).then(function() { alert('已复制！'); }); }
+        function copyTweet() { var text = document.getElementById('tweetResult').textContent; navigator.clipboard.writeText(text).then(function() { alert('推文已复制！'); }); }
         function downloadTweet() {
-            const content = document.getElementById('tweetContent').innerText || document.getElementById('tweetContent').textContent;
-            const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
+            var text = document.getElementById('tweetResult').textContent;
+            var blob = new Blob([text], {type: 'text/markdown'});
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
             a.href = url;
-            a.download = `大乐透预测报告_${fusionPrediction?.target_period || 'unknown'}.md`;
+            a.download = '大乐透预测_' + (fusionPrediction ? fusionPrediction.target_period : 'report') + '.md';
             a.click();
-            URL.revokeObjectURL(url);
         }
     </script>
 </body>

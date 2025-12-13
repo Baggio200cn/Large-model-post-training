@@ -1,63 +1,83 @@
+# -*- coding: utf-8 -*-
 from http.server import BaseHTTPRequestHandler
 import json
-from datetime import datetime
+import os
+
+KV_REST_API_URL = os.environ.get('KV_REST_API_URL') or os.environ.get('KV_URL', '')
+KV_REST_API_TOKEN = os.environ.get('KV_REST_API_TOKEN', '')
+
+def kv_get(key):
+    if not KV_REST_API_URL or not KV_REST_API_TOKEN:
+        return None
+    try:
+        import urllib.request
+        url = KV_REST_API_URL + '/get/' + key
+        req = urllib.request.Request(url)
+        req.add_header('Authorization', 'Bearer ' + KV_REST_API_TOKEN)
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode('utf-8'))
+            result = data.get('result')
+            if result and isinstance(result, str):
+                try:
+                    return json.loads(result)
+                except:
+                    return result
+            return result
+    except:
+        return None
+
 
 class handler(BaseHTTPRequestHandler):
+    
     def do_GET(self):
-        try:
-            response = {
-                'status': 'healthy',
-                'service': '大乐透AI预测系统',
-                'version': '2.0.0',
-                'description': '基于深度学习与灵修直觉的智能预测平台',
-                'components': {
-                    'frontend': 'operational',
-                    'api_server': 'operational',
-                    'data_analysis': 'operational',
-                    'prediction_engine': 'operational',
-                    'spiritual_module': 'operational'
-                },
-                'data_status': {
-                    'historical_data': '100期',
-                    'last_update': '2025-10-29',
-                    'data_source': '真实历史开奖数据'
-                },
-                'model_status': {
-                    'lstm': 'active',
-                    'transformer': 'active',
-                    'xgboost': 'active',
-                    'ensemble': 'active'
-                },
-                'timestamp': datetime.now().isoformat(),
-                'uptime': 'continuous',
-                'environment': 'production'
-            }
-            
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.send_header('Cache-Control', 'no-cache')
-            self.end_headers()
-            
-            self.wfile.write(json.dumps(response, ensure_ascii=False).encode('utf-8'))
-            
-        except Exception as e:
-            self.send_response(500)
-            self.send_header('Content-type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            
-            import traceback
-            error_response = {
-                'status': 'error',
-                'message': str(e),
-                'traceback': traceback.format_exc()
-            }
-            self.wfile.write(json.dumps(error_response).encode('utf-8'))
+        # 检测KV配置
+        kv_configured = bool(KV_REST_API_URL and KV_REST_API_TOKEN)
+        
+        # 尝试获取数据来验证KV是否真正可用
+        kv_working = False
+        total_periods = 0
+        data_source = 'none'
+        
+        if kv_configured:
+            try:
+                history = kv_get('lottery_history')
+                if history and isinstance(history, list):
+                    kv_working = True
+                    total_periods = len(history)
+                    data_source = 'kv_storage'
+            except:
+                pass
+        
+        if not kv_working:
+            # 使用备份数据
+            total_periods = 10
+            data_source = 'backup'
+        
+        result = {
+            'status': 'healthy',
+            'version': '2.1.0',
+            'kv_available': kv_working,
+            'kv_configured': kv_configured,
+            'total_periods': total_periods,
+            'data_source': data_source,
+            'endpoints': [
+                '/api/health',
+                '/api/latest-results',
+                '/api/admin-data',
+                '/api/generate-tweet',
+                '/api/spiritual'
+            ]
+        }
+        
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json; charset=utf-8')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(json.dumps(result, ensure_ascii=False).encode('utf-8'))
     
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Methods', 'GET,OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.end_headers()

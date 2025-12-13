@@ -7,15 +7,6 @@ from datetime import datetime
 
 DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY', '')
 
-ML_TIPS = [
-    {'title': 'LSTM', 'desc': 'LSTM is a recurrent neural network that learns long-term dependencies through gate mechanisms.'},
-    {'title': 'Transformer', 'desc': 'Transformer uses self-attention to find correlations between different numbers.'},
-    {'title': 'XGBoost', 'desc': 'XGBoost is a gradient boosting algorithm that corrects errors by adding decision trees.'},
-    {'title': 'RandomForest', 'desc': 'Random Forest uses multiple decision trees voting to make robust predictions.'},
-    {'title': 'Feature Engineering', 'desc': 'Feature engineering transforms raw data into valuable features like hot/cold numbers.'},
-    {'title': 'Ensemble Learning', 'desc': 'Combining multiple models often achieves better results than any single model.'},
-]
-
 ML_TIPS_CN = [
     {'title': 'LSTM', 'content': 'LSTM(长短期记忆网络)通过门控机制学习序列数据的长期依赖关系，特别适合分析号码的时序规律。'},
     {'title': 'Transformer', 'content': 'Transformer使用自注意力机制发现不同号码之间的关联性，能够捕捉到一些号码经常一起出现的规律。'},
@@ -61,6 +52,7 @@ def fmt(nums):
 
 
 class handler(BaseHTTPRequestHandler):
+    
     def do_POST(self):
         result = {'status': 'error'}
         try:

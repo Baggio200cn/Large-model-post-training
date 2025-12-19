@@ -1,193 +1,291 @@
 # -*- coding: utf-8 -*-
-from http.server import BaseHTTPRequestHandler
+"""
+禅心慧算 - 推文生成API（统一模板版）
+"""
+
 import json
 import os
-import random
 from datetime import datetime
+from http.server import BaseHTTPRequestHandler
+from urllib.parse import parse_qs, urlparse
 
-DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY', '')
+# ============ 统一模板配置 ============
 
-ML_TIPS_CN = [
-    {'title': 'LSTM', 'content': 'LSTM(长短期记忆网络)通过门控机制学习序列数据的长期依赖关系，特别适合分析号码的时序规律。'},
-    {'title': 'Transformer', 'content': 'Transformer使用自注意力机制发现不同号码之间的关联性，能够捕捉到一些号码经常一起出现的规律。'},
-    {'title': 'XGBoost', 'content': 'XGBoost是一种梯度提升算法，通过逐步添加决策树来纠正预测错误，处理各种统计特征效果出色。'},
-    {'title': 'RandomForest', 'content': '随机森林由多棵决策树投票决定结果，这种集体智慧能有效降低单一模型的过拟合风险。'},
-    {'title': 'Feature Engineering', 'content': '特征工程是将原始数据转换为有价值特征的过程，包括热门号码、冷门号码、遗漏期数等。'},
-    {'title': 'Ensemble', 'content': '模型集成将多个模型组合起来，取长补短，往往比单一模型获得更稳定的预测效果。'},
-]
+PLATFORMS = {
+    "weibo": {"name": "微博", "max_length": 2000, "min_length": 100},
+    "xiaohongshu": {"name": "小红书", "max_length": 1000, "min_length": 300},
+    "toutiao": {"name": "今日头条", "max_length": 2000, "min_length": 800},
+    "twitter": {"name": "Twitter", "max_length": 280, "min_length": 50}
+}
+
+RISK_WORDS = {
+    "预测": "分析",
+    "预测号码": "概率计算",
+    "中奖": "命中",
+    "必中": "高频",
+    "推荐号码": "参考数据",
+    "投资建议": "技术分享",
+    "稳赚": "学习"
+}
+
+DISCLAIMERS = {
+    "short": "⚠️ 纯技术学习，彩票随机，理性娱乐！",
+    "standard": "【声明】本内容为AI技术学习记录，不构成任何投资建议。彩票是随机事件，请理性娱乐。",
+    "casual": "🎯 这是AI学习实验，彩票猜不准的～开心就好！"
+}
+
+# ============ 推文模板 ============
+
+TWEET_TEMPLATES = {
+    "tech_share": [
+        "🤖 AI学习日记 | 用{models}分析{data_type}数据，探索机器学习在随机数据上的表现。结论：AI也猜不准随机数～技术很有趣，但彩票还是随机的！{disclaimer}",
+        "📊 数据实验 | 训练了{models}模型，分析{period}期{data_type}数据。发现：所有模型命中率都接近随机水平，再次证明彩票的随机性！{disclaimer}",
+        "🔬 ML实验记录 | 当深度学习遇上真正的随机数据会怎样？用{data_type}做了个实验，LSTM和Transformer都"认输"了～{disclaimer}"
+    ],
+    "philosophy": [
+        "🧘 禅与AI | 机器学习教会我的事：有些事，算法再强也无能为力。随机之道，不可强求。{disclaimer}",
+        "☯️ 技术感悟 | 用AI分析{data_type}，不是为了赢，而是为了理解"随机"的本质。万法皆空，理性为本。{disclaimer}"
+    ],
+    "casual": [
+        "😂 AI：我分析了{period}期数据！\n彩票：我是随机的。\nAI：...\n\n技术学习很快乐，但别指望AI能猜中彩票哦～{disclaimer}",
+        "🎲 让AI分析彩票数据的结果：它学会了"认命"。随机就是随机，这才是最大的收获！{disclaimer}"
+    ]
+}
+
+# ============ 生成器类 ============
+
+class TweetGenerator:
+    """推文生成器"""
+    
+    def __init__(self, platform: str = "weibo", style: str = "tech_share"):
+        self.platform = platform
+        self.platform_config = PLATFORMS.get(platform, PLATFORMS["weibo"])
+        self.style = style
+        self.templates = TWEET_TEMPLATES.get(style, TWEET_TEMPLATES["tech_share"])
+    
+    def sanitize(self, content: str) -> str:
+        """替换风险词"""
+        for risk, safe in RISK_WORDS.items():
+            content = content.replace(risk, safe)
+        return content
+    
+    def generate(self, data_type: str = "大乐透", period: int = 260,
+                 models: str = "LSTM+XGBoost", template_index: int = 0,
+                 disclaimer_style: str = "short") -> dict:
+        """生成推文"""
+        
+        template = self.templates[template_index % len(self.templates)]
+        disclaimer = DISCLAIMERS.get(disclaimer_style, DISCLAIMERS["short"])
+        
+        content = template.format(
+            data_type=data_type,
+            period=period,
+            models=models,
+            disclaimer=disclaimer
+        )
+        
+        # 安全化处理
+        content = self.sanitize(content)
+        
+        # 长度检查
+        max_len = self.platform_config["max_length"]
+        if len(content) > max_len:
+            content = content[:max_len-3] + "..."
+        
+        return {
+            "success": True,
+            "platform": self.platform,
+            "platform_name": self.platform_config["name"],
+            "style": self.style,
+            "content": content,
+            "length": len(content),
+            "max_length": max_len,
+            "generated_at": datetime.now().isoformat()
+        }
+    
+    def generate_batch(self, data_type: str = "大乐透", period: int = 260,
+                       models: str = "LSTM+XGBoost") -> list:
+        """批量生成所有模板"""
+        results = []
+        for i, template in enumerate(self.templates):
+            results.append(self.generate(
+                data_type=data_type,
+                period=period,
+                models=models,
+                template_index=i
+            ))
+        return results
 
 
-def call_deepseek(prompt):
-    if not DEEPSEEK_API_KEY:
-        return None
+# ============ DeepSeek集成（可选）============
+
+def generate_with_deepseek(prompt_type: str, data_type: str = "大乐透",
+                           period: int = 260) -> dict:
+    """使用DeepSeek生成推文"""
+    
+    api_key = os.environ.get('DEEPSEEK_API_KEY')
+    if not api_key:
+        return {"success": False, "error": "未配置DEEPSEEK_API_KEY"}
+    
+    prompts = {
+        "tech": f"写一条关于用AI分析{data_type}数据的技术分享推文，100字以内，强调这是学习实验，AI无法预测随机数，要有趣轻松",
+        "philosophy": f"写一条融合禅意的AI技术感悟推文，关于机器学习与随机性，100字以内，有哲理感",
+        "casual": f"写一条轻松幽默的推文，关于AI分析{data_type}数据的有趣发现，100字以内，要搞笑"
+    }
+    
     try:
         import urllib.request
-        url = 'https://api.deepseek.com/v1/chat/completions'
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + DEEPSEEK_API_KEY
-        }
-        body = {
-            'model': 'deepseek-chat',
-            'messages': [
-                {'role': 'system', 'content': 'You are a professional science writer. Write in Chinese. Use Markdown format.'},
-                {'role': 'user', 'content': prompt}
-            ],
-            'max_tokens': 2000,
-            'temperature': 0.7
-        }
-        req = urllib.request.Request(url, json.dumps(body).encode('utf-8'), headers, method='POST')
-        with urllib.request.urlopen(req, timeout=25) as resp:
-            data = json.loads(resp.read().decode('utf-8'))
-            text = data.get('choices', [{}])[0].get('message', {}).get('content', '')
-            return text if text and len(text) > 100 else None
-    except:
-        return None
+        
+        prompt = prompts.get(prompt_type, prompts["tech"])
+        prompt += "\n\n要求：不要使用'预测'这个词，用'分析'代替。结尾加上：⚠️ 技术学习，理性娱乐"
+        
+        data = json.dumps({
+            "model": "deepseek-chat",
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 200,
+            "temperature": 0.8
+        }).encode('utf-8')
+        
+        req = urllib.request.Request(
+            "https://api.deepseek.com/v1/chat/completions",
+            data=data,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            }
+        )
+        
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            result = json.loads(resp.read().decode('utf-8'))
+            content = result["choices"][0]["message"]["content"]
+            
+            # 安全化
+            for risk, safe in RISK_WORDS.items():
+                content = content.replace(risk, safe)
+            
+            return {
+                "success": True,
+                "content": content,
+                "source": "deepseek",
+                "generated_at": datetime.now().isoformat()
+            }
+            
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 
-def fmt(nums):
-    if not nums:
-        return '--'
-    return ' '.join([str(n).zfill(2) for n in nums])
-
+# ============ API Handler ============
 
 class handler(BaseHTTPRequestHandler):
     
+    def set_cors(self):
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+    
+    def send_json(self, data, status=200):
+        self.send_response(status)
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.set_cors()
+        self.end_headers()
+        self.wfile.write(json.dumps(data, ensure_ascii=False, indent=2).encode('utf-8'))
+    
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.set_cors()
+        self.end_headers()
+    
+    def do_GET(self):
+        query = parse_qs(urlparse(self.path).query)
+        action = query.get('action', ['generate'])[0]
+        
+        if action == 'info':
+            self.send_json({
+                "success": True,
+                "name": "推文生成API",
+                "platforms": list(PLATFORMS.keys()),
+                "styles": list(TWEET_TEMPLATES.keys()),
+                "disclaimer_styles": list(DISCLAIMERS.keys())
+            })
+            return
+        
+        if action == 'templates':
+            self.send_json({
+                "success": True,
+                "templates": TWEET_TEMPLATES
+            })
+            return
+        
+        # 默认生成
+        platform = query.get('platform', ['weibo'])[0]
+        style = query.get('style', ['tech_share'])[0]
+        data_type = query.get('data_type', ['大乐透'])[0]
+        period = int(query.get('period', ['260'])[0])
+        
+        gen = TweetGenerator(platform, style)
+        result = gen.generate(data_type=data_type, period=period)
+        self.send_json(result)
+    
     def do_POST(self):
-        result = {'status': 'error'}
         try:
             length = int(self.headers.get('Content-Length', 0))
             body = json.loads(self.rfile.read(length).decode('utf-8')) if length > 0 else {}
             
-            ttype = body.get('type', 'detailed')
-            pred = body.get('prediction') or {}
-            last_act = body.get('last_actual') or {}
-            last_pred = body.get('last_predicted') or {}
-            models = body.get('ml_models') or {}
-            period = str(body.get('target_period', '25142'))
+            action = body.get('action', 'generate')
             
-            front = pred.get('front') or []
-            back = pred.get('back') or []
-            conf = pred.get('confidence') or 0.75
+            # DeepSeek生成
+            if action == 'deepseek':
+                prompt_type = body.get('prompt_type', 'tech')
+                data_type = body.get('data_type', '大乐透')
+                period = body.get('period', 260)
+                result = generate_with_deepseek(prompt_type, data_type, period)
+                self.send_json(result)
+                return
             
-            hits = 0
-            fhits, bhits = [], []
-            if last_act and last_pred:
-                af = set(last_act.get('front') or [])
-                ab = set(last_act.get('back') or [])
-                pf = set(last_pred.get('front') or [])
-                pb = set(last_pred.get('back') or [])
-                fhits = sorted(af & pf)
-                bhits = sorted(ab & pb)
-                hits = len(fhits) + len(bhits)
+            # 批量生成
+            if action == 'batch':
+                platform = body.get('platform', 'weibo')
+                style = body.get('style', 'tech_share')
+                data_type = body.get('data_type', '大乐透')
+                period = body.get('period', 260)
+                
+                gen = TweetGenerator(platform, style)
+                results = gen.generate_batch(data_type=data_type, period=period)
+                self.send_json({"success": True, "tweets": results})
+                return
             
-            tip = random.choice(ML_TIPS_CN)
-            date = datetime.now().strftime('%Y-%m-%d')
+            # 单条生成
+            platform = body.get('platform', 'weibo')
+            style = body.get('style', 'tech_share')
+            data_type = body.get('data_type', '大乐透')
+            period = body.get('period', 260)
+            models = body.get('models', 'LSTM+XGBoost')
+            template_index = body.get('template_index', 0)
+            disclaimer_style = body.get('disclaimer_style', 'short')
             
-            if hits >= 4:
-                title = '🎯 第' + period + '期：上期命中' + str(hits) + '个，状态火热！'
-            elif hits >= 2:
-                title = '📊 第' + period + '期：数据揭示新趋势'
-            else:
-                title = '🤖 第' + period + '期：模型优化后重新出发'
+            gen = TweetGenerator(platform, style)
+            result = gen.generate(
+                data_type=data_type,
+                period=period,
+                models=models,
+                template_index=template_index,
+                disclaimer_style=disclaimer_style
+            )
+            self.send_json(result)
             
-            seed = int(period) % 5
-            imgs = [
-                '数字' + period[-2:] + '在星空中闪耀，AI神经网络环绕，紫蓝色调，科幻风格',
-                '水晶球显示第' + period + '期预测，全息图表，赛博朋克风格',
-                'AI机器人分析数据，屏幕显示' + period + '，数据矩阵背景',
-                '神经网络3D可视化，节点闪烁' + period + '，霓虹色彩',
-                '四种AI模型融合成能量球，奇幻科技风格'
-            ]
-            img = imgs[seed]
-            
-            art = '# ' + title + '\n\n'
-            art += '📅 ' + date + '\n\n---\n\n'
-            
-            if last_act:
-                lf = last_act.get('front') or []
-                lb = last_act.get('back') or []
-                art += '## 📊 上期回顾\n\n'
-                art += '**开奖：** ' + fmt(lf) + ' + ' + fmt(lb) + '\n\n'
-                if last_pred:
-                    lpf = last_pred.get('front') or []
-                    lpb = last_pred.get('back') or []
-                    art += '**预测：** ' + fmt(lpf) + ' + ' + fmt(lpb) + '\n\n'
-                    art += '**命中：** 前区' + str(len(fhits)) + '个'
-                    if fhits:
-                        art += '(' + ','.join(map(str, fhits)) + ')'
-                    art += '，后区' + str(len(bhits)) + '个'
-                    if bhits:
-                        art += '(' + ','.join(map(str, bhits)) + ')'
-                    art += '\n\n'
-                    if hits >= 3:
-                        art += '🎉 表现不错！\n\n'
-                    else:
-                        art += '🔧 本期调整Transformer权重\n\n'
-            
-            art += '---\n\n## 🎯 第' + period + '期预测\n\n'
-            art += '**🔴 前区：** ' + fmt(front) + '\n\n'
-            art += '**🔵 后区：** ' + fmt(back) + '\n\n'
-            art += '**📊 置信度：** ' + str(round(conf * 100, 1)) + '%\n\n'
-            
-            if ttype != 'simple' and models:
-                art += '---\n\n## 🤖 模型详情\n\n'
-                art += '| 模型 | 前区 | 后区 | 置信度 |\n|:---:|:---:|:---:|:---:|\n'
-                for k, n in [('lstm', 'LSTM'), ('transformer', 'Transformer'), ('xgboost', 'XGBoost'), ('random_forest', 'RF')]:
-                    if k in models:
-                        m = models[k]
-                        mf = ','.join(map(str, m.get('front') or [])) or '--'
-                        mb = ','.join(map(str, m.get('back') or [])) or '--'
-                        mc = str(round((m.get('confidence') or 0.75) * 100, 1)) + '%'
-                        art += '| ' + n + ' | ' + mf + ' | ' + mb + ' | ' + mc + ' |\n'
-                art += '\n'
-            
-            art += '---\n\n## 🧠 ML小课堂：' + tip['title'] + '\n\n'
-            art += tip['content'] + '\n\n'
-            art += '---\n\n## 🖼️ 插图提示词\n\n> ' + img + '\n\n'
-            art += '---\n\n⚠️ 仅供参考，理性购彩\n\n*AI预测系统 | ' + date + '*\n'
-            
-            ds_used = False
-            if DEEPSEEK_API_KEY and ttype != 'simple':
-                try:
-                    p = '请优化这篇大乐透预测文章：\n1.保持号码不变\n2.语言更生动\n3.扩展ML小课堂\n4.Markdown格式\n5.1500字内\n\n' + art
-                    enhanced = call_deepseek(p)
-                    if enhanced:
-                        art = enhanced
-                        ds_used = True
-                except:
-                    pass
-            
-            result = {
-                'status': 'success',
-                'article': art,
-                'title': title,
-                'image_prompt': img,
-                'ml_knowledge': tip,
-                'hit_count': hits,
-                'deepseek_enhanced': ds_used,
-                'deepseek_configured': bool(DEEPSEEK_API_KEY)
-            }
         except Exception as e:
-            result = {'status': 'error', 'message': str(e)}
-        
-        self.send_response(200)
-        self.send_header('Content-type', 'application/json; charset=utf-8')
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.end_headers()
-        self.wfile.write(json.dumps(result, ensure_ascii=False).encode('utf-8'))
-    
-    def do_GET(self):
-        r = {'status': 'success', 'api': 'generate-tweet', 'deepseek': bool(DEEPSEEK_API_KEY)}
-        self.send_response(200)
-        self.send_header('Content-type', 'application/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.end_headers()
-        self.wfile.write(json.dumps(r).encode('utf-8'))
-    
-    def do_OPTIONS(self):
-        self.send_response(200)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
-        self.end_headers()
+            self.send_json({"success": False, "error": str(e)}, 500)
+```
+
+---
+
+## API使用示例
+
+**获取信息：**
+```
+GET /api/generate-tweet?action=info
+```
+
+**生成推文：**
+```
+GET /api/generate-tweet?platform=weibo&style=tech_share

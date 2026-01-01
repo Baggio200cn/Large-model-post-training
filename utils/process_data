@@ -1,0 +1,30 @@
+import pandas as pd
+
+def load_and_process_data(filepath):
+    """
+    加载原始数据并进行处理
+    :param filepath: 原始数据文件路径
+    :return: 处理后的DataFrame
+    """
+    try:
+        # 加载数据
+        data = pd.read_csv(filepath)
+        
+        # 数据清洗与标准化
+        data.fillna(0, inplace=True)  # 填充缺失值
+        for col in data.columns[1:]:  # 对数字列进行标准化
+            data[col] = (data[col] - data[col].mean()) / data[col].std()
+        
+        # 保存处理后的数据
+        processed_filepath = filepath.replace("raw_data", "processed_data")
+        data.to_csv(processed_filepath, index=False)
+        print(f"数据处理完成，保存至: {processed_filepath}")
+        
+        return data
+    except Exception as e:
+        print(f"数据处理失败: {e}")
+        return None
+
+# 示例调用
+if __name__ == "__main__":
+    load_and_process_data("data/raw_data/sample.csv")

@@ -1,0 +1,164 @@
+// 全局状态管理
+const AppState = {
+    isLoading: false,
+    lastPrediction: null,
+    systemHealth: 'unknown'
+};
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    checkSystemHealth();
+    setInterval(checkSystemHealth, 30000);
+});
+
+// 系统健康检查
+async function checkSystemHealth() {
+    try {
+        const response = await fetch('/api/health');
+        const data = await response.json();
+        
+        const statusEl = document.getElementById('api-status');
+        if (data.status === 'healthy') {
+            statusEl.innerHTML = '<span class="status-indicator status-healthy"></span>系统运行正常';
+            AppState.systemHealth = 'healthy';
+        } else {
+            statusEl.innerHTML = '<span class="status-indicator status-error"></span>系统异常';
+            AppState.systemHealth = 'error';
+        }
+    } catch (error) {
+        const statusEl = document.getElementById('api-status');
+        statusEl.innerHTML = '<span class="status-indicator status-error"></span>无法连接到API服务';
+        AppState.systemHealth = 'error';
+    }
+}
+
+// 显示加载状态
+function showLoading(elementId, show = true) {
+    const loadingEl = document.getElementById(elementId + '-loading');
+    if (loadingEl) {
+        loadingEl.classList.toggle('show', show);
+    }
+}
+
+// 显示结果
+function showResult(elementId, content, isSuccess = true) {
+    const resultEl = document.getElementById(elementId + '-result');
+    if (resultEl) {
+        resultEl.innerHTML = content;
+        resultEl.style.borderLeft = `4px solid ${isSuccess ? '#48bb78' : '#f56565'}`;
+    }
+}
+
+// 数据分析
+async function analyzeData() {
+    showLoading('analysis');
+    try {
+        const response = await fetch('/api/data-analysis');
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            const analysis = data.analysis;
+            const content = `
+                <h3>数据分析结果</h3>
+                <p><strong>分析期数:</strong> ${analysis.data_overview?.total_draws || 'N/A'}</p>
+                <p><strong>更新时间:</strong> ${analysis.data_overview?.last_update || 'N/A'}</p>
+            `;
+            showResult('analysis', content);
+        } else {
+            showResult('analysis', `分析失败: ${data.message}`, false);
+        }
+    } catch (error) {
+        showResult('analysis', `请求失败: ${error.message}`, false);
+    } finally {
+        showLoading('analysis', false);
+    }
+}
+
+// AI预测
+async function predict() {
+    showLoading('prediction');
+    try {
+        const response = await fetch('/api/predict', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                historical_data: [],
+                prediction_type: 'all'
+            })
+        });
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            AppState.lastPrediction = data.prediction;
+            const pred = data.prediction.ensemble_prediction;
+            
+            const content = `
+                <h3>AI预测结果</h3>
+                <div style="text-align: center; margin: 15px 0;">
+                    <h4>前区推荐</h4>
+                    <p>号码: ${pred.front_zone.join(', ')}</p>
+                    <h4>后区推荐</h4>
+                    <p>号码: ${pred.back_zone.join(', ')}</p>
+                    <p><strong>置信度:</strong> ${(pred.confidence * 100).toFixed(1)}%</p>
+                </div>
+            `;
+            showResult('prediction', content);
+        } else {
+            showResult('prediction', `预测失败: ${data.message}`, false);
+        }
+    } catch (error) {
+        showResult('prediction', `请求失败: ${error.message}`, false);
+    } finally {
+        showLoading('prediction', false);
+    }
+}
+
+// 灵修扰动
+async function getSpiritualPerturbation() {
+    showLoading('spiritual');
+    try {
+        const response = await fetch('/api/spiritual');
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            const content = `
+                <h3>灵修扰动因子</h3>
+                <p>扰动数据获取成功</p>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+            showResult('spiritual', content);
+        } else {
+            showResult('spiritual', `获取失败: ${data.message}`, false);
+        }
+    } catch (error) {
+        showResult('spiritual', `请求失败: ${error.message}`, false);
+    } finally {
+        showLoading('spiritual', false);
+    }
+}
+
+// 系统健康检查详情
+async function getSystemHealth() {
+    showLoading('monitor');
+    try {
+        const response = await fetch('/api/health');
+        const data = await response.json();
+        
+        if (data.status === 'healthy') {
+            const content = `
+                <h3>系统健康状态</h3>
+                <p><strong>服务状态:</strong> ${data.status}</p>
+                <p><strong>服务名称:</strong> ${data.service}</p>
+                <p><strong>版本:</strong> ${data.version}</p>
+                <p><strong>检查时间:</strong> ${new Date(data.timestamp).toLocaleString()}</p>
+            `;
+            showResult('monitor', content);
+        } else {
+            showResult('monitor', `系统异常: ${data.message}`, false);
+        }
+    } catch (error) {
+        showResult('monitor', `系统检查失败: ${error.message}`, false);
+    } finally {
+        showLoading('monitor', false);
+    }
+}

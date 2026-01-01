@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>时间测试</title>
+<style>body{display:flex;justify-content:center;align-items:center;height:100vh;background:#667eea;color:#fff;font-family:Arial;font-size:3em;}</style>
+</head><body><div id="t">加载中...</div><script>
+function u(){const n=new Date();document.getElementById('t').textContent=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')+' '+String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0');}
+u();setInterval(u,1000);
+</script></body></html>

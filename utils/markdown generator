@@ -1,0 +1,25 @@
+import markdown
+import os
+
+def convert_markdown_to_html(md_file, output_dir):
+    """
+    将Markdown文件转换为HTML文件
+    :param md_file: Markdown文件路径
+    :param output_dir: 输出HTML文件目录
+    """
+    try:
+        with open(md_file, 'r', encoding='utf-8') as f:
+            md_content = f.read()
+            html_content = markdown.markdown(md_content)
+
+        # 输出HTML文件
+        html_file = os.path.join(output_dir, os.path.basename(md_file).replace('.md', '.html'))
+        with open(html_file, 'w', encoding='utf-8') as f:
+            f.write(html_content)
+        print(f"HTML文件已生成: {html_file}")
+    except Exception as e:
+        print(f"转换失败: {e}")
+
+# 示例调用
+if __name__ == "__main__":
+    convert_markdown_to_html("module_stacking.md", "html/")

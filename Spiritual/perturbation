@@ -1,0 +1,12 @@
+import random
+
+def apply_perturbation(predictions, image_input):
+    """
+    应用灵修图片扰动到预测结果
+    :param predictions: 模型预测结果列表
+    :param image_input: 图片输入，用于扰动计算
+    :return: 调整后的预测结果
+    """
+    perturbation_factor = random.uniform(0.9, 1.1)
+    adjusted_predictions = [p * perturbation_factor for p in predictions]
+    return adjusted_predictions

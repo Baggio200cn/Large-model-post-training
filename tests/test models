@@ -1,0 +1,14 @@
+# Test Models Code
+import unittest
+
+class TestModels(unittest.TestCase):
+    def test_lstm_model(self):
+        # Add LSTM Model tests here
+        pass
+
+    def test_transformer_model(self):
+        # Add Transformer Model tests here
+        pass
+
+if __name__ == '__main__':
+    unittest.main()

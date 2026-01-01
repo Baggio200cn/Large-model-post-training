@@ -1,0 +1,840 @@
+/* ============================================
+   AI彩票分析实验室 - 完整样式表
+   版本: 2.0
+   更新日期: 2025-10-30
+   ============================================ */
+
+/* 全局样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* 头部样式 */
+.header {
+    text-align: center;
+    color: white;
+    margin-bottom: 40px;
+    padding: 20px;
+}
+
+.header h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+.subtitle {
+    font-size: 1.2em;
+    opacity: 0.9;
+    font-weight: 300;
+}
+
+.subtitle-small {
+    font-size: 0.7em;
+    opacity: 0.7;
+    font-weight: normal;
+    margin-left: 10px;
+}
+
+/* 卡片样式 */
+.card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 加载状态 */
+.loading {
+    text-align: center;
+    padding: 60px 20px;
+    color: #667eea;
+}
+
+.loading h3 {
+    margin: 20px 0 10px;
+    color: #667eea;
+}
+
+.loading p {
+    color: #999;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 预测区域 */
+.predictions-container {
+    display: block;
+}
+
+.prediction-section {
+    margin-bottom: 40px;
+}
+
+.section-title {
+    color: #667eea;
+    margin-bottom: 20px;
+    font-size: 1.5em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section-title .icon {
+    font-size: 1.2em;
+}
+
+/* ============================================
+   号码球样式 - 主预测区域
+   ============================================ */
+
+/* 彩球容器 */
+.balls-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    padding: 20px 0;
+    min-height: 100px;
+}
+
+/* 基础号码球样式 */
+.ball {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+}
+
+.ball:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+
+/* 红球样式 */
+.ball.red,
+.ball.red-ball {
+    background: linear-gradient(145deg, #ff6b6b, #ee5a6f);
+}
+
+/* 蓝球样式 */
+.ball.blue,
+.ball.blue-ball {
+    background: linear-gradient(145deg, #4facfe, #00f2fe);
+}
+
+/* ============================================
+   小号码球样式 - 历史数据区域
+   ============================================ */
+
+.ball-small {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: bold;
+    margin: 2px;
+    color: white;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
+.red-ball-small {
+    background: linear-gradient(145deg, #ff6b6b, #ee5a6f);
+}
+
+.blue-ball-small {
+    background: linear-gradient(145deg, #4facfe, #00f2fe);
+}
+
+/* 号码显示容器（历史数据用） */
+.number-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.number-display .separator {
+    margin: 0 8px;
+    color: #999;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* ============================================
+   模型信息和其他内容区域
+   ============================================ */
+
+/* 模型信息 */
+.model-info {
+    background: #f8f9fa;
+    border-left: 4px solid #667eea;
+    padding: 20px;
+    margin: 30px 0;
+    border-radius: 8px;
+    font-size: 0.95em;
+}
+
+.model-info p {
+    margin-bottom: 10px;
+    color: #555;
+    line-height: 1.8;
+}
+
+.model-info p:last-child {
+    margin-bottom: 0;
+}
+
+.model-info .update-time {
+    color: #667eea;
+    font-weight: 500;
+}
+
+.model-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* 免责声明 */
+.disclaimer {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 20px;
+    margin: 30px 0;
+    border-radius: 8px;
+}
+
+.disclaimer-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+    color: #856404;
+}
+
+.disclaimer p {
+    margin-bottom: 10px;
+    color: #856404;
+    line-height: 1.6;
+}
+
+.disclaimer p:last-child {
+    margin-bottom: 0;
+}
+
+.disclaimer code {
+    background: rgba(0,0,0,0.1);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+.disclaimer strong {
+    font-weight: 600;
+}
+
+/* 按钮样式 */
+.actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    flex: 1;
+    min-width: 200px;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.btn-secondary:hover {
+    background: #f8f9fa;
+    transform: translateY(-2px);
+}
+
+.btn-sm {
+    padding: 8px 16px;
+    font-size: 0.9em;
+    min-width: auto;
+}
+
+/* ============================================
+   历史开奖记录样式
+   ============================================ */
+
+.history-card {
+    margin-top: 30px;
+}
+
+/* 加载状态（小尺寸） */
+.loading-small {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: #999;
+    gap: 10px;
+}
+
+.spinner-small {
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* 历史数据表格容器 */
+.history-table-container {
+    overflow-x: auto;
+    margin-top: 20px;
+}
+
+/* 历史数据表格 */
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.history-table thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.history-table th {
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.95em;
+}
+
+.history-table th:first-child {
+    border-top-left-radius: 10px;
+}
+
+.history-table th:last-child {
+    border-top-right-radius: 10px;
+}
+
+.history-table tbody tr {
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s ease;
+}
+
+.history-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.history-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.history-table td {
+    padding: 15px;
+    color: #555;
+}
+
+.history-table td.period {
+    font-weight: 600;
+    color: #667eea;
+}
+
+.history-table td.date {
+    color: #777;
+}
+
+.history-table td.numbers {
+    min-width: 250px;
+}
+
+/* 错误信息 */
+.error-message {
+    text-align: center;
+    padding: 40px 20px;
+    background: #fff3cd;
+    border-radius: 10px;
+    margin: 20px 0;
+}
+
+.error-message .icon {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 15px;
+}
+
+.error-message h3 {
+    color: #856404;
+    margin-bottom: 10px;
+}
+
+.error-message p {
+    color: #856404;
+    margin-bottom: 20px;
+}
+
+/* ============================================
+   关于页面
+   ============================================ */
+
+.about-card {
+    display: none;
+}
+
+.about-content {
+    margin: 20px 0;
+}
+
+.about-content section {
+    margin-bottom: 30px;
+}
+
+.about-content h2 {
+    color: #667eea;
+    margin-bottom: 20px;
+    font-size: 1.8em;
+}
+
+.about-content h3 {
+    color: #667eea;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+}
+
+.about-content p {
+    margin-bottom: 15px;
+    color: #555;
+    line-height: 1.8;
+}
+
+.about-content ul {
+    margin-left: 30px;
+    margin-bottom: 15px;
+}
+
+.about-content li {
+    margin-bottom: 10px;
+    color: #555;
+    line-height: 1.6;
+}
+
+.about-content strong {
+    color: #667eea;
+    font-weight: 600;
+}
+
+.link {
+    color: #667eea;
+    text-decoration: none;
+    border-bottom: 1px dashed #667eea;
+    transition: all 0.3s ease;
+}
+
+.link:hover {
+    color: #764ba2;
+    border-bottom-style: solid;
+}
+
+/* ============================================
+   页脚
+   ============================================ */
+
+.footer {
+    text-align: center;
+    color: white;
+    padding: 30px 20px;
+    margin-top: 40px;
+    opacity: 0.9;
+    font-size: 0.9em;
+}
+
+.footer p {
+    margin-bottom: 8px;
+}
+
+.footer a {
+    color: white;
+    text-decoration: underline;
+}
+
+.footer-note {
+    margin-top: 10px;
+    font-style: italic;
+    opacity: 0.8;
+}
+
+/* ============================================
+   响应式设计
+   ============================================ */
+
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
+    .header h1 {
+        font-size: 1.8em;
+    }
+
+    .subtitle {
+        font-size: 1em;
+    }
+
+    .card {
+        padding: 20px;
+    }
+
+    .ball {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+
+    .ball-small {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+
+    .actions {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+    }
+
+    .balls-container {
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .section-title {
+        font-size: 1.3em;
+    }
+
+    .history-table th,
+    .history-table td {
+        padding: 10px;
+        font-size: 0.9em;
+    }
+
+    .history-table td.numbers {
+        min-width: auto;
+    }
+
+    .number-display {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .number-display .separator {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .header h1 {
+        font-size: 1.5em;
+    }
+
+    .card {
+        padding: 15px;
+    }
+
+    .ball {
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+    }
+
+    .section-title {
+        font-size: 1.2em;
+    }
+
+    .model-info {
+        padding: 15px;
+        font-size: 0.85em;
+    }
+
+    .disclaimer {
+        padding: 15px;
+        font-size: 0.9em;
+    }
+}
+
+/* ============================================
+   动画效果
+   ============================================ */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.ball {
+    animation: bounceIn 0.5s ease-out;
+}
+
+.ball:nth-child(1) { animation-delay: 0.1s; }
+.ball:nth-child(2) { animation-delay: 0.2s; }
+.ball:nth-child(3) { animation-delay: 0.3s; }
+.ball:nth-child(4) { animation-delay: 0.4s; }
+.ball:nth-child(5) { animation-delay: 0.5s; }
+
+/* ============================================
+   打印样式
+   ============================================ */
+
+@media print {
+    body {
+        background: white;
+        padding: 0;
+    }
+
+    .header,
+    .footer,
+    .actions {
+        display: none;
+    }
+
+    .card {
+        box-shadow: none;
+        page-break-inside: avoid;
+    }
+
+    .ball:hover {
+        transform: none;
+    }
+}
+
+/* ============================================
+   辅助工具类
+   ============================================ */
+
+.text-center {
+    text-align: center;
+}
+
+.mt-10 {
+    margin-top: 10px;
+}
+
+.mt-20 {
+    margin-top: 20px;
+}
+
+.mb-10 {
+    margin-bottom: 10px;
+}
+
+.mb-20 {
+    margin-bottom: 20px;
+}
+
+.hidden {
+    display: none;
+}
+
+.visible {
+    display: block;
+}
+```
+
+---
+
+## 🎯 这个完整版CSS的特点
+
+### ✅ 包含所有必要样式
+
+1. **号码球样式**
+   - 大号码球（预测区域）：60x60px
+   - 小号码球（历史数据）：32x32px
+   - 支持 `.red-ball` 和 `.blue-ball` 类名
+   - 渐变背景、阴影效果
+
+2. **历史数据表格**
+   - 完整的表格样式
+   - 悬停效果
+   - 响应式设计
+
+3. **响应式设计**
+   - 平板适配（768px）
+   - 手机适配（480px）
+   - 自动调整布局和字体
+
+4. **动画效果**
+   - 号码球弹入动画
+   - 延迟动画（依次出现）
+   - 悬停放大效果
+
+5. **完整的组件样式**
+   - 加载状态
+   - 错误提示
+   - 按钮样式
+   - 卡片布局
+
+---
+
+## 🚀 使用方法
+
+### Step 1: 替换整个CSS文件
+
+1. 打开 GitHub
+```
+   https://github.com/Baggio200cn/Large-model-post-training/blob/main/public/css/style.css
+```
+
+2. 点击 ✏️ **编辑**
+
+3. **全选删除**（Ctrl+A, Delete）
+
+4. **粘贴上面的完整代码**
+
+5. 提交：`Update to complete production-ready CSS v2.0`
+
+### Step 2: 等待部署
+
+- Vercel 自动部署（1-2分钟）
+
+### Step 3: 测试
+
+1. 清除浏览器缓存
+2. 刷新页面
+3. 应该能看到：
+   - ✅ 红球和蓝球正确显示
+   - ✅ 历史数据号码以小球形式显示
+   - ✅ 所有样式正常
+
+---
+
+## 📊 预期效果
+
+### 预测区域：
+```
+🔴 红球推荐
+基于历史频率分析
+
+ 09   02   22   08   14    ← 红色圆球，白色数字
+
+🔵 蓝球推荐
+统计学习结果
+
+ 05   02                   ← 蓝色圆球，白色数字
+```
+
+### 历史数据：
+```
+期号    日期          开奖号码
+25126  2025-10-27   03 07 20 22 34 + 04 12  ← 小圆球显示
+25125  2025-10-25   10 12 20 21 26 + 09 12

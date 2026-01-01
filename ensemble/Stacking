@@ -1,0 +1,15 @@
+from sklearn.ensemble import StackingClassifier
+from sklearn.linear_model import LogisticRegression
+
+def build_stacking_model(base_models, train_data, train_labels):
+    """
+    构建Stacking集成模型
+    :param base_models: 基础子模型字典
+    :param train_data: 训练数据
+    :param train_labels: 训练标签
+    :return: 训练好的集成模型
+    """
+    estimators = [(name, model) for name, model in base_models.items()]
+    stacking_model = StackingClassifier(estimators=estimators, final_estimator=LogisticRegression())
+    stacking_model.fit(train_data, train_labels)
+    return stacking_model

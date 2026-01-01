@@ -1,0 +1,204 @@
+/* 历史数据卡片样式 */
+.history-card {
+    margin-top: 2rem;
+}
+
+/* 加载状态 - 小尺寸 */
+.loading-small {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    gap: 1rem;
+}
+
+.spinner-small {
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(99, 102, 241, 0.2);
+    border-top-color: #6366f1;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* 错误消息 */
+.error-message {
+    text-align: center;
+    padding: 2rem;
+    color: #ef4444;
+}
+
+.error-message .icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.error-message p {
+    margin: 1rem 0;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+/* 历史数据表格容器 */
+.history-table-container {
+    overflow-x: auto;
+    margin-top: 1rem;
+}
+
+/* 历史数据表格 */
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.history-table thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.history-table th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.history-table tbody tr {
+    border-bottom: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+    animation: fadeInUp 0.5s ease both;
+}
+
+.history-table tbody tr:hover {
+    background-color: #f9fafb;
+    transform: translateX(4px);
+}
+
+.history-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.history-table td {
+    padding: 1rem;
+}
+
+/* 期号单元格 */
+.period-cell {
+    font-weight: 600;
+    color: #6366f1;
+    font-size: 1rem;
+}
+
+/* 日期单元格 */
+.date-cell {
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+/* 号码单元格 */
+.numbers-cell {
+    min-width: 300px;
+}
+
+/* 历史号码容器 */
+.history-balls-container {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* 历史号码球 */
+.history-ball {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-weight: 600;
+    font-size: 0.85rem;
+    font-family: 'Courier New', monospace;
+}
+
+.history-ball.red {
+    background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(236, 72, 153, 0.3);
+}
+
+.history-ball.blue {
+    background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* 球之间的分隔符 */
+.ball-separator {
+    color: #9ca3af;
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin: 0 0.25rem;
+}
+
+/* 动画 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .history-table {
+        font-size: 0.85rem;
+    }
+    
+    .history-table th,
+    .history-table td {
+        padding: 0.75rem;
+    }
+    
+    .history-ball {
+        width: 28px;
+        height: 28px;
+        font-size: 0.75rem;
+    }
+    
+    .numbers-cell {
+        min-width: auto;
+    }
+    
+    .history-balls-container {
+        gap: 0.3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .history-table {
+        font-size: 0.8rem;
+    }
+    
+    .history-table th,
+    .history-table td {
+        padding: 0.5rem;
+    }
+    
+    .history-ball {
+        width: 24px;
+        height: 24px;
+        font-size: 0.7rem;
+    }
+}

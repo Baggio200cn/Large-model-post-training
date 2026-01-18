@@ -1,12 +1,23 @@
-fastapi
-uvicorn
-pandas
-scikit-learn
-xgboost
-tensorflow
-numpy
-requests
-beautifulsoup4
-python-multipart
-jinja2
-Pillow
+# Vercel Serverless部署优化版
+# 只包含API函数实际需要的轻量级依赖
+
+# 核心依赖
+requests>=2.28.0
+beautifulsoup4>=4.11.0
+
+# 数据处理（轻量级）
+numpy>=1.24.0
+pandas>=2.0.0
+
+# 图像处理
+Pillow>=10.0.0
+
+# 注意：以下依赖太大，不适合Vercel Serverless部署
+# tensorflow - 约200-300MB，已移除
+# xgboost - 约100MB，已移除
+# scikit-learn - 约50MB，如需使用请按需添加
+
+# 如果需要ML功能，建议：
+# 1. 使用预训练模型的API（如OpenAI、HuggingFace）
+# 2. 将模型部署到其他服务（如AWS Lambda with larger limits）
+# 3. 使用更轻量的替代方案

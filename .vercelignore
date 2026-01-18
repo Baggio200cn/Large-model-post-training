@@ -1,0 +1,89 @@
+# 大文件和目录
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.pdf
+*.zip
+*.tar.gz
+
+# Python缓存和虚拟环境
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 测试和开发文件
+tests/
+test_*.py
+*_test.py
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 文档和说明
+docs/
+README.md
+*.md
+*.txt
+!requirements.txt
+
+# Git相关
+.git/
+.gitignore
+.gitattributes
+
+# IDE配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 开发脚本
+scripts/
+setup.sh
+
+# 不需要部署的模块
+Spiritual/
+ensemble/
+module/
+utils/
+
+# 配置文件
+workflows/
+.github/
+
+# 大型模型文件
+*.h5
+*.pkl
+*.joblib
+*.model
+*.weights
+
+# 本地开发相关
+main.py
+全局状态管理.txt
+自动更新彩票数据和模型.txt
+ensemble_vs_true.png
+rf_feature_importance.png

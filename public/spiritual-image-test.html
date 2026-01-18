@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>灵修图片预测 - 测试页面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+
+        .upload-section {
+            margin-bottom: 30px;
+            padding: 30px;
+            border: 2px dashed #667eea;
+            border-radius: 15px;
+            text-align: center;
+            background: #f8f9ff;
+            transition: all 0.3s;
+        }
+
+        .upload-section:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+
+        .upload-section.dragover {
+            border-color: #764ba2;
+            background: #e8ecff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: transform 0.2s;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .preview-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .text-input-section {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 100px;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .predict-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .predict-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .predict-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-section {
+            display: none;
+            margin-top: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+        }
+
+        .result-section.active {
+            display: block;
+        }
+
+        .prediction-result {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .numbers-display {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .number-ball {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .front-ball {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .back-ball {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .confidence {
+            display: inline-block;
+            padding: 8px 20px;
+            background: rgba(102, 126, 234, 0.2);
+            border-radius: 20px;
+            color: #667eea;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .analysis-details {
+            margin-top: 25px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        .dimension-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .dimension-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .dimension-numbers {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .error-message {
+            display: none;
+            padding: 15px;
+            background: #fee;
+            border: 1px solid #fcc;
+            border-radius: 8px;
+            color: #c33;
+            margin-top: 20px;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ 灵修图片预测</h1>
+        <p class="subtitle">上传图片 + 文字描述，获得灵性号码指引</p>
+
+        <!-- 图片上传区域 -->
+        <div class="upload-section" id="uploadSection">
+            <div class="upload-icon">🖼️</div>
+            <p style="margin-bottom: 15px;">拖拽图片到此处，或点击按钮选择图片</p>
+            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                选择图片
+            </button>
+            <input type="file" id="fileInput" accept="image/*" onchange="handleFileSelect(event)">
+            <div class="preview-container" id="previewContainer"></div>
+        </div>
+
+        <!-- 文字输入区域 -->
+        <div class="text-input-section">
+            <label for="textInput">文字描述（可选）：</label>
+            <textarea id="textInput" placeholder="输入你看到的、感受到的内容...&#10;例如：红色的莲花，中间有光明"></textarea>
+        </div>
+
+        <!-- 预测按钮 -->
+        <button class="predict-btn" id="predictBtn" onclick="makePrediction()">
+            🔮 开始预测
+        </button>
+
+        <!-- 加载状态 -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 15px; color: #667eea;">正在分析中...</p>
+        </div>
+
+        <!-- 错误提示 -->
+        <div class="error-message" id="errorMessage"></div>
+
+        <!-- 结果展示区域 -->
+        <div class="result-section" id="resultSection">
+            <div class="prediction-result">
+                <h2 style="color: #667eea; margin-bottom: 20px;">🎯 预测结果</h2>
+
+                <h3 style="color: #333; margin-bottom: 10px;">前区号码</h3>
+                <div class="numbers-display" id="frontNumbers"></div>
+
+                <h3 style="color: #333; margin: 20px 0 10px;">后区号码</h3>
+                <div class="numbers-display" id="backNumbers"></div>
+
+                <div class="confidence" id="confidence"></div>
+            </div>
+
+            <div class="analysis-details" id="analysisDetails">
+                <h3 style="color: #667eea; margin-bottom: 15px;">📊 分析详情</h3>
+                <div id="dimensionsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let uploadedImageBase64 = null;
+
+        // 拖拽上传
+        const uploadSection = document.getElementById('uploadSection');
+
+        uploadSection.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadSection.classList.add('dragover');
+        });
+
+        uploadSection.addEventListener('dragleave', () => {
+            uploadSection.classList.remove('dragover');
+        });
+
+        uploadSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        // 文件选择
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        // 处理文件
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showError('请选择图片文件');
+                return;
+            }
+
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                uploadedImageBase64 = e.target.result;
+
+                // 显示预览
+                const previewContainer = document.getElementById('previewContainer');
+                previewContainer.innerHTML = `
+                    <img src="${uploadedImageBase64}" class="preview-image" alt="预览">
+                    <p style="margin-top: 10px; color: #666;">图片已上传 ✓</p>
+                `;
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        // 发起预测
+        async function makePrediction() {
+            const textInput = document.getElementById('textInput').value.trim();
+
+            // 验证输入
+            if (!uploadedImageBase64 && !textInput) {
+                showError('请至少提供图片或文字描述');
+                return;
+            }
+
+            // 隐藏之前的结果和错误
+            document.getElementById('resultSection').classList.remove('active');
+            document.getElementById('errorMessage').classList.remove('active');
+
+            // 显示加载状态
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('predictBtn').disabled = true;
+
+            try {
+                const response = await fetch('/api/spiritual-image-predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        image: uploadedImageBase64,
+                        text: textInput
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    displayResult(data);
+                } else {
+                    showError(data.message || '预测失败');
+                }
+            } catch (error) {
+                showError('网络错误: ' + error.message);
+            } finally {
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('predictBtn').disabled = false;
+            }
+        }
+
+        // 显示结果
+        function displayResult(data) {
+            const prediction = data.prediction;
+            const analysis = data.analysis;
+
+            // 前区号码
+            const frontNumbers = document.getElementById('frontNumbers');
+            frontNumbers.innerHTML = prediction.front_zone.map(num =>
+                `<div class="number-ball front-ball">${String(num).padStart(2, '0')}</div>`
+            ).join('');
+
+            // 后区号码
+            const backNumbers = document.getElementById('backNumbers');
+            backNumbers.innerHTML = prediction.back_zone.map(num =>
+                `<div class="number-ball back-ball">${String(num).padStart(2, '0')}</div>`
+            ).join('');
+
+            // 置信度
+            const confidence = document.getElementById('confidence');
+            confidence.textContent = `置信度: ${(prediction.confidence * 100).toFixed(1)}%`;
+
+            // 分析详情
+            const dimensionsList = document.getElementById('dimensionsList');
+            dimensionsList.innerHTML = analysis.details.map(dim => `
+                <div class="dimension-item">
+                    <div class="dimension-title">${dim.dimension}</div>
+                    <div class="dimension-numbers">
+                        号码: ${dim.numbers.join(', ')}
+                        ${dim.colors ? `<br>颜色: ${dim.colors.join(', ')}` : ''}
+                        ${dim.dominant_element ? `<br>主导五行: ${dim.dominant_element}` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            // 显示结果区域
+            document.getElementById('resultSection').classList.add('active');
+
+            // 滚动到结果
+            setTimeout(() => {
+                document.getElementById('resultSection').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest'
+                });
+            }, 100);
+        }
+
+        // 显示错误
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.classList.add('active');
+
+            setTimeout(() => {
+                errorElement.classList.remove('active');
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

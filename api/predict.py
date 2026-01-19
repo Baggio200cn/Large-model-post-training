@@ -1,46 +1,3 @@
-<<<<<<< HEAD
-﻿from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from datetime import datetime
-import random
-
-app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-class PredictRequest(BaseModel):
-    features: list = []
-
-@app.post("/predict")
-async def predict(req: PredictRequest):
-    front_zone = sorted(random.sample(range(1, 36), 5))
-    back_zone = sorted(random.sample(range(1, 13), 2))
-    response = {
-        'status': 'success',
-        'prediction': {
-            'ensemble_prediction': {
-                'front_zone': front_zone,
-                'back_zone': back_zone,
-                'confidence': round(random.uniform(0.7, 0.9), 3)
-            },
-            'individual_models': {
-                'lstm_model': {
-                    'front_zone': sorted(random.sample(range(1, 36), 5)),
-                    'back_zone': sorted(random.sample(range(1, 13), 2)),
-                    'confidence': round(random.uniform(0.6, 0.9), 3)
-                }
-            }
-        },
-        'timestamp': datetime.now().isoformat()
-    }
-    return response
-=======
 """大乐透ML预测系统 - All-in-One版本"""
 from http.server import BaseHTTPRequestHandler
 import json
@@ -312,4 +269,3 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.end_headers()
->>>>>>> 75fe0abe06fc410ae65f8e03c73d15ef57737fbd

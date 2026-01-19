@@ -1,63 +1,3 @@
-<<<<<<< HEAD
-﻿from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime
-import random
-
-app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-@app.get("/spiritual")
-async def spiritual():
-    time_seed = int(datetime.now().timestamp()) % 10000
-    random.seed(time_seed)
-    spiritual_images = [
-        'lotus_meditation.jpg',
-        'mountain_zen.jpg', 
-        'ocean_waves.jpg',
-        'forest_tranquility.jpg',
-        'sunset_chakra.jpg'
-    ]
-    selected_image = random.choice(spiritual_images)
-    response = {
-        'status': 'success',
-        'spiritual_perturbation': {
-            'spiritual_image': {
-                'filename': selected_image,
-                'description': f'灵修图像：{selected_image}'
-            },
-            'perturbation_factors': {
-                'chaos_factor': round(random.uniform(0.1, 0.9), 3),
-                'harmony_factor': round(random.uniform(0.1, 0.9), 3),
-                'energy_level': random.choice(['极高', '高', '中等', '低', '极低']),
-                'cosmic_alignment': round(random.uniform(0.0, 1.0), 3)
-            },
-            'overall_intensity': round(random.uniform(0.3, 0.8), 3),
-            'spiritual_guidance': {
-                'meditation_time': f'{random.randint(5, 30)}分钟',
-                'recommended_mantra': random.choice([
-                    '愿智慧照亮前路',
-                    '心静自然凉',
-                    '随缘不变，不变随缘',
-                    '一切皆有可能'
-                ])
-            }
-        },
-        'energy_reading': {
-            'cosmic_energy': f'{random.randint(60, 95)}%',
-            'earth_energy': f'{random.randint(50, 90)}%',
-            'personal_energy': f'{random.randint(70, 100)}%'
-        },
-        'timestamp': datetime.now().isoformat()
-    }
-    return response
-=======
 from http.server import BaseHTTPRequestHandler
 import json
 from datetime import datetime
@@ -357,4 +297,3 @@ class handler(BaseHTTPRequestHandler):
         }
         
         return result
->>>>>>> 75fe0abe06fc410ae65f8e03c73d15ef57737fbd

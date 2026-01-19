@@ -1,12 +1,21 @@
+# Vercel 部署专用依赖（轻量版）
+# 只包含 API 运行必需的库
+
+# Web 框架
 fastapi
 uvicorn
-pandas
-scikit-learn
-xgboost
-tensorflow
-numpy
+
+# HTTP 请求
 requests
-beautifulsoup4
-python-multipart
-jinja2
+
+# 腾讯云 COS
 cos-python-sdk-v5
+
+# 文件处理
+python-multipart
+
+# HTML 解析（如果 API 需要）
+beautifulsoup4
+
+# JSON 处理
+jinja2

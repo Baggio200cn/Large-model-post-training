@@ -1,45 +1,3 @@
-<<<<<<< HEAD
-﻿from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime
-import random
-
-app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-@app.get("/data-analysis")
-async def data_analysis():
-    response = {
-        'status': 'success',
-        'analysis': {
-            'data_overview': {
-                'total_draws': random.randint(800, 1200),
-                'analysis_period': '2020-01-01 至 2024-01-01',
-                'last_update': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            },
-            'front_zone_analysis': {
-                'most_frequent': [7, 12, 23, 28, 35],
-                'least_frequent': [2, 8, 15, 31, 34],
-                'hot_numbers': [1, 9, 17, 25, 33],
-                'cold_numbers': [4, 11, 19, 27, 32]
-            },
-            'back_zone_analysis': {
-                'most_frequent': [3, 7],
-                'least_frequent': [1, 12],
-                'hot_numbers': [2, 5],
-                'cold_numbers': [9, 11]
-            }
-        },
-        'timestamp': datetime.now().isoformat()
-    }
-    return response
-=======
 from http.server import BaseHTTPRequestHandler
 import json
 from datetime import datetime
@@ -293,4 +251,3 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.end_headers()
->>>>>>> 75fe0abe06fc410ae65f8e03c73d15ef57737fbd

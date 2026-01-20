@@ -1,21 +1,7 @@
-# Vercel 部署专用依赖（轻量版）
-# 只包含 API 运行必需的库
+# Vercel 部署专用依赖（测试版）
+# 暂时清空所有依赖以测试基础 Python 运行时
+# 如果基础运行时正常，再逐步添加依赖
 
-# Web 框架
-fastapi
-uvicorn
-
-# HTTP 请求
-requests
-
-# 腾讯云 COS
-cos-python-sdk-v5
-
-# 文件处理
-python-multipart
-
-# HTML 解析（如果 API 需要）
-beautifulsoup4
-
-# JSON 处理
-jinja2
+# 步骤1: 先测试零依赖能否运行
+# 步骤2: 添加纯 Python 依赖（requests, beautifulsoup4）
+# 步骤3: 添加 COS SDK 及其编译依赖

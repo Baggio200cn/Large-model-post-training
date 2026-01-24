@@ -1,10 +1,13 @@
 {
   "version": 2,
   "builds": [
-    {
-      "src": "api/[!_]*.py",
-      "use": "@vercel/python"
-    }
+    { "src": "api/health.py", "use": "@vercel/python" },
+    { "src": "api/latest-results.py", "use": "@vercel/python" },
+    { "src": "api/predict.py", "use": "@vercel/python" },
+    { "src": "api/data-analysis.py", "use": "@vercel/python" },
+    { "src": "api/generate-tweet.py", "use": "@vercel/python" },
+    { "src": "api/admin-data.py", "use": "@vercel/python" },
+    { "src": "api/spiritual.py", "use": "@vercel/python" }
   ],
   "routes": [
     {

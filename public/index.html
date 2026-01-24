@@ -188,7 +188,9 @@
 
         <div class="card fusion-card">
             <div class="card-title">🔮 最终融合预测</div>
-            <p style="color:#ccc;margin-bottom:15px;">ML机器学习(70%) + 灵修直觉(30%) = 智能融合预测</p>
+            <p style="color:#ccc;margin-bottom:15px;">
+                <span id="fusionMethod">EWMA自适应权重算法 - 根据历史表现自动调整模型权重</span>
+            </p>
             <button class="btn btn-warning" onclick="generateFusionPrediction()">⚡ 生成融合预测</button>
             <div id="fusionLoading" class="loading"><div class="spinner"></div><p>正在融合计算...</p></div>
             <div id="fusionResult" style="display:none;margin-top:20px;">
@@ -505,24 +507,113 @@
             var result = document.getElementById('fusionResult');
             loading.classList.add('show');
             result.style.display = 'none';
+
+            // 确保已获取ML和灵修预测
             if (!mlPrediction) { await getMLPrediction(); }
             if (!spiritualPrediction) { await getSpiritualPrediction(); }
-            loading.classList.remove('show');
-            if (!mlPrediction || !spiritualPrediction) { alert('请先获取预测！'); return; }
-            var frontF = fusion(mlPrediction.front, spiritualPrediction.front, 0.7, 0.3, 5, 35);
-            var backF = fusion(mlPrediction.back, spiritualPrediction.back, 0.7, 0.3, 2, 12);
-            var conf = mlPrediction.confidence * 0.7 + (spiritualPrediction.intensity || 0.7) * 0.3;
-            var period = latestData && latestData.latest_result ? String(parseInt(latestData.latest_result.period) + 1) : '25142';
-            fusionPrediction = {front: frontF, back: backF, confidence: conf, target_period: period};
-            document.getElementById('fusionPeriod').textContent = period;
-            document.getElementById('fusionFront').innerHTML = frontF.map(function(n) {
-                return '<div class="fusion-ball fusion-red">' + String(n).padStart(2, '0') + '</div>';
-            }).join('');
-            document.getElementById('fusionBack').innerHTML = backF.map(function(n) {
-                return '<div class="fusion-ball fusion-blue">' + String(n).padStart(2, '0') + '</div>';
-            }).join('');
-            document.getElementById('fusionConfidence').textContent = (conf * 100).toFixed(1) + '%';
-            result.style.display = 'block';
+
+            if (!mlPrediction || !spiritualPrediction) {
+                loading.classList.remove('show');
+                alert('请先获取ML和灵修预测！');
+                return;
+            }
+
+            try {
+                // 构建各模型的预测数据
+                var predictions = {};
+
+                // 添加ML模型预测
+                if (mlPrediction.individual_models) {
+                    for (var modelName in mlPrediction.individual_models) {
+                        var model = mlPrediction.individual_models[modelName];
+                        predictions[modelName] = {
+                            front: model.front,
+                            back: model.back
+                        };
+                    }
+                } else {
+                    // 如果没有individual_models，使用整体ML预测
+                    predictions['ml_ensemble'] = {
+                        front: mlPrediction.front,
+                        back: mlPrediction.back
+                    };
+                }
+
+                // 添加灵修预测
+                predictions['spiritual'] = {
+                    front: spiritualPrediction.front,
+                    back: spiritualPrediction.back
+                };
+
+                // 调用融合API（使用EWMA自适应权重）
+                var resp = await fetch('/api/fusion-predict', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({predictions: predictions})
+                });
+
+                var data = await resp.json();
+                loading.classList.remove('show');
+
+                if (data.success && data.fusion_prediction) {
+                    var fusion = data.fusion_prediction;
+                    var period = latestData && latestData.latest_result ? String(parseInt(latestData.latest_result.period) + 1) : '25143';
+
+                    fusionPrediction = {
+                        front: fusion.front_zone,
+                        back: fusion.back_zone,
+                        confidence: fusion.confidence,
+                        target_period: period,
+                        weights: fusion.weights_used,
+                        adaptive: fusion.adaptive_enabled
+                    };
+
+                    // 显示结果
+                    document.getElementById('fusionPeriod').textContent = period;
+                    document.getElementById('fusionFront').innerHTML = fusion.front_zone.map(function(n) {
+                        return '<div class="fusion-ball fusion-red">' + String(n).padStart(2, '0') + '</div>';
+                    }).join('');
+                    document.getElementById('fusionBack').innerHTML = fusion.back_zone.map(function(n) {
+                        return '<div class="fusion-ball fusion-blue">' + String(n).padStart(2, '0') + '</div>';
+                    }).join('');
+
+                    // 显示置信度和权重信息
+                    var confText = (fusion.confidence * 100).toFixed(1) + '%';
+                    if (fusion.adaptive_enabled) {
+                        confText += ' (EWMA自适应)';
+                    }
+                    document.getElementById('fusionConfidence').textContent = confText;
+
+                    result.style.display = 'block';
+                } else {
+                    // 如果API失败，使用本地固定权重fallback
+                    console.warn('融合API失败，使用本地计算');
+                    useFallbackFusion();
+                }
+            } catch (e) {
+                loading.classList.remove('show');
+                console.error('融合预测错误:', e);
+                useFallbackFusion();
+            }
+
+            function useFallbackFusion() {
+                var frontF = fusion(mlPrediction.front, spiritualPrediction.front, 0.7, 0.3, 5, 35);
+                var backF = fusion(mlPrediction.back, spiritualPrediction.back, 0.7, 0.3, 2, 12);
+                var conf = mlPrediction.confidence * 0.7 + (spiritualPrediction.intensity || 0.7) * 0.3;
+                var period = latestData && latestData.latest_result ? String(parseInt(latestData.latest_result.period) + 1) : '25143';
+
+                fusionPrediction = {front: frontF, back: backF, confidence: conf, target_period: period};
+
+                document.getElementById('fusionPeriod').textContent = period;
+                document.getElementById('fusionFront').innerHTML = frontF.map(function(n) {
+                    return '<div class="fusion-ball fusion-red">' + String(n).padStart(2, '0') + '</div>';
+                }).join('');
+                document.getElementById('fusionBack').innerHTML = backF.map(function(n) {
+                    return '<div class="fusion-ball fusion-blue">' + String(n).padStart(2, '0') + '</div>';
+                }).join('');
+                document.getElementById('fusionConfidence').textContent = (conf * 100).toFixed(1) + '% (本地fallback)';
+                result.style.display = 'block';
+            }
         }
 
         function fusion(ml, sp, mlW, spW, count, max) {

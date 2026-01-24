@@ -13,7 +13,7 @@ class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         """获取管理数据状态"""
         try:
-            from _lottery_data import lottery_data
+            from utils._lottery_data import lottery_data
 
             kv_available = False
             data_source = 'local_backup'
@@ -35,7 +35,7 @@ class handler(BaseHTTPRequestHandler):
 
             if cos_configured:
                 try:
-                    from _cos_data_loader import get_lottery_data
+                    from utils._cos_data_loader import get_lottery_data
                     cos_data = get_lottery_data()
                     if cos_data and isinstance(cos_data, list) and len(cos_data) > 0:
                         kv_available = True
@@ -99,7 +99,7 @@ class handler(BaseHTTPRequestHandler):
                 }
             elif action == 'get_history':
                 # 获取历史记录
-                from _lottery_data import lottery_data
+                from utils._lottery_data import lottery_data
                 limit = params.get('limit', 20)
                 history = []
                 for item in lottery_data[:limit]:

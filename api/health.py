@@ -29,7 +29,7 @@ class handler(BaseHTTPRequestHandler):
 
         if cos_configured:
             try:
-                from _cos_data_loader import get_lottery_data, get_cache_status
+                from utils._cos_data_loader import get_lottery_data, get_cache_status
                 data = get_lottery_data()
                 if data and isinstance(data, list):
                     cos_available = True
@@ -41,7 +41,7 @@ class handler(BaseHTTPRequestHandler):
         if not cos_available:
             # 使用本地备份数据
             try:
-                from _lottery_data import lottery_data
+                from utils._lottery_data import lottery_data
                 total_periods = len(lottery_data)
                 data_source = 'local_backup'
             except:

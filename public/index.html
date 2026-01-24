@@ -187,8 +187,9 @@
         </div>
 
         <div class="card fusion-card">
-            <div class="card-title">🔮 最终融合预测</div>
-            <p style="color:#ccc;margin-bottom:15px;">ML机器学习(70%) + 灵修直觉(30%) = 智能融合预测</p>
+            <div class="card-title">🔮 最终融合预测（EWMA动态权重）</div>
+            <p id="fusionWeightDesc" style="color:#ccc;margin-bottom:10px;">ML机器学习(70%) + 灵修直觉(30%) = 智能融合预测</p>
+            <p style="color:#aaa;font-size:12px;margin-bottom:15px;">⚡ 权重根据历史准确率自动调整</p>
             <button class="btn btn-warning" onclick="generateFusionPrediction()">⚡ 生成融合预测</button>
             <div id="fusionLoading" class="loading"><div class="spinner"></div><p>正在融合计算...</p></div>
             <div id="fusionResult" style="display:none;margin-top:20px;">
@@ -239,6 +240,15 @@
                 <button class="btn btn-primary" onclick="checkSystem()">🔍 检测系统</button>
                 <div id="systemLoading" class="loading"><div class="spinner"></div></div>
                 <div id="systemResult" class="result-box"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">⚖️ EWMA权重管理</div>
+                <p style="color:#aaa;margin-bottom:15px;">查看和管理融合预测的动态权重</p>
+                <button class="btn btn-primary" onclick="checkWeights()">📊 查看权重</button>
+                <button class="btn btn-warning" onclick="resetWeights()" style="margin-left:10px;">🔄 重置权重</button>
+                <div id="weightsLoading" class="loading"><div class="spinner"></div></div>
+                <div id="weightsResult" class="result-box"></div>
             </div>
         </div>
 
@@ -380,15 +390,46 @@
             var result = document.getElementById('fusionResult');
             loading.classList.add('show');
             result.style.display = 'none';
+
             if (!mlPrediction) { await getMLPrediction(); }
             if (!spiritualPrediction) { await getSpiritualPrediction(); }
+
+            if (!mlPrediction || !spiritualPrediction) {
+                loading.classList.remove('show');
+                alert('请先获取预测！');
+                return;
+            }
+
+            // 从API获取动态权重
+            var mlWeight = 0.7;
+            var spiritualWeight = 0.3;
+            try {
+                var weightResp = await fetch('/api/fusion-weights');
+                var weightData = await weightResp.json();
+                if (weightData.status === 'success') {
+                    mlWeight = weightData.weights.ml;
+                    spiritualWeight = weightData.weights.spiritual;
+                    // 更新权重描述
+                    var weightDesc = 'ML机器学习(' + Math.round(mlWeight * 100) + '%) + 灵修直觉(' + Math.round(spiritualWeight * 100) + '%) = EWMA智能融合';
+                    document.getElementById('fusionWeightDesc').textContent = weightDesc;
+                }
+            } catch (e) {
+                console.log('使用默认权重:', e);
+            }
+
             loading.classList.remove('show');
-            if (!mlPrediction || !spiritualPrediction) { alert('请先获取预测！'); return; }
-            var frontF = fusion(mlPrediction.front, spiritualPrediction.front, 0.7, 0.3, 5, 35);
-            var backF = fusion(mlPrediction.back, spiritualPrediction.back, 0.7, 0.3, 2, 12);
-            var conf = mlPrediction.confidence * 0.7 + (spiritualPrediction.intensity || 0.7) * 0.3;
+
+            var frontF = fusion(mlPrediction.front, spiritualPrediction.front, mlWeight, spiritualWeight, 5, 35);
+            var backF = fusion(mlPrediction.back, spiritualPrediction.back, mlWeight, spiritualWeight, 2, 12);
+            var conf = mlPrediction.confidence * mlWeight + (spiritualPrediction.intensity || 0.7) * spiritualWeight;
             var period = latestData && latestData.latest_result ? String(parseInt(latestData.latest_result.period) + 1) : '25142';
-            fusionPrediction = {front: frontF, back: backF, confidence: conf, target_period: period};
+            fusionPrediction = {
+                front: frontF,
+                back: backF,
+                confidence: conf,
+                target_period: period,
+                weights: {ml: mlWeight, spiritual: spiritualWeight}
+            };
             document.getElementById('fusionPeriod').textContent = period;
             document.getElementById('fusionFront').innerHTML = frontF.map(function(n) {
                 return '<div class="fusion-ball fusion-red">' + String(n).padStart(2, '0') + '</div>';
@@ -467,6 +508,63 @@
             } catch (e) {
                 loading.classList.remove('show');
                 result.innerHTML = '<p style="color:#e74c3c;">检测失败</p>';
+            }
+        }
+
+        async function checkWeights() {
+            var loading = document.getElementById('weightsLoading');
+            var result = document.getElementById('weightsResult');
+            loading.classList.add('show');
+            result.innerHTML = '';
+            try {
+                var resp = await fetch('/api/fusion-weights');
+                var data = await resp.json();
+                loading.classList.remove('show');
+                if (data.status === 'success') {
+                    var stats = data.stats;
+                    var mlPct = Math.round(data.weights.ml * 100);
+                    var spPct = Math.round(data.weights.spiritual * 100);
+                    result.innerHTML =
+                        '<div style="background:linear-gradient(135deg,rgba(52,152,219,0.2),rgba(155,89,182,0.2));padding:15px;border-radius:8px;margin-bottom:10px;">' +
+                        '<p style="color:#3498db;font-size:18px;font-weight:bold;">🎯 当前权重分配</p>' +
+                        '<p style="color:#fff;font-size:16px;margin-top:10px;">ML机器学习: <span style="color:#00d4ff;">' + mlPct + '%</span></p>' +
+                        '<p style="color:#fff;font-size:16px;">灵修直觉: <span style="color:#f39c12;">' + spPct + '%</span></p>' +
+                        '</div>' +
+                        '<p style="color:#aaa;">📊 ML准确率: ' + (stats.ml_accuracy * 100).toFixed(1) + '%</p>' +
+                        '<p style="color:#aaa;">🔮 灵修准确率: ' + (stats.spiritual_accuracy * 100).toFixed(1) + '%</p>' +
+                        '<p style="color:#aaa;">📈 总预测次数: ' + stats.total_predictions + '</p>' +
+                        '<p style="color:#aaa;">⚡ 衰减因子: ' + stats.decay_factor + '</p>' +
+                        '<p style="color:#888;font-size:12px;margin-top:10px;">*权重根据EWMA算法自动调整</p>';
+                }
+            } catch (e) {
+                loading.classList.remove('show');
+                result.innerHTML = '<p style="color:#e74c3c;">查询失败: ' + e.message + '</p>';
+            }
+        }
+
+        async function resetWeights() {
+            if (!confirm('确定要重置权重吗？这将恢复默认值(70%/30%)')) return;
+            var loading = document.getElementById('weightsLoading');
+            var result = document.getElementById('weightsResult');
+            loading.classList.add('show');
+            result.innerHTML = '';
+            try {
+                var resp = await fetch('/api/fusion-weights', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({action: 'reset'})
+                });
+                var data = await resp.json();
+                loading.classList.remove('show');
+                if (data.status === 'success') {
+                    result.innerHTML = '<p style="color:#00b894;">✅ ' + data.message + '</p>';
+                    setTimeout(checkWeights, 1000);
+                } else {
+                    result.innerHTML = '<p style="color:#e74c3c;">重置失败</p>';
+                }
+            } catch (e) {
+                loading.classList.remove('show');
+                result.innerHTML = '<p style="color:#e74c3c;">重置失败: ' + e.message + '</p>';
             }
         }
 

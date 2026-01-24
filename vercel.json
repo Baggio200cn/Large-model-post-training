@@ -1,13 +1,18 @@
 {
   "version": 2,
   "builds": [
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    },
     { "src": "api/health.py", "use": "@vercel/python" },
     { "src": "api/latest-results.py", "use": "@vercel/python" },
     { "src": "api/predict.py", "use": "@vercel/python" },
     { "src": "api/data-analysis.py", "use": "@vercel/python" },
     { "src": "api/generate-tweet.py", "use": "@vercel/python" },
     { "src": "api/admin-data.py", "use": "@vercel/python" },
-    { "src": "api/spiritual.py", "use": "@vercel/python" }
+    { "src": "api/spiritual.py", "use": "@vercel/python" },
+    { "src": "api/fusion-weights.py", "use": "@vercel/python" }
   ],
   "routes": [
     {
@@ -15,13 +20,8 @@
       "dest": "/api/$1"
     },
     {
-      "src": "/(.*\\.(js|css|jpg|png|gif|ico|svg|woff|woff2|ttf|eot|html))",
-      "dest": "/public/$1"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/public/index.html"
+      "dest": "/public/$1"
     }
-  ],
-  "outputDirectory": "public"
+  ]
 }

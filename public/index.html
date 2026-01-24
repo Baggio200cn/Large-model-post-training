@@ -217,6 +217,17 @@
             <div class="card">
                 <div class="card-title">🧘 灵修直觉预测</div>
                 <p style="color:#aaa;margin-bottom:15px;">上传图片或输入灵修文字，系统将感应能量场生成预测</p>
+
+                <div style="margin-bottom:15px;">
+                    <label style="color:#aaa;font-size:14px;display:block;margin-bottom:8px;">📸 上传灵修图片</label>
+                    <input type="file" id="spiritualImage" accept="image/*" style="display:none;" onchange="previewSpiritualImage()">
+                    <button class="btn" style="background:#9b59b6;" onclick="document.getElementById('spiritualImage').click()">📁 选择图片</button>
+                    <div id="imagePreview" style="margin-top:10px;display:none;">
+                        <img id="previewImg" style="max-width:200px;max-height:200px;border-radius:8px;border:2px solid #9b59b6;">
+                        <p id="imageInfo" style="color:#aaa;font-size:12px;margin-top:5px;"></p>
+                    </div>
+                </div>
+
                 <textarea id="spiritualText" rows="3" placeholder="例如：今日心情平静，感悟数字8、15、23..."></textarea>
                 <div style="margin-top:10px;display:flex;gap:10px;">
                     <button class="btn btn-success" onclick="getSpiritualPrediction()">🔮 获取灵修预测</button>
@@ -333,6 +344,29 @@
             }
         }
 
+        let spiritualImageData = null;
+
+        function previewSpiritualImage() {
+            const fileInput = document.getElementById('spiritualImage');
+            const preview = document.getElementById('imagePreview');
+            const previewImg = document.getElementById('previewImg');
+            const imageInfo = document.getElementById('imageInfo');
+
+            if (fileInput.files && fileInput.files[0]) {
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    spiritualImageData = e.target.result;
+                    previewImg.src = e.target.result;
+                    imageInfo.textContent = '📷 ' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+                    preview.style.display = 'block';
+                };
+
+                reader.readAsDataURL(file);
+            }
+        }
+
         async function getSpiritualPrediction() {
             const loading = document.getElementById('spiritualLoading');
             const result = document.getElementById('spiritualResult');
@@ -340,10 +374,15 @@
             loading.classList.add('show');
             result.innerHTML = '';
             try {
+                const requestBody = {text: text};
+                if (spiritualImageData) {
+                    requestBody.image = spiritualImageData;
+                }
+
                 const resp = await fetch('/api/spiritual', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({text: text})
+                    body: JSON.stringify(requestBody)
                 });
                 const data = await resp.json();
                 loading.classList.remove('show');
@@ -358,8 +397,10 @@
                     back = genNums(2, 12);
                     intensity = 0.6 + Math.random() * 0.3;
                 }
+                const imageAnalyzed = data.energy_analysis?.image_analyzed ? '✅ 图片能量已分析' : '';
                 spiritualPrediction = {front: front, back: back, intensity: intensity};
                 result.innerHTML = '<p style="color:#9b59b6;">🧘 灵修感应结果</p>' +
+                    (imageAnalyzed ? '<p style="color:#00d4ff;font-size:12px;">' + imageAnalyzed + '</p>' : '') +
                     '<p><strong>前区：</strong> ' + front.join(', ') + '</p>' +
                     '<p><strong>后区：</strong> ' + back.join(', ') + '</p>' +
                     '<p><strong>能量强度：</strong> ' + (intensity * 100).toFixed(1) + '%</p>';
@@ -381,7 +422,10 @@
 
         function clearSpiritual() {
             document.getElementById('spiritualText').value = '';
+            document.getElementById('spiritualImage').value = '';
+            document.getElementById('imagePreview').style.display = 'none';
             document.getElementById('spiritualResult').innerHTML = '';
+            spiritualImageData = null;
             spiritualPrediction = null;
         }
 

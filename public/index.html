@@ -1,58 +1,3 @@
-<<<<<<< HEAD
-﻿<!DOCTYPE html>
-<html lang="zh">
-<head>
-    <meta charset="UTF-8">
-    <title>大乐透AI分析与开奖</title>
-    <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 40px; background: #f7f7f7; }
-        h2 { color: #2c3e50; }
-        button { margin: 10px 0; padding: 8px 18px; background: #3498db; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background: #217dbb; }
-        pre { background: #fff; padding: 16px; border-radius: 6px; box-shadow: 0 2px 8px #eee; overflow-x: auto; }
-        #latest-analysis { white-space: pre-wrap; }
-    </style>
-    <!-- 可选：引入 marked.js 用于 markdown 渲染 -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-</head>
-<body>
-    <h2>最新开奖信息</h2>
-    <button onclick="fetchLatestResults()">获取最新开奖</button>
-    <pre id="latest-results">点击上方按钮获取数据...</pre>
-
-    <h2>AI分析报告</h2>
-    <button onclick="fetchLatestAnalysis()">获取AI分析报告</button>
-    <div id="latest-analysis">点击上方按钮获取数据...</div>
-
-    <script>
-    // 获取最新开奖信息
-    async function fetchLatestResults() {
-        const res = await fetch('http://127.0.0.1:8000/latest-results');
-        const data = await res.json();
-        document.getElementById('latest-results').innerText = JSON.stringify(data, null, 2);
-    }
-
-    // 获取AI分析报告
-    async function fetchLatestAnalysis() {
-        const body = {
-            current_period: '25123',
-            last_period: '25122',
-            csv_path: 'data/processed_lottery_data.csv'
-        };
-        const res = await fetch('http://127.0.0.1:8000/latest-analysis', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-        const data = await res.json();
-        // 如果是markdown，渲染为HTML
-        if (data.report && data.report.content) {
-            document.getElementById('latest-analysis').innerHTML = marked.parse(data.report.content);
-        } else {
-            document.getElementById('latest-analysis').innerText = JSON.stringify(data, null, 2);
-        }
-    }
-=======
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -604,7 +549,6 @@
             a.download = '大乐透预测_' + (fusionPrediction ? fusionPrediction.target_period : 'report') + '.md';
             a.click();
         }
->>>>>>> 75fe0abe06fc410ae65f8e03c73d15ef57737fbd
     </script>
 </body>
 </html>

@@ -216,6 +216,14 @@
             <div class="card">
                 <div class="card-title">🧘 灵修直觉预测</div>
                 <p style="color:#aaa;margin-bottom:15px;">上传图片或输入灵修文字，系统将感应能量场生成预测</p>
+                <input type="file" id="spiritualImage" accept="image/*" style="display:none;" onchange="handleImageUpload(this)">
+                <div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:10px;margin-bottom:10px;">
+                    <button class="btn" style="background:#9b59b6;color:#fff;width:100%;" onclick="document.getElementById('spiritualImage').click()">📷 上传图片 (可选)</button>
+                    <div id="imagePreview" style="margin-top:10px;display:none;">
+                        <img id="previewImg" style="max-width:100%;max-height:150px;border-radius:8px;">
+                        <button class="btn" style="background:#e74c3c;color:#fff;margin-top:5px;padding:5px 10px;font-size:12px;" onclick="clearImage()">删除图片</button>
+                    </div>
+                </div>
                 <textarea id="spiritualText" rows="3" placeholder="例如：今日心情平静，感悟数字8、15、23..."></textarea>
                 <div style="margin-top:10px;display:flex;gap:10px;">
                     <button class="btn btn-success" onclick="getSpiritualPrediction()">🔮 获取灵修预测</button>
@@ -266,6 +274,7 @@
         let mlPrediction = null;
         let spiritualPrediction = null;
         let fusionPrediction = null;
+        let uploadedImageBase64 = null;
 
         window.onload = function() { loadLatestData(); };
 
@@ -295,17 +304,20 @@
             loading.classList.add('show');
             result.innerHTML = '';
             try {
-                const resp = await fetch('/api/latest-results', {
+                // 先获取latest-results的ml_predict
+                const resp1 = await fetch('/api/latest-results', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({action: 'ml_predict'})
                 });
-                const data = await resp.json();
-                loading.classList.remove('show');
-                if (data.status === 'success' && data.ml_prediction) {
-                    mlPrediction = data.ml_prediction;
-                    const p = data.ml_prediction;
-                    result.innerHTML = '<p style="color:#ffd700;margin-bottom:10px;">🎯 ML集成预测 (第' + data.target_period + '期)</p>' +
+                const data1 = await resp1.json();
+
+                if (data1.status === 'success' && data1.ml_prediction) {
+                    mlPrediction = data1.ml_prediction;
+                    const p = data1.ml_prediction;
+                    const targetPeriod = data1.target_period || '25143';
+
+                    result.innerHTML = '<p style="color:#ffd700;margin-bottom:10px;">🎯 ML集成预测 (第' + targetPeriod + '期)</p>' +
                         '<p><strong>前区：</strong> ' + p.front.join(', ') + '</p>' +
                         '<p><strong>后区：</strong> ' + p.back.join(', ') + '</p>' +
                         '<p><strong>置信度：</strong> ' + (p.confidence * 100).toFixed(1) + '%</p>' +
@@ -314,12 +326,50 @@
                         Object.entries(p.individual_models || {}).map(function(e) {
                             return '<p style="font-size:12px;">' + e[0] + ': ' + e[1].front.join(',') + ' + ' + e[1].back.join(',') + '</p>';
                         }).join('');
+                    loading.classList.remove('show');
+                    return;
+                }
+
+                // 如果上面失败，尝试调用/api/predict
+                const resp2 = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({})
+                });
+                const data2 = await resp2.json();
+                loading.classList.remove('show');
+
+                if (data2.status === 'success' && data2.prediction) {
+                    const pred = data2.prediction.ensemble_prediction || data2.prediction.all_predictions[0];
+                    mlPrediction = {
+                        front: pred.front_zone,
+                        back: pred.back_zone,
+                        confidence: pred.confidence,
+                        individual_models: {}
+                    };
+
+                    // 转换所有预测到individual_models格式
+                    if (data2.prediction.all_predictions) {
+                        data2.prediction.all_predictions.forEach(function(p) {
+                            mlPrediction.individual_models[p.strategy] = {
+                                front: p.front_zone,
+                                back: p.back_zone,
+                                confidence: p.confidence
+                            };
+                        });
+                    }
+
+                    result.innerHTML = '<p style="color:#ffd700;margin-bottom:10px;">🎯 ML机器学习预测</p>' +
+                        '<p><strong>前区：</strong> ' + pred.front_zone.join(', ') + '</p>' +
+                        '<p><strong>后区：</strong> ' + pred.back_zone.join(', ') + '</p>' +
+                        '<p><strong>置信度：</strong> ' + (pred.confidence * 100).toFixed(1) + '%</p>' +
+                        '<p style="font-size:12px;color:#aaa;margin-top:10px;">策略：' + pred.strategy + '</p>';
                 } else {
                     result.innerHTML = '<p style="color:#e74c3c;">预测失败</p>';
                 }
             } catch (e) {
                 loading.classList.remove('show');
-                result.innerHTML = '<p style="color:#e74c3c;">请求失败</p>';
+                result.innerHTML = '<p style="color:#e74c3c;">请求失败: ' + e.message + '</p>';
             }
         }
 
@@ -330,36 +380,73 @@
             loading.classList.add('show');
             result.innerHTML = '';
             try {
+                // 构建请求体
+                const requestBody = {
+                    text: text || ''
+                };
+
+                // 如果有上传的图片，添加到请求中
+                if (uploadedImageBase64) {
+                    requestBody.image = uploadedImageBase64;
+                }
+
                 const resp = await fetch('/api/spiritual', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({text: text})
+                    body: JSON.stringify(requestBody)
                 });
                 const data = await resp.json();
                 loading.classList.remove('show');
+
                 let front = [], back = [], intensity = 0.7;
-                if (data.spiritual_prediction) {
+                let interpretation = '';
+
+                if (data.success && data.spiritual_prediction) {
+                    front = data.spiritual_prediction.front_zone || [];
+                    back = data.spiritual_prediction.back_zone || [];
+                    intensity = data.spiritual_prediction.energy || 0.7;
+                    interpretation = data.interpretation || '';
+                } else if (data.spiritual_prediction) {
                     front = data.spiritual_prediction.front_zone || [];
                     back = data.spiritual_prediction.back_zone || [];
                 }
-                if (data.energy_analysis) { intensity = data.energy_analysis.intensity || 0.7; }
+
+                if (data.energy_analysis) {
+                    intensity = data.energy_analysis.intensity || intensity;
+                }
+
                 if (front.length === 0) {
                     front = genNums(5, 35);
                     back = genNums(2, 12);
                     intensity = 0.6 + Math.random() * 0.3;
                 }
+
                 spiritualPrediction = {front: front, back: back, intensity: intensity};
-                result.innerHTML = '<p style="color:#9b59b6;">🧘 灵修感应结果</p>' +
+
+                let html = '<p style="color:#9b59b6;">🧘 灵修感应结果</p>' +
                     '<p><strong>前区：</strong> ' + front.join(', ') + '</p>' +
                     '<p><strong>后区：</strong> ' + back.join(', ') + '</p>' +
                     '<p><strong>能量强度：</strong> ' + (intensity * 100).toFixed(1) + '%</p>';
+
+                if (interpretation) {
+                    html += '<hr style="border-color:rgba(255,255,255,0.2);margin:10px 0;">' +
+                        '<p style="font-size:12px;color:#aaa;white-space:pre-wrap;">' + interpretation + '</p>';
+                }
+
+                if (data.image_analysis) {
+                    html += '<p style="font-size:12px;color:#aaa;margin-top:5px;">图像主色调: ' +
+                        data.image_analysis.dominant_color + '</p>';
+                }
+
+                result.innerHTML = html;
             } catch (e) {
                 loading.classList.remove('show');
                 var front = genNums(5, 35), back = genNums(2, 12);
                 spiritualPrediction = {front: front, back: back, intensity: 0.65};
                 result.innerHTML = '<p style="color:#9b59b6;">🧘 本地灵修感应</p>' +
                     '<p><strong>前区：</strong> ' + front.join(', ') + '</p>' +
-                    '<p><strong>后区：</strong> ' + back.join(', ') + '</p>';
+                    '<p><strong>后区：</strong> ' + back.join(', ') + '</p>' +
+                    '<p style="font-size:12px;color:#e74c3c;">提示: ' + e.message + '</p>';
             }
         }
 
@@ -369,10 +456,48 @@
             return Array.from(nums).sort(function(a, b) { return a - b; });
         }
 
+        function handleImageUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            // 检查文件大小（限制5MB）
+            if (file.size > 5 * 1024 * 1024) {
+                alert('图片文件过大，请选择小于5MB的图片');
+                input.value = '';
+                return;
+            }
+
+            // 检查文件类型
+            if (!file.type.startsWith('image/')) {
+                alert('请选择图片文件');
+                input.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64 = e.target.result.split(',')[1]; // 移除data:image/xxx;base64,前缀
+                uploadedImageBase64 = base64;
+
+                // 显示预览
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('imagePreview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearImage() {
+            uploadedImageBase64 = null;
+            document.getElementById('spiritualImage').value = '';
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('previewImg').src = '';
+        }
+
         function clearSpiritual() {
             document.getElementById('spiritualText').value = '';
             document.getElementById('spiritualResult').innerHTML = '';
             spiritualPrediction = null;
+            clearImage();
         }
 
         async function generateFusionPrediction() {
@@ -549,3 +674,6 @@
             a.download = '大乐透预测_' + (fusionPrediction ? fusionPrediction.target_period : 'report') + '.md';
             a.click();
         }
+    </script>
+</body>
+</html>

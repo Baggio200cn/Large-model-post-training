@@ -3,9 +3,42 @@ from http.server import BaseHTTPRequestHandler
 import json
 import os
 import sys
+from datetime import datetime
 
 # 添加api目录到路径
 sys.path.insert(0, os.path.dirname(__file__))
+
+# 用户添加的数据存储路径
+USER_DATA_FILE = '/tmp/user_lottery_data.json'
+
+
+def load_user_data():
+    """加载用户添加的数据"""
+    if os.path.exists(USER_DATA_FILE):
+        try:
+            with open(USER_DATA_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            return []
+    return []
+
+
+def save_user_data(data):
+    """保存用户添加的数据"""
+    try:
+        with open(USER_DATA_FILE, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        return True
+    except:
+        return False
+
+
+def get_combined_lottery_data():
+    """获取合并后的彩票数据（用户数据 + 固定数据）"""
+    from utils._lottery_data import lottery_data
+    user_data = load_user_data()
+    # 用户数据在前，固定数据在后
+    return user_data + lottery_data
 
 
 class handler(BaseHTTPRequestHandler):
@@ -13,16 +46,17 @@ class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         """获取管理数据状态"""
         try:
-            from utils._lottery_data import lottery_data
+            # 使用合并后的数据（用户数据 + 固定数据）
+            combined_data = get_combined_lottery_data()
 
             kv_available = False
             data_source = 'local_backup'
             latest_period = '--'
             total_periods = 0
 
-            if lottery_data and len(lottery_data) > 0:
-                total_periods = len(lottery_data)
-                latest = lottery_data[0]
+            if combined_data and len(combined_data) > 0:
+                total_periods = len(combined_data)
+                latest = combined_data[0]
                 latest_period = latest.get('period', '--')
 
             # 检测腾讯云COS配置
@@ -93,16 +127,59 @@ class handler(BaseHTTPRequestHandler):
                 }
             elif action == 'add':
                 # 添加开奖数据
-                result = {
-                    'status': 'success',
-                    'message': '添加数据功能需要配置数据存储'
-                }
+                period = params.get('period', '').strip()
+                date = params.get('date', '').strip()
+                front = params.get('front', [])
+                back = params.get('back', [])
+
+                # 验证数据
+                if not period:
+                    result = {'status': 'error', 'message': '期号不能为空'}
+                elif not isinstance(front, list) or len(front) != 5:
+                    result = {'status': 'error', 'message': '前区需要5个号码'}
+                elif not isinstance(back, list) or len(back) != 2:
+                    result = {'status': 'error', 'message': '后区需要2个号码'}
+                else:
+                    # 检查期号是否已存在
+                    combined_data = get_combined_lottery_data()
+                    existing = any(item.get('period') == period for item in combined_data)
+
+                    if existing:
+                        result = {'status': 'error', 'message': f'期号 {period} 已存在'}
+                    else:
+                        # 加载用户数据
+                        user_data = load_user_data()
+
+                        # 创建新记录
+                        new_record = {
+                            'period': period,
+                            'date': date if date else datetime.now().strftime('%Y-%m-%d'),
+                            'front_zone': front,
+                            'back_zone': back,
+                            'user_added': True,
+                            'added_at': datetime.now().isoformat()
+                        }
+
+                        # 添加到列表开头（最新的在前面）
+                        user_data.insert(0, new_record)
+
+                        # 保存
+                        if save_user_data(user_data):
+                            result = {
+                                'status': 'success',
+                                'message': f'成功添加期号 {period} 的数据'
+                            }
+                        else:
+                            result = {
+                                'status': 'error',
+                                'message': '保存数据失败'
+                            }
             elif action == 'get_history':
-                # 获取历史记录
-                from utils._lottery_data import lottery_data
+                # 获取历史记录（使用合并后的数据）
+                combined_data = get_combined_lottery_data()
                 limit = params.get('limit', 20)
                 history = []
-                for item in lottery_data[:limit]:
+                for item in combined_data[:limit]:
                     history.append({
                         'period': item.get('period'),
                         'date': item.get('date'),

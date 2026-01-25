@@ -8,6 +8,15 @@ from datetime import datetime
 # 添加api目录到路径
 sys.path.insert(0, os.path.dirname(__file__))
 
+# 导入数据同步和训练触发模块
+try:
+    from utils._data_sync import sync_new_data
+    from utils._training_trigger import trigger_training, get_training_status
+    SYNC_AVAILABLE = True
+except Exception as e:
+    print(f"⚠️  数据同步/训练模块导入失败: {str(e)}")
+    SYNC_AVAILABLE = False
+
 # 用户添加的数据存储路径
 USER_DATA_FILE = '/tmp/user_lottery_data.json'
 
@@ -165,9 +174,42 @@ class handler(BaseHTTPRequestHandler):
 
                         # 保存
                         if save_user_data(user_data):
+                            # 基本成功消息
+                            success_msg = f'成功添加期号 {period} 的数据'
+
+                            # 自动同步到COS和触发训练
+                            if SYNC_AVAILABLE:
+                                try:
+                                    print("\n" + "="*60)
+                                    print("🚀 自动触发数据同步和模型训练")
+                                    print("="*60)
+
+                                    # 获取合并后的数据
+                                    combined_data = get_combined_lottery_data()
+
+                                    # 步骤1：同步数据到本地文件和COS
+                                    sync_result = sync_new_data([new_record], combined_data)
+
+                                    if sync_result.get('success'):
+                                        success_msg += f"\n✅ 数据已同步: {sync_result.get('message')}"
+                                    else:
+                                        success_msg += f"\n⚠️  数据同步失败: {sync_result.get('message')}"
+
+                                    # 步骤2：触发后台训练
+                                    training_result = trigger_training(combined_data)
+
+                                    if training_result.get('success'):
+                                        success_msg += f"\n✅ 模型训练已启动（后台运行）"
+                                        success_msg += f"\n   日志文件: {training_result.get('log_file')}"
+                                    else:
+                                        success_msg += f"\n⚠️  训练触发失败: {training_result.get('message')}"
+
+                                except Exception as e:
+                                    success_msg += f"\n⚠️  自动化流程异常: {str(e)}"
+
                             result = {
                                 'status': 'success',
-                                'message': f'成功添加期号 {period} 的数据'
+                                'message': success_msg
                             }
                         else:
                             result = {
@@ -190,6 +232,19 @@ class handler(BaseHTTPRequestHandler):
                     'status': 'success',
                     'history': history
                 }
+            elif action == 'training_status':
+                # 获取训练状态
+                if SYNC_AVAILABLE:
+                    training_status = get_training_status()
+                    result = {
+                        'status': 'success',
+                        'training': training_status
+                    }
+                else:
+                    result = {
+                        'status': 'error',
+                        'message': '训练模块不可用'
+                    }
             else:
                 result = {
                     'status': 'error',

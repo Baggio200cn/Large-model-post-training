@@ -1,25 +1,39 @@
 """大乐透ML预测系统 - All-in-One版本"""
 from http.server import BaseHTTPRequestHandler
 import json
+import os
+import sys
 from datetime import datetime
 import random
 import statistics
 from collections import Counter
 
-# 数据
-LOTTERY_HISTORY = [
-    {'period': '25047', 'date': '2024-04-01', 'front_zone': [2, 3, 9, 14, 29], 'back_zone': [2, 4]},
-    {'period': '25048', 'date': '2024-04-03', 'front_zone': [1, 8, 19, 25, 32], 'back_zone': [5, 11]},
-    {'period': '25049', 'date': '2024-04-06', 'front_zone': [5, 12, 23, 28, 35], 'back_zone': [3, 8]},
-    {'period': '25050', 'date': '2024-04-08', 'front_zone': [7, 15, 20, 31, 34], 'back_zone': [1, 9]},
-    {'period': '25051', 'date': '2024-04-10', 'front_zone': [3, 10, 18, 26, 33], 'back_zone': [4, 12]},
-    {'period': '25052', 'date': '2024-04-13', 'front_zone': [6, 11, 22, 27, 35], 'back_zone': [2, 7]},
-    {'period': '25053', 'date': '2024-04-15', 'front_zone': [4, 13, 21, 29, 32], 'back_zone': [6, 10]},
-    {'period': '25054', 'date': '2024-04-17', 'front_zone': [8, 16, 24, 30, 34], 'back_zone': [3, 11]},
-    {'period': '25055', 'date': '2024-04-20', 'front_zone': [2, 14, 19, 28, 35], 'back_zone': [1, 8]},
-    {'period': '25056', 'date': '2024-04-22', 'front_zone': [5, 9, 17, 25, 33], 'back_zone': [4, 9]},
-    {'period': '25131', 'date': '2024-11-20', 'front_zone': [3, 8, 12, 24, 34], 'back_zone': [9, 12]},
-]
+# 添加路径以导入admin-data模块
+sys.path.insert(0, os.path.dirname(__file__))
+
+# 导入获取合并数据的函数
+def get_lottery_history():
+    """获取合并后的彩票历史数据（用户数据 + 固定数据）"""
+    try:
+        # 导入admin-data中的函数
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "admin_data",
+            os.path.join(os.path.dirname(__file__), "admin-data.py")
+        )
+        admin_data = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(admin_data)
+
+        # 获取合并后的数据
+        combined_data = admin_data.get_combined_lottery_data()
+        print(f"📊 加载了 {len(combined_data)} 期历史数据（包含用户添加的数据）")
+        return combined_data
+
+    except Exception as e:
+        print(f"⚠️  加载合并数据失败，使用默认数据: {str(e)}")
+        # 回退到默认数据
+        from utils._lottery_data import lottery_data
+        return lottery_data
 
 class LotteryFeatureExtractor:
     def __init__(self, historical_data):
@@ -217,6 +231,9 @@ class MLPredictor:
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
+            # 获取最新的合并数据
+            LOTTERY_HISTORY = get_lottery_history()
+
             if len(LOTTERY_HISTORY) < 10:
                 raise Exception(f"历史数据不足")
             predictor = MLPredictor(LOTTERY_HISTORY)

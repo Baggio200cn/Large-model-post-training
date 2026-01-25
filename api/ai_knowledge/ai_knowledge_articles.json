@@ -1,0 +1,331 @@
+{
+  "metadata": {
+    "total_issues": 15,
+    "description": "AI智能体知识科普系列 - 结合大乐透AI平台",
+    "created_at": "2026-01-25",
+    "platform": "大乐透AI预测平台"
+  },
+  "articles": [
+    {
+      "issue": 1,
+      "title": "揭秘AI智能体：从大乐透预测看智能体的诞生",
+      "chapters": [
+        "Ch00_Agentic_Design_Patterns_Intro",
+        "06_What_makes_an_AI_system_an_Agent"
+      ],
+      "tags": [
+        "智能体基础",
+        "AI导论",
+        "大乐透预测"
+      ],
+      "reading_time": "8分钟",
+      "difficulty": "入门",
+      "summary": "通过大乐透AI预测平台的实例，深入浅出地介绍什么是AI智能体，以及智能体与传统AI的本质区别。",
+      "key_concepts": [
+        "五步循环",
+        "自主性",
+        "工具使用",
+        "设计模式"
+      ],
+      "daletu_features": [
+        "数据获取",
+        "特征提取",
+        "策略生成",
+        "置信度评估"
+      ],
+      "created_at": "2026-01-25"
+    },
+    {
+      "issue": 2,
+      "title": "AI团队作战：多智能体协作如何让预测更准确",
+      "chapters": [
+        "Ch07_Multi_Agent_Collaboration"
+      ],
+      "tags": [
+        "多智能体",
+        "协作模式",
+        "团队协作"
+      ],
+      "reading_time": "7分钟",
+      "difficulty": "入门",
+      "summary": "探索如何让多个AI智能体像团队一样分工合作，提升大乐透预测的准确性和效率。",
+      "key_concepts": [
+        "顺序传递",
+        "并行处理",
+        "层级结构",
+        "批判-复审"
+      ],
+      "daletu_features": [
+        "数据分析师智能体",
+        "策略设计师智能体",
+        "预测生成器智能体",
+        "质量审核智能体"
+      ],
+      "created_at": "2026-01-25"
+    },
+    {
+      "issue": 3,
+      "title": "AI的记忆宫殿：如何从302期历史数据中学习",
+      "chapters": [
+        "Ch08_Memory_Management"
+      ],
+      "tags": [
+        "记忆管理",
+        "数据存储",
+        "知识积累"
+      ],
+      "reading_time": "7分钟",
+      "difficulty": "入门",
+      "summary": "揭秘大乐透AI如何管理和利用302期历史数据，实现短期记忆和长期记忆的协同工作。",
+      "key_concepts": [
+        "短期记忆",
+        "长期记忆",
+        "向量数据库",
+        "语义检索"
+      ],
+      "daletu_features": [
+        "历史数据管理",
+        "腾讯云COS存储",
+        "缓存机制",
+        "数据检索"
+      ],
+      "created_at": "2026-01-25"
+    },
+    {
+      "issue": 4,
+      "title": "自我进化的AI：如何根据预测结果优化策略",
+      "chapters": [
+        "Ch09_Learning_and_Adaptation"
+      ],
+      "tags": [
+        "机器学习",
+        "自适应",
+        "模型优化"
+      ],
+      "reading_time": "8分钟",
+      "difficulty": "进阶",
+      "summary": "了解大乐透AI如何通过强化学习、监督学习等方法，根据历史预测准确率不断优化自身策略。",
+      "key_concepts": [
+        "强化学习",
+        "监督学习",
+        "在线学习",
+        "模型调优"
+      ],
+      "daletu_features": [
+        "预测准确率追踪",
+        "策略权重调整",
+        "特征重要性分析",
+        "模型热更新"
+      ],
+      "created_at": "2026-01-25"
+    },
+    {
+      "issue": 5,
+      "title": "数据的桥梁：MCP如何连接AI与外部世界",
+      "chapters": [
+        "Ch10_Model_Context_Protocol"
+      ],
+      "tags": [
+        "MCP",
+        "数据接入",
+        "标准化协议"
+      ],
+      "reading_time": "7分钟",
+      "difficulty": "进阶",
+      "summary": "探索模型上下文协议（MCP）如何帮助大乐透AI从腾讯云COS获取数据和模型文件。",
+      "key_concepts": [
+        "MCP协议",
+        "标准化接口",
+        "工具暴露",
+        "数据源集成"
+      ],
+      "daletu_features": [
+        "腾讯云COS集成",
+        "历史数据加载",
+        "ML模型加载",
+        "API标准化"
+      ],
+      "created_at": "2026-01-25"
+    },
+    {
+      "issue": 6,
+      "title": "目标设定与监控：AI的项目管理艺术",
+      "chapters": [
+        "Ch11_Goal_Setting_and_Monitoring"
+      ],
+      "tags": [
+        "智能体设计",
+        "大乐透AI"
+      ],
+      "reading_time": "7分钟",
+      "difficulty": "进阶",
+      "summary": "第6期内容待完善",
+      "key_concepts": [],
+      "daletu_features": [],
+      "created_at": "2026-01-25",
+      "status": "draft"
+    },
+    {
+      "issue": 7,
+      "title": "容错机制：当预测出错时AI如何应对",
+      "chapters": [
+        "Ch12_Exception_Handling"
+      ],
+      "tags": [
+        "智能体设计",
+        "大乐透AI"
+      ],
+      "reading_time": "7分钟",
+      "difficulty": "进阶",
+      "summary": "第7期内容待完善",
+      "key_concepts": [],
+      "daletu_features": [],
+      "created_at": "2026-01-25",
+      "status": "draft"
+    },
+    {
+      "issue": 8,
+      "title": "人机协作：用户如何参与AI预测过程",
+      "chapters": [
+        "Ch13_Human_in_the_Loop"
+      ],
+      "tags": [
+        "智能体设计",
+        "大乐透AI"
+      ],
+      "reading_time": "7分钟",
+      "difficulty": "进阶",
+      "summary": "第8期内容待完善",
+      "key_concepts": [],
+      "daletu_features": [],
+      "created_at": "2026-01-25",
+      "status": "draft"
+    },
+    {
+      "issue": 9,
+      "title": "知识检索：基于事实的智能预测",
+      "chapters": [
+        "Ch14_Knowledge_Retrieval_RAG"
+      ],
+      "tags": [
+        "智能体设计",
+        "大乐透AI"
+      ],
+      "reading_time": "7分钟",
+      "difficulty": "进阶",
+      "summary": "第9期内容待完善",
+      "key_concepts": [],
+      "daletu_features": [],
+      "created_at": "2026-01-25",
+      "status": "draft"
+    },
+    {
+      "issue": 10,
+      "title": "AI的对话：智能体间如何通信",
+      "chapters": [
+        "Ch15_Inter_Agent_Communication"
+      ],
+      "tags": [
+        "智能体设计",
+        "大乐透AI"
+      ],
+      "reading_time": "7分钟",
+      "difficulty": "进阶",
+      "summary": "第10期内容待完善",
+      "key_concepts": [],
+      "daletu_features": [],
+      "created_at": "2026-01-25",
+      "status": "draft"
+    },
+    {
+      "issue": 11,
+      "title": "成本优化：控制API调用和资源消耗",
+      "chapters": [
+        "Ch16_Resource_Aware"
+      ],
+      "tags": [
+        "智能体设计",
+        "大乐透AI"
+      ],
+      "reading_time": "7分钟",
+      "difficulty": "进阶",
+      "summary": "第11期内容待完善",
+      "key_concepts": [],
+      "daletu_features": [],
+      "created_at": "2026-01-25",
+      "status": "draft"
+    },
+    {
+      "issue": 12,
+      "title": "安全护栏：确保AI预测的合规性",
+      "chapters": [
+        "Ch18_Guardrails_Safety_Patterns"
+      ],
+      "tags": [
+        "智能体设计",
+        "大乐透AI"
+      ],
+      "reading_time": "7分钟",
+      "difficulty": "进阶",
+      "summary": "第12期内容待完善",
+      "key_concepts": [],
+      "daletu_features": [],
+      "created_at": "2026-01-25",
+      "status": "draft"
+    },
+    {
+      "issue": 13,
+      "title": "AI的成绩单：如何评估预测性能",
+      "chapters": [
+        "Ch19_Evaluation_and_Monitoring"
+      ],
+      "tags": [
+        "智能体设计",
+        "大乐透AI"
+      ],
+      "reading_time": "7分钟",
+      "difficulty": "进阶",
+      "summary": "第13期内容待完善",
+      "key_concepts": [],
+      "daletu_features": [],
+      "created_at": "2026-01-25",
+      "status": "draft"
+    },
+    {
+      "issue": 14,
+      "title": "优先级管理：处理多个预测请求",
+      "chapters": [
+        "Ch20_Prioritization"
+      ],
+      "tags": [
+        "智能体设计",
+        "大乐透AI"
+      ],
+      "reading_time": "7分钟",
+      "difficulty": "进阶",
+      "summary": "第14期内容待完善",
+      "key_concepts": [],
+      "daletu_features": [],
+      "created_at": "2026-01-25",
+      "status": "draft"
+    },
+    {
+      "issue": 15,
+      "title": "创新引擎：AI如何探索新的预测策略",
+      "chapters": [
+        "Ch21_Exploration_and_Discovery"
+      ],
+      "tags": [
+        "智能体设计",
+        "大乐透AI"
+      ],
+      "reading_time": "7分钟",
+      "difficulty": "进阶",
+      "summary": "第15期内容待完善",
+      "key_concepts": [],
+      "daletu_features": [],
+      "created_at": "2026-01-25",
+      "status": "draft"
+    }
+  ]
+}

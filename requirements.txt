@@ -1,7 +1,12 @@
-# Vercel 部署专用依赖（测试版）
-# 暂时清空所有依赖以测试基础 Python 运行时
-# 如果基础运行时正常，再逐步添加依赖
+# Vercel 部署所需依赖
+# Python标准库不需要列出，只列出第三方依赖
 
-# 步骤1: 先测试零依赖能否运行
-# 步骤2: 添加纯 Python 依赖（requests, beautifulsoup4）
-# 步骤3: 添加 COS SDK 及其编译依赖
+# COS SDK - 用于腾讯云对象存储
+cos-python-sdk-v5==1.9.30
+
+# HTTP请求库
+requests==2.31.0
+
+# 可选：数据处理（如果API需要）
+# numpy==1.24.3
+# pandas==2.0.3

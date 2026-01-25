@@ -165,7 +165,8 @@ def sync_new_data(new_records: List[Dict[str, Any]], combined_data: List[Dict[st
         'success': False,
         'file_updated': False,
         'cos_uploaded': False,
-        'message': ''
+        'message': '',
+        'details': []
     }
 
     try:
@@ -177,36 +178,60 @@ def sync_new_data(new_records: List[Dict[str, Any]], combined_data: List[Dict[st
         file_updated = update_lottery_data_file(new_records)
         result['file_updated'] = file_updated
 
+        if file_updated:
+            result['details'].append('✅ 本地文件已更新')
+        else:
+            result['details'].append('❌ 本地文件更新失败')
+
         # 2. 上传到COS
         print("\n" + "="*60)
         print("☁️  步骤2：上传到腾讯云COS")
         print("="*60)
 
-        cos_uploaded = upload_to_cos(combined_data)
-        result['cos_uploaded'] = cos_uploaded
+        # 检查COS配置
+        cos_configured = all([
+            os.getenv('TENCENT_SECRET_ID'),
+            os.getenv('TENCENT_SECRET_KEY'),
+            os.getenv('TENCENT_COS_BUCKET')
+        ])
 
-        # 判断整体是否成功
-        if file_updated or cos_uploaded:
-            result['success'] = True
-            result['message'] = '数据同步完成'
+        if not cos_configured:
+            print("⚠️  腾讯云COS环境变量未配置，跳过COS上传")
+            result['cos_uploaded'] = False
+            result['details'].append('⚠️  COS未配置（需设置TENCENT_SECRET_ID等环境变量）')
+        else:
+            cos_uploaded = upload_to_cos(combined_data)
+            result['cos_uploaded'] = cos_uploaded
 
-            if file_updated and cos_uploaded:
-                result['message'] += '（本地文件✅ + COS✅）'
-            elif file_updated:
-                result['message'] += '（仅本地文件✅，COS未配置）'
-            elif cos_uploaded:
-                result['message'] += '（仅COS✅，本地文件更新失败）'
+            if cos_uploaded:
+                result['details'].append('✅ 数据已上传到COS')
+            else:
+                result['details'].append('❌ COS上传失败（请检查网络或权限）')
+
+        # 判断整体是否成功（至少一个成功就算成功）
+        result['success'] = file_updated or result['cos_uploaded']
+
+        # 构建消息
+        if file_updated and result['cos_uploaded']:
+            result['message'] = '数据同步完成（本地✅ + COS✅）'
+        elif file_updated and not cos_configured:
+            result['message'] = '本地同步成功（COS未配置）'
+        elif file_updated:
+            result['message'] = '本地同步成功（COS上传失败）'
         else:
             result['message'] = '数据同步失败'
 
         print(f"\n{'='*60}")
         print(f"📊 同步结果：{result['message']}")
+        for detail in result['details']:
+            print(f"   {detail}")
         print(f"{'='*60}")
 
         return result
 
     except Exception as e:
         result['message'] = f'同步异常: {str(e)}'
+        result['details'].append(f'❌ 异常: {str(e)}')
         print(f"❌ {result['message']}")
         return result
 

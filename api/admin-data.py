@@ -190,19 +190,17 @@ class handler(BaseHTTPRequestHandler):
                                     # 步骤1：同步数据到本地文件和COS
                                     sync_result = sync_new_data([new_record], combined_data)
 
-                                    if sync_result.get('success'):
-                                        success_msg += f"\n✅ 数据已同步: {sync_result.get('message')}"
-                                    else:
-                                        success_msg += f"\n⚠️  数据同步失败: {sync_result.get('message')}"
+                                    # 显示同步结果
+                                    success_msg += f"\n{sync_result.get('message', '数据同步完成')}"
 
                                     # 步骤2：触发后台训练
                                     training_result = trigger_training(combined_data)
 
                                     if training_result.get('success'):
                                         success_msg += f"\n✅ 模型训练已启动（后台运行）"
-                                        success_msg += f"\n   日志文件: {training_result.get('log_file')}"
+                                        success_msg += f"\n   日志: {training_result.get('log_file')}"
                                     else:
-                                        success_msg += f"\n⚠️  训练触发失败: {training_result.get('message')}"
+                                        success_msg += f"\n⚠️  训练未启动: {training_result.get('message')}"
 
                                 except Exception as e:
                                     success_msg += f"\n⚠️  自动化流程异常: {str(e)}"

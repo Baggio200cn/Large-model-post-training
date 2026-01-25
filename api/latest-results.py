@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-大乐透ML预测API - 基于300期历史数据训练
+大乐透ML预测API - 基于最新合并数据训练
 """
 from http.server import BaseHTTPRequestHandler
 import json
 import os
+import sys
 import random
 from datetime import datetime
 from collections import Counter
+
+# 添加路径以导入admin-data模块
+sys.path.insert(0, os.path.dirname(__file__))
 
 KV_REST_API_URL = os.environ.get('KV_REST_API_URL') or os.environ.get('KV_URL', '')
 KV_REST_API_TOKEN = os.environ.get('KV_REST_API_TOKEN', '')
@@ -580,13 +584,57 @@ def get_statistics(history):
     }
 
 
+def get_combined_lottery_data():
+    """获取合并后的彩票数据（用户数据 + 固定数据）"""
+    try:
+        # 导入admin-data中的函数
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "admin_data",
+            os.path.join(os.path.dirname(__file__), "admin-data.py")
+        )
+        admin_data = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(admin_data)
+
+        # 获取合并后的数据
+        combined_data = admin_data.get_combined_lottery_data()
+
+        # 转换格式：从{period, front_zone, back_zone}到{period, front, back}
+        converted_data = []
+        for item in combined_data:
+            converted_data.append({
+                'period': item.get('period'),
+                'date': item.get('date'),
+                'front': item.get('front_zone', []),
+                'back': item.get('back_zone', [])
+            })
+
+        print(f"📊 成功加载合并数据: {len(converted_data)} 期（包含用户添加的数据）")
+        return converted_data
+
+    except Exception as e:
+        print(f"⚠️  加载合并数据失败，使用备份数据: {str(e)}")
+        return BACKUP_DATA
+
+
 class handler(BaseHTTPRequestHandler):
-    
+
     def get_history(self):
-        """获取历史数据：优先KV，否则使用300期备份"""
+        """获取历史数据：优先合并数据，然后KV，最后使用备份"""
+        # 1. 优先使用合并数据（用户数据+固定数据）
+        combined_data = get_combined_lottery_data()
+        if combined_data and len(combined_data) > len(BACKUP_DATA):
+            print(f"✅ 使用合并数据: {len(combined_data)} 期")
+            return combined_data
+
+        # 2. 尝试从KV获取
         data = kv_get('lottery_history')
         if data and isinstance(data, list) and len(data) > 0:
+            print(f"✅ 使用KV数据: {len(data)} 期")
             return data
+
+        # 3. 回退到备份数据
+        print(f"⚠️  使用备份数据: {len(BACKUP_DATA)} 期")
         return BACKUP_DATA
     
     def do_GET(self):

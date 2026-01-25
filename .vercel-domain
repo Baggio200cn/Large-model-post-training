@@ -1,0 +1,15 @@
+# Vercel域名配置文件
+# 请将下面的占位符替换为您的实际Vercel域名
+
+# 您的Vercel项目域名（从 https://vercel.com/dashboard 获取）
+VERCEL_DOMAIN=your-actual-domain.vercel.app
+
+# 使用说明：
+# 1. 登录 https://vercel.com/dashboard
+# 2. 找到项目 "Large-model-post-training"
+# 3. 复制项目的实际域名（例如：large-model-post-training-abc123.vercel.app）
+# 4. 替换上面的 VERCEL_DOMAIN 值
+# 5. 运行命令更新所有文档：
+#    sed -i "s|your-project.vercel.app|$(grep VERCEL_DOMAIN .vercel-domain | cut -d'=' -f2)|g" DEPLOYMENT.md docs/AUTO_TRAINING.md
+#    sed -i "s|your-domain.vercel.app|$(grep VERCEL_DOMAIN .vercel-domain | cut -d'=' -f2)|g" DEPLOYMENT.md docs/AUTO_TRAINING.md
+#    sed -i "s|your-domain.com|$(grep VERCEL_DOMAIN .vercel-domain | cut -d'=' -f2)|g" docs/AUTO_TRAINING.md

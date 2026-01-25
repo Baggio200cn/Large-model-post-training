@@ -31,7 +31,7 @@ jobs:
       
       - name: 安装依赖
         run: |
-          pip install requests beautifulsoup4
+          pip install requests beautifulsoup4 cos-python-sdk-v5
       
       - name: 运行抓取脚本
         id: fetch
@@ -50,7 +50,17 @@ jobs:
             echo "has_changes=true" >> $GITHUB_OUTPUT
             echo "检测到数据更新"
           fi
-      
+
+      - name: 上传到腾讯云COS
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          python scripts/upload_latest_to_cos.py
+        env:
+          TENCENT_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
+          TENCENT_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
+          TENCENT_COS_BUCKET: ${{ secrets.TENCENT_COS_BUCKET }}
+          TENCENT_COS_REGION: ${{ secrets.TENCENT_COS_REGION }}
+
       - name: 提交更新
         if: steps.check_changes.outputs.has_changes == 'true'
         run: |

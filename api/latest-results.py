@@ -587,17 +587,11 @@ def get_statistics(history):
 def get_combined_lottery_data():
     """获取合并后的彩票数据（用户数据 + 固定数据）"""
     try:
-        # 导入admin-data中的函数
-        import importlib.util
-        spec = importlib.util.spec_from_file_location(
-            "admin_data",
-            os.path.join(os.path.dirname(__file__), "admin-data.py")
-        )
-        admin_data = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(admin_data)
+        # 使用共享数据加载模块
+        from utils._data_loader import get_combined_lottery_data as get_combined
 
         # 获取合并后的数据
-        combined_data = admin_data.get_combined_lottery_data()
+        combined_data = get_combined()
 
         # 转换格式：从{period, front_zone, back_zone}到{period, front, back}
         converted_data = []
@@ -614,6 +608,8 @@ def get_combined_lottery_data():
 
     except Exception as e:
         print(f"⚠️  加载合并数据失败，使用备份数据: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return BACKUP_DATA
 
 

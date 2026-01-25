@@ -8,6 +8,9 @@ from datetime import datetime
 # 添加api目录到路径
 sys.path.insert(0, os.path.dirname(__file__))
 
+# 导入共享数据加载模块
+from utils._data_loader import load_user_data, save_user_data, get_combined_lottery_data
+
 # 导入数据同步和训练触发模块
 try:
     from utils._data_sync import sync_new_data
@@ -16,38 +19,6 @@ try:
 except Exception as e:
     print(f"⚠️  数据同步/训练模块导入失败: {str(e)}")
     SYNC_AVAILABLE = False
-
-# 用户添加的数据存储路径
-USER_DATA_FILE = '/tmp/user_lottery_data.json'
-
-
-def load_user_data():
-    """加载用户添加的数据"""
-    if os.path.exists(USER_DATA_FILE):
-        try:
-            with open(USER_DATA_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except:
-            return []
-    return []
-
-
-def save_user_data(data):
-    """保存用户添加的数据"""
-    try:
-        with open(USER_DATA_FILE, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-        return True
-    except:
-        return False
-
-
-def get_combined_lottery_data():
-    """获取合并后的彩票数据（用户数据 + 固定数据）"""
-    from utils._lottery_data import lottery_data
-    user_data = load_user_data()
-    # 用户数据在前，固定数据在后
-    return user_data + lottery_data
 
 
 class handler(BaseHTTPRequestHandler):

@@ -15,22 +15,18 @@ sys.path.insert(0, os.path.dirname(__file__))
 def get_lottery_history():
     """获取合并后的彩票历史数据（用户数据 + 固定数据）"""
     try:
-        # 导入admin-data中的函数
-        import importlib.util
-        spec = importlib.util.spec_from_file_location(
-            "admin_data",
-            os.path.join(os.path.dirname(__file__), "admin-data.py")
-        )
-        admin_data = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(admin_data)
+        # 使用共享数据加载模块
+        from utils._data_loader import get_combined_lottery_data
 
         # 获取合并后的数据
-        combined_data = admin_data.get_combined_lottery_data()
+        combined_data = get_combined_lottery_data()
         print(f"📊 加载了 {len(combined_data)} 期历史数据（包含用户添加的数据）")
         return combined_data
 
     except Exception as e:
         print(f"⚠️  加载合并数据失败，使用默认数据: {str(e)}")
+        import traceback
+        traceback.print_exc()
         # 回退到默认数据
         from utils._lottery_data import lottery_data
         return lottery_data

@@ -25,7 +25,7 @@ def load_user_data() -> List[Dict[str, Any]]:
 
 def get_combined_lottery_data() -> List[Dict[str, Any]]:
     """
-    获取合并后的彩票数据（用户数据 + 固定数据）
+    获取合并后的彩票数据（优先级：COS云存储 > 本地用户数据 > 固定数据）
 
     Returns:
         合并后的数据列表，格式：
@@ -39,25 +39,39 @@ def get_combined_lottery_data() -> List[Dict[str, Any]]:
             ...
         ]
     """
+    # 优先级1: 尝试从腾讯云COS加载（最新且持久化的数据）
+    try:
+        from utils._cos_data_loader import get_lottery_data
+        cos_data = get_lottery_data()
+        if cos_data and isinstance(cos_data, list) and len(cos_data) > 0:
+            print(f"✅ 使用COS云端数据: {len(cos_data)} 期")
+            return cos_data
+    except Exception as e:
+        print(f"⚠️  COS加载失败: {str(e)}，尝试本地数据")
+
+    # 优先级2: 使用本地数据（用户数据 + 固定数据）
     try:
         # 导入固定数据
         from utils._lottery_data import lottery_data
 
-        # 加载用户数据
+        # 加载用户数据（可能存在于/tmp，但在Serverless环境下不可靠）
         user_data = load_user_data()
 
         # 合并：用户数据在前，固定数据在后
         combined = user_data + lottery_data
 
+        print(f"ℹ️  使用本地合并数据: {len(combined)} 期 (用户:{len(user_data)}, 固定:{len(lottery_data)})")
         return combined
 
     except Exception as e:
         print(f"⚠️  加载合并数据失败: {str(e)}")
-        # 回退到只返回固定数据
+        # 优先级3: 回退到只返回固定数据
         try:
             from utils._lottery_data import lottery_data
+            print(f"⚠️  使用备份固定数据: {len(lottery_data)} 期")
             return lottery_data
         except:
+            print("❌ 所有数据源都失败")
             return []
 
 

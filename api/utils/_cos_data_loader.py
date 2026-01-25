@@ -90,6 +90,52 @@ def get_lottery_data(force_refresh: bool = False) -> List[Dict]:
         return lottery_data
 
 
+def upload_to_cos(lottery_data: List[Dict]) -> bool:
+    """
+    上传彩票数据到腾讯云COS（持久化存储）
+
+    Args:
+        lottery_data: 彩票历史数据列表
+
+    Returns:
+        是否上传成功
+    """
+    try:
+        print(f"📤 上传数据到腾讯云COS: {len(lottery_data)} 期")
+
+        client = get_cos_client()
+
+        # 准备上传数据（包装成带元数据的格式）
+        upload_data = {
+            'data': lottery_data,
+            'total_records': len(lottery_data),
+            'last_updated': datetime.now().isoformat(),
+            'source': 'admin-manual-add',
+            'version': '1.0'
+        }
+
+        # 上传到COS
+        result = client.upload_json(upload_data, 'data/lottery_history.json')
+
+        if result.get('success'):
+            print(f"✅ COS上传成功: {len(lottery_data)} 期数据")
+
+            # 清除缓存，强制下次重新加载
+            _cache['lottery_data'] = None
+            _cache['lottery_data_timestamp'] = None
+
+            return True
+        else:
+            print(f"❌ COS上传失败: {result.get('error')}")
+            return False
+
+    except Exception as e:
+        print(f"❌ COS上传异常: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
 def load_model_from_cos(model_name: str, force_refresh: bool = False) -> Any:
     """
     从COS加载机器学习模型（带缓存）

@@ -7,5 +7,21 @@ cos-python-sdk-v5>=1.9.30
 # HTTP请求 - DeepSeek API调用
 requests>=2.28.0
 
-# 注意：tensorflow 太重（>500MB），Vercel Serverless 不支持
-# 深度学习模型预测改用轻量级统计方法实现
+# ==================
+# ML 机器学习依赖
+# ==================
+
+# 数值计算
+numpy>=1.24.0
+
+# 传统ML模型 (XGBoost, RandomForest)
+scikit-learn>=1.3.0
+xgboost>=2.0.0
+
+# ONNX推理运行时 (替代TensorFlow，用于LSTM/Transformer)
+onnxruntime>=1.16.0
+
+# 注意：
+# - tensorflow 太重(500MB+)，Vercel 不支持
+# - LSTM/Transformer 模型需预先转换为 ONNX 格式
+# - 模型文件存储在腾讯云 COS 存储桶中

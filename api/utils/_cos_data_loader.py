@@ -127,9 +127,14 @@ def load_model_from_cos(model_name: str, force_refresh: bool = False) -> Any:
             try:
                 client.download_file(cos_path, temp_path)
 
-                # 加载Keras模型
-                import tensorflow as tf
-                model = tf.keras.models.load_model(temp_path)
+                # 加载Keras模型 - Vercel不支持tensorflow，使用轻量级替代方案
+                try:
+                    import tensorflow as tf
+                    model = tf.keras.models.load_model(temp_path)
+                except ImportError:
+                    # Vercel环境不支持tensorflow，返回None让调用方使用统计方法
+                    print("⚠️  tensorflow未安装，跳过深度学习模型加载")
+                    raise Exception("深度学习模型需要tensorflow，Vercel不支持。请使用统计预测方法。")
 
                 # 更新缓存
                 _cache['models'][model_name] = model

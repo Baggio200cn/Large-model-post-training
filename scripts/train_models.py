@@ -322,23 +322,44 @@ def train_transformer(X_train, y_train, X_test, y_test, zone='front'):
 def convert_keras_to_onnx(model, model_name, input_shape, output_dir):
     """将Keras模型转换为ONNX格式"""
     import tf2onnx
+    import tempfile
+    import shutil
 
     print(f"\n🔄 转换 {model_name} 到ONNX格式...")
 
     output_path = f'{output_dir}/{model_name}.onnx'
 
-    # 定义输入签名
-    spec = (tf.TensorSpec(input_shape, tf.float32, name="input"),)
+    # 方法：先保存为 SavedModel，再转换为 ONNX
+    temp_dir = tempfile.mkdtemp()
+    saved_model_path = os.path.join(temp_dir, 'saved_model')
 
-    # 转换
-    model_proto, _ = tf2onnx.convert.from_keras(
-        model,
-        input_signature=spec,
-        output_path=output_path
-    )
+    try:
+        # 保存为 SavedModel 格式
+        model.export(saved_model_path, format='tf_saved_model')
 
-    print(f"✅ 已保存: {output_path}")
-    return output_path
+        # 从 SavedModel 转换为 ONNX
+        model_proto, _ = tf2onnx.convert.from_saved_model(
+            saved_model_path,
+            output_path=output_path
+        )
+
+        print(f"✅ 已保存: {output_path}")
+        return output_path
+
+    except Exception as e:
+        print(f"⚠️  SavedModel方法失败: {e}")
+        print("   尝试备用方法...")
+
+        # 备用方法：直接保存为 .keras 格式
+        keras_path = f'{output_dir}/{model_name}.keras'
+        model.save(keras_path)
+        print(f"✅ 已保存为Keras格式: {keras_path}")
+        return keras_path
+
+    finally:
+        # 清理临时目录
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 def save_models(models, output_dir='models'):
@@ -347,33 +368,10 @@ def save_models(models, output_dir='models'):
 
     saved_info = {'models': {}}
 
+    # 先保存所有 sklearn/xgboost 模型（这些不会失败）
+    print("\n📦 保存 sklearn/xgboost 模型...")
     for model_name, (model, metadata) in models.items():
-        if 'lstm' in model_name.lower():
-            # LSTM模型转换为ONNX
-            input_shape = metadata.get('input_shape', (10, 7))
-            batch_input_shape = (None,) + input_shape
-            model_path = convert_keras_to_onnx(model, model_name, batch_input_shape, output_dir)
-            saved_info['models'][model_name] = {
-                'type': 'onnx',
-                'format': 'onnx',
-                'path': model_path,
-                'metadata': metadata
-            }
-
-        elif 'transformer' in model_name.lower():
-            # Transformer模型转换为ONNX
-            input_shape = metadata.get('input_shape', (70,))
-            batch_input_shape = (None,) + input_shape
-            model_path = convert_keras_to_onnx(model, model_name, batch_input_shape, output_dir)
-            saved_info['models'][model_name] = {
-                'type': 'onnx',
-                'format': 'onnx',
-                'path': model_path,
-                'metadata': metadata
-            }
-
-        else:
-            # sklearn和xgboost模型保存为.pkl
+        if 'lstm' not in model_name.lower() and 'transformer' not in model_name.lower():
             model_path = f'{output_dir}/{model_name}.pkl'
             with open(model_path, 'wb') as f:
                 pickle.dump(model, f)
@@ -383,8 +381,40 @@ def save_models(models, output_dir='models'):
                 'path': model_path,
                 'metadata': metadata
             }
+            print(f"💾 已保存: {model_name}")
 
-        print(f"💾 已保存: {model_name}")
+    # 然后保存 Keras 模型（可能需要转换为 ONNX）
+    print("\n📦 保存 Keras 模型...")
+    for model_name, (model, metadata) in models.items():
+        if 'lstm' in model_name.lower():
+            input_shape = metadata.get('input_shape', (10, 7))
+            batch_input_shape = (None,) + input_shape
+            try:
+                model_path = convert_keras_to_onnx(model, model_name, batch_input_shape, output_dir)
+                file_format = 'onnx' if model_path.endswith('.onnx') else 'keras'
+                saved_info['models'][model_name] = {
+                    'type': file_format,
+                    'format': file_format,
+                    'path': model_path,
+                    'metadata': metadata
+                }
+            except Exception as e:
+                print(f"❌ 保存 {model_name} 失败: {e}")
+
+        elif 'transformer' in model_name.lower():
+            input_shape = metadata.get('input_shape', (70,))
+            batch_input_shape = (None,) + input_shape
+            try:
+                model_path = convert_keras_to_onnx(model, model_name, batch_input_shape, output_dir)
+                file_format = 'onnx' if model_path.endswith('.onnx') else 'keras'
+                saved_info['models'][model_name] = {
+                    'type': file_format,
+                    'format': file_format,
+                    'path': model_path,
+                    'metadata': metadata
+                }
+            except Exception as e:
+                print(f"❌ 保存 {model_name} 失败: {e}")
 
     # 保存模型信息
     saved_info['version'] = '2.0.0'

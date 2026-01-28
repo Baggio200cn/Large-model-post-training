@@ -56,48 +56,61 @@ class TencentCOSClient:
         print(f"   区域: {self.region}")
         print(f"   存储桶: {self.bucket}")
 
-    def upload_file(self, local_path: str, cos_path: str) -> Dict[str, Any]:
+    def upload_file(self, local_path: str, cos_path: str, max_retries: int = 4) -> Dict[str, Any]:
         """
-        上传文件到COS
+        上传文件到COS（带重试机制）
 
         Args:
             local_path: 本地文件路径
             cos_path: COS上的路径（如：data/lottery_history.json）
+            max_retries: 最大重试次数
 
         Returns:
             上传结果信息
         """
+        import time
+
         if not os.path.exists(local_path):
             raise FileNotFoundError(f"本地文件不存在: {local_path}")
 
         print(f"📤 上传文件: {local_path} -> cos://{self.bucket}/{cos_path}")
 
-        try:
-            response = self.client.upload_file(
-                Bucket=self.bucket,
-                LocalFilePath=local_path,
-                Key=cos_path,
-                PartSize=10,
-                MAXThread=10
-            )
+        last_error = None
+        for attempt in range(max_retries):
+            try:
+                response = self.client.upload_file(
+                    Bucket=self.bucket,
+                    LocalFilePath=local_path,
+                    Key=cos_path,
+                    PartSize=10,
+                    MAXThread=5  # 减少线程数以提高稳定性
+                )
 
-            file_size = os.path.getsize(local_path) / 1024  # KB
-            print(f"✅ 上传成功！文件大小: {file_size:.2f} KB")
+                file_size = os.path.getsize(local_path) / 1024  # KB
+                print(f"✅ 上传成功！文件大小: {file_size:.2f} KB")
 
-            return {
-                'success': True,
-                'cos_path': cos_path,
-                'local_path': local_path,
-                'size_kb': file_size,
-                'etag': response.get('ETag', '')
-            }
+                return {
+                    'success': True,
+                    'cos_path': cos_path,
+                    'local_path': local_path,
+                    'size_kb': file_size,
+                    'etag': response.get('ETag', '')
+                }
 
-        except Exception as e:
-            print(f"❌ 上传失败: {str(e)}")
-            return {
-                'success': False,
-                'error': str(e)
-            }
+            except Exception as e:
+                last_error = e
+                if attempt < max_retries - 1:
+                    wait_time = 2 ** (attempt + 1)  # 2, 4, 8, 16秒
+                    print(f"⚠️  上传失败 (尝试 {attempt + 1}/{max_retries}): {str(e)}")
+                    print(f"   {wait_time}秒后重试...")
+                    time.sleep(wait_time)
+                else:
+                    print(f"❌ 上传失败 (已重试{max_retries}次): {str(e)}")
+
+        return {
+            'success': False,
+            'error': str(last_error)
+        }
 
     def download_file(self, cos_path: str, local_path: str) -> Dict[str, Any]:
         """

@@ -384,3 +384,15 @@ def get_all_back_numbers():
 def get_history_for_training():
     """获取用于ML训练的历史数据"""
     return LOTTERY_HISTORY
+
+
+# 为兼容其他模块导入，提供格式化的lottery_data
+lottery_data = [
+    {
+        'period': record[0],
+        'front_zone': list(record[1:6]),
+        'back_zone': list(record[6:8]),
+        'date': record[8] if len(record) > 8 else ''
+    }
+    for record in LOTTERY_HISTORY
+]

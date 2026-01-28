@@ -1,5 +1,8 @@
 """
 从腾讯云COS加载数据和模型
+支持：
+- scikit-learn/xgboost 模型 (.pkl格式)
+- ONNX 模型 (.onnx格式) - 用于LSTM/Transformer
 提供缓存机制以减少COS请求次数
 """
 import os
@@ -20,6 +23,7 @@ _cache = {
     'lottery_data': None,
     'lottery_data_timestamp': None,
     'models': {},
+    'onnx_sessions': {},  # ONNX推理会话缓存
     'cache_ttl': 3600  # 缓存有效期：1小时
 }
 
@@ -90,12 +94,71 @@ def get_lottery_data(force_refresh: bool = False) -> List[Dict]:
         return lottery_data
 
 
-def load_model_from_cos(model_name: str, force_refresh: bool = False) -> Any:
+def load_onnx_model(model_name: str, force_refresh: bool = False) -> Any:
     """
-    从COS加载机器学习模型（带缓存）
+    从COS加载ONNX模型（用于LSTM/Transformer）
 
     Args:
-        model_name: 模型名称（如：random_forest_front）
+        model_name: 模型名称（如：lstm_front, transformer_back）
+        force_refresh: 是否强制刷新缓存
+
+    Returns:
+        ONNX InferenceSession 对象
+    """
+    global _cache
+
+    # 检查缓存
+    if not force_refresh and model_name in _cache['onnx_sessions']:
+        print(f"📦 使用缓存ONNX会话: {model_name}")
+        return _cache['onnx_sessions'][model_name]
+
+    print(f"📥 从腾讯云COS加载ONNX模型: {model_name}")
+
+    try:
+        import onnxruntime as ort
+        import tempfile
+
+        client = get_cos_client()
+        cos_path = f'models/{model_name}.onnx'
+
+        # 下载到临时文件
+        with tempfile.NamedTemporaryFile(suffix='.onnx', delete=False) as f:
+            temp_path = f.name
+
+        try:
+            client.download_file(cos_path, temp_path)
+
+            # 创建ONNX推理会话
+            session = ort.InferenceSession(
+                temp_path,
+                providers=['CPUExecutionProvider']
+            )
+
+            # 更新缓存
+            _cache['onnx_sessions'][model_name] = session
+
+            print(f"✅ 成功加载ONNX模型: {model_name}")
+            return session
+
+        finally:
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+
+    except ImportError:
+        print("❌ onnxruntime 未安装")
+        raise Exception("需要安装 onnxruntime: pip install onnxruntime")
+
+    except Exception as e:
+        print(f"❌ 从COS加载ONNX模型失败: {str(e)}")
+        raise Exception(f"无法加载ONNX模型 {model_name}: {str(e)}")
+
+
+def load_sklearn_model(model_name: str, force_refresh: bool = False) -> Any:
+    """
+    从COS加载sklearn/xgboost模型（.pkl格式）
+
+    Args:
+        model_name: 模型名称（如：xgboost_front, random_forest_back）
         force_refresh: 是否强制刷新缓存
 
     Returns:
@@ -108,54 +171,41 @@ def load_model_from_cos(model_name: str, force_refresh: bool = False) -> Any:
         print(f"📦 使用缓存模型: {model_name}")
         return _cache['models'][model_name]
 
-    # 从COS加载
-    print(f"📥 从腾讯云COS加载模型: {model_name}")
+    print(f"📥 从腾讯云COS加载sklearn模型: {model_name}")
 
     try:
         client = get_cos_client()
+        cos_path = f'models/{model_name}.pkl'
 
-        # 判断文件类型
-        if 'lstm' in model_name.lower() or 'transformer' in model_name.lower():
-            # Keras模型（.h5格式）
-            cos_path = f'models/{model_name}.h5'
+        model = client.download_pickle(cos_path)
 
-            # 下载到临时文件
-            import tempfile
-            with tempfile.NamedTemporaryFile(suffix='.h5', delete=False) as f:
-                temp_path = f.name
+        # 更新缓存
+        _cache['models'][model_name] = model
 
-            try:
-                client.download_file(cos_path, temp_path)
-
-                # 加载Keras模型
-                import tensorflow as tf
-                model = tf.keras.models.load_model(temp_path)
-
-                # 更新缓存
-                _cache['models'][model_name] = model
-
-                print(f"✅ 成功加载Keras模型: {model_name}")
-                return model
-
-            finally:
-                if os.path.exists(temp_path):
-                    os.unlink(temp_path)
-
-        else:
-            # sklearn/xgboost模型（.pkl格式）
-            cos_path = f'models/{model_name}.pkl'
-
-            model = client.download_pickle(cos_path)
-
-            # 更新缓存
-            _cache['models'][model_name] = model
-
-            print(f"✅ 成功加载模型: {model_name}")
-            return model
+        print(f"✅ 成功加载sklearn模型: {model_name}")
+        return model
 
     except Exception as e:
-        print(f"❌ 从COS加载模型失败: {str(e)}")
+        print(f"❌ 从COS加载sklearn模型失败: {str(e)}")
         raise Exception(f"无法加载模型 {model_name}: {str(e)}")
+
+
+def load_model_from_cos(model_name: str, force_refresh: bool = False) -> Any:
+    """
+    从COS加载机器学习模型（自动识别类型）
+
+    Args:
+        model_name: 模型名称
+        force_refresh: 是否强制刷新缓存
+
+    Returns:
+        加载的模型对象或ONNX会话
+    """
+    # 根据模型名称判断类型
+    if 'lstm' in model_name.lower() or 'transformer' in model_name.lower():
+        return load_onnx_model(model_name, force_refresh)
+    else:
+        return load_sklearn_model(model_name, force_refresh)
 
 
 def get_models_info() -> Dict[str, Any]:
@@ -174,7 +224,21 @@ def get_models_info() -> Dict[str, Any]:
 
     except Exception as e:
         print(f"⚠️  无法加载模型信息: {str(e)}")
-        return {}
+        # 返回默认模型配置
+        return {
+            'models': {
+                'xgboost_front': {'type': 'sklearn', 'format': 'pkl', 'description': 'XGBoost前区预测'},
+                'xgboost_back': {'type': 'sklearn', 'format': 'pkl', 'description': 'XGBoost后区预测'},
+                'random_forest_front': {'type': 'sklearn', 'format': 'pkl', 'description': 'RandomForest前区预测'},
+                'random_forest_back': {'type': 'sklearn', 'format': 'pkl', 'description': 'RandomForest后区预测'},
+                'lstm_front': {'type': 'onnx', 'format': 'onnx', 'description': 'LSTM前区预测'},
+                'lstm_back': {'type': 'onnx', 'format': 'onnx', 'description': 'LSTM后区预测'},
+                'transformer_front': {'type': 'onnx', 'format': 'onnx', 'description': 'Transformer前区预测'},
+                'transformer_back': {'type': 'onnx', 'format': 'onnx', 'description': 'Transformer后区预测'},
+            },
+            'version': '2.0.0',
+            'updated': datetime.now().isoformat()
+        }
 
 
 def clear_cache():
@@ -184,6 +248,7 @@ def clear_cache():
     _cache['lottery_data'] = None
     _cache['lottery_data_timestamp'] = None
     _cache['models'].clear()
+    _cache['onnx_sessions'].clear()
 
     print("🗑️  缓存已清除")
 
@@ -194,7 +259,8 @@ def get_cache_status() -> Dict[str, Any]:
 
     status = {
         'lottery_data_cached': _cache['lottery_data'] is not None,
-        'models_cached': list(_cache['models'].keys()),
+        'sklearn_models_cached': list(_cache['models'].keys()),
+        'onnx_models_cached': list(_cache['onnx_sessions'].keys()),
         'cache_ttl': _cache['cache_ttl']
     }
 
@@ -208,7 +274,7 @@ def get_cache_status() -> Dict[str, Any]:
 if __name__ == '__main__':
     # 测试代码
     print("=" * 60)
-    print("测试从COS加载数据")
+    print("测试从COS加载数据和模型")
     print("=" * 60)
 
     try:
@@ -221,6 +287,11 @@ if __name__ == '__main__':
         status = get_cache_status()
         print(f"\n📊 缓存状态:")
         print(json.dumps(status, indent=2, ensure_ascii=False))
+
+        # 测试模型信息
+        models_info = get_models_info()
+        print(f"\n📋 可用模型:")
+        print(json.dumps(models_info, indent=2, ensure_ascii=False))
 
     except Exception as e:
         print(f"\n❌ 测试失败: {str(e)}")
